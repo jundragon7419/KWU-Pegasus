@@ -1,0 +1,21 @@
+.appRoot {
+  width: 100%;
+  min-height: 100vh;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  background: #ffffff;
+  color: #111111;
+}
+
+.title {
+  margin-bottom: 12px;
+  font-size: 2rem;
+  color: #111111;
+}
+
+.subtitle {
+  color: #1f1f26;
+  font-size: 1rem;
+}
