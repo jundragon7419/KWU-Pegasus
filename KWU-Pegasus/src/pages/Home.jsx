@@ -1,34 +1,117 @@
+import { useMemo } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { NOTICES } from '../data/notices'
+import { getHolidayMap } from '../data/holidays'
+import { getEventMap, EVENT_TYPES } from '../data/events'
 import styles from './Home.module.css'
 
+const DAYS = ['일', '월', '화', '수', '목', '금', '토']
+
+function MiniCalendar() {
+  const navigate = useNavigate()
+  const today = new Date()
+  const year = today.getFullYear()
+  const month = today.getMonth()
+
+  const holidayMap = useMemo(() => getHolidayMap(year), [year])
+  const eventMap = useMemo(() => getEventMap(year, month), [year, month])
+
+  const firstDay = new Date(year, month, 1).getDay()
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+
+  const cells = []
+  for (let i = 0; i < firstDay; i++) cells.push(null)
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d)
+  while (cells.length % 7 !== 0) cells.push(null)
+
+  return (
+    <div className={styles.calendarWidget} onClick={() => navigate('/schedule')}>
+      <div className={styles.calendarHeader}>
+        <span className={styles.calendarTitle}>{year}년 {month + 1}월</span>
+      </div>
+      <div className={styles.calendarGrid}>
+        {DAYS.map((d, i) => (
+          <div key={d} className={`${styles.calendarDayLabel} ${i === 0 ? styles.sun : ''}`}>{d}</div>
+        ))}
+        {cells.map((d, i) => {
+          const col = i % 7
+          const key = d ? `${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}` : null
+          const holidays = key ? (holidayMap.get(key) ?? []) : []
+          const isHoliday = holidays.length > 0
+          const isToday = d === today.getDate()
+          const isRed = col === 0 || isHoliday
+          const events = d ? (eventMap.get(String(d).padStart(2, '0')) ?? []) : []
+          return (
+            <div
+              key={i}
+              className={`${styles.calendarCell} ${isToday ? styles.calendarToday : ''} ${isRed && d ? styles.sun : ''}`}
+              title={[...holidays, ...events.map(e => EVENT_TYPES[e.type].label + ' ' + e.title)].join(', ')}
+            >
+              {d ?? ''}
+              {d && (isHoliday || events.length > 0) && (
+                <div className={styles.dotRow}>
+                  {isHoliday && <span className={styles.dot} style={{ background: '#f07070' }} />}
+                  {events.map(ev => (
+                    <span key={ev.id} className={styles.dot} style={{ background: EVENT_TYPES[ev.type].color }} />
+                  ))}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+const CATEGORY_LABEL = { notice: '공지', event: '행사', game: '경기' }
+const CATEGORY_STYLE = { notice: styles.tagNotice, event: styles.tagEvent, game: styles.tagGame }
+
 export default function Home() {
+  const pinned = NOTICES.filter(n => n.isPinned)
+  const recent = NOTICES.filter(n => !n.isPinned).slice(0, 8 - pinned.length)
+
   return (
     <section className={styles.home}>
       <div className={styles.heroImageWrapper}>
         <img className={styles.heroImage} src="/main.jpg" alt="메인 이미지" />
       </div>
-      <div className={`${styles.longText} text`}>
-        <p>이것은 스크롤바 테스트를 위해 추가된 긴 텍스트입니다. 아래 내용을 반복하면서 충분히 길게 만들어 홈 페이지가 스크롤 가능한지 확인합니다.</p>
-        <p>첫 번째 문단입니다. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec at ex at odio tincidunt aliquam. Curabitur nec purus quis risus auctor tempor. Praesent nec ligula id eros elementum vestibulum id in massa.</p>
-        <p>두 번째 문단입니다. Nullam quis vestibulum augue. Suspendisse non lorem vel velit efficitur malesuada. Maecenas vitae dignissim urna. Nunc malesuada sollicitudin dui, sed sollicitudin odio vulputate sed.</p>
-        <p>세 번째 문단입니다. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Integer id orci scelerisque, imperdiet mi ac, pulvinar augue. Vivamus mattis felis eu tortor feugiat lacinia.</p>
-        <p>네 번째 문단입니다. Fusce ac mauris ut ante fermentum hendrerit ut eget lacus. Aliquam erat volutpat. Sed et libero ligula. Praesent et vestibulum magna.</p>
-        <p>다섯 번째 문단입니다. Pellentesque ac arcu ac odio dignissim interdum. Nulla facilisi. Integer vel mollis erat, eu pharetra massa. Curabitur egestas ullamcorper bibendum.</p>
-      </div>
-      <div className={`${styles.longText} text`}>
-        <p>이것은 스크롤바 테스트를 위해 추가된 긴 텍스트입니다. 아래 내용을 반복하면서 충분히 길게 만들어 홈 페이지가 스크롤 가능한지 확인합니다.</p>
-        <p>첫 번째 문단입니다. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec at ex at odio tincidunt aliquam. Curabitur nec purus quis risus auctor tempor. Praesent nec ligula id eros elementum vestibulum id in massa.</p>
-        <p>두 번째 문단입니다. Nullam quis vestibulum augue. Suspendisse non lorem vel velit efficitur malesuada. Maecenas vitae dignissim urna. Nunc malesuada sollicitudin dui, sed sollicitudin odio vulputate sed.</p>
-        <p>세 번째 문단입니다. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Integer id orci scelerisque, imperdiet mi ac, pulvinar augue. Vivamus mattis felis eu tortor feugiat lacinia.</p>
-        <p>네 번째 문단입니다. Fusce ac mauris ut ante fermentum hendrerit ut eget lacus. Aliquam erat volutpat. Sed et libero ligula. Praesent et vestibulum magna.</p>
-        <p>다섯 번째 문단입니다. Pellentesque ac arcu ac odio dignissim interdum. Nulla facilisi. Integer vel mollis erat, eu pharetra massa. Curabitur egestas ullamcorper bibendum.</p>
-      </div>
-      <div className={`${styles.longText} text`}>
-        <p>이것은 스크롤바 테스트를 위해 추가된 긴 텍스트입니다. 아래 내용을 반복하면서 충분히 길게 만들어 홈 페이지가 스크롤 가능한지 확인합니다.</p>
-        <p>첫 번째 문단입니다. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec at ex at odio tincidunt aliquam. Curabitur nec purus quis risus auctor tempor. Praesent nec ligula id eros elementum vestibulum id in massa.</p>
-        <p>두 번째 문단입니다. Nullam quis vestibulum augue. Suspendisse non lorem vel velit efficitur malesuada. Maecenas vitae dignissim urna. Nunc malesuada sollicitudin dui, sed sollicitudin odio vulputate sed.</p>
-        <p>세 번째 문단입니다. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Integer id orci scelerisque, imperdiet mi ac, pulvinar augue. Vivamus mattis felis eu tortor feugiat lacinia.</p>
-        <p>네 번째 문단입니다. Fusce ac mauris ut ante fermentum hendrerit ut eget lacus. Aliquam erat volutpat. Sed et libero ligula. Praesent et vestibulum magna.</p>
-        <p>다섯 번째 문단입니다. Pellentesque ac arcu ac odio dignissim interdum. Nulla facilisi. Integer vel mollis erat, eu pharetra massa. Curabitur egestas ullamcorper bibendum.</p>
+
+      <div className={styles.widgets}>
+        {/* 공지사항 */}
+        <div className={styles.widget}>
+          <div className={styles.widgetHeader}>
+            <span className={styles.widgetTitle}>공지사항</span>
+            <Link to="/notice" className={styles.widgetMore}>더보기 →</Link>
+          </div>
+          <div className={styles.noticeList}>
+            {pinned.map(n => (
+              <Link key={n.id} to={`/notice/${n.id}`} className={`${styles.noticeRow} ${styles.noticePinned}`}>
+                <span className={styles.pinIcon}>📌</span>
+                <span className={`${styles.tag} ${CATEGORY_STYLE[n.category]}`}>{CATEGORY_LABEL[n.category]}</span>
+                <span className={styles.noticeTitle}>{n.title}</span>
+                <span className={styles.noticeDate}>{n.date}</span>
+              </Link>
+            ))}
+            {pinned.length > 0 && <div className={styles.noticeDivider} />}
+            {recent.map(n => (
+              <Link key={n.id} to={`/notice/${n.id}`} className={styles.noticeRow}>
+                <span className={`${styles.tag} ${CATEGORY_STYLE[n.category]}`}>{CATEGORY_LABEL[n.category]}</span>
+                <span className={styles.noticeTitle}>{n.title}</span>
+                <span className={styles.noticeDate}>{n.date}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* 달력 */}
+        <div className={styles.widget}>
+          <div className={styles.widgetHeader}>
+            <span className={styles.widgetTitle}>일정</span>
+            <Link to="/schedule" className={styles.widgetMore}>더보기 →</Link>
+          </div>
+          <MiniCalendar />
+        </div>
       </div>
     </section>
   )

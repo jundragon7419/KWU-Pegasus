@@ -11,6 +11,11 @@
   --text-100: #ffffff;
   --surface: #ffffff;
   --font-sans: 'Noto Sans KR', 'Roboto', system-ui, sans-serif;
+
+  /* 레이아웃 */
+  --content-width: 70vw;
+  --content-max-width: 1200px;
+  --content-min-width: 320px;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }

@@ -1,0 +1,209 @@
+.page {
+  width: 100%;
+  padding: 40px 0 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* ── 헤더 ── */
+.pageHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.season {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--main-300);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-100);
+  letter-spacing: -0.5px;
+}
+
+/* ── 컨트롤 ── */
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.filterRow {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.filterBtn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.82rem;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  padding: 5px 14px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.filterBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-100);
+}
+
+.filterActive {
+  background: var(--main-500);
+  border-color: var(--main-500);
+  color: var(--text-100);
+  font-weight: 700;
+}
+
+.filterActive:hover {
+  background: var(--main-500);
+}
+
+.searchInput {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 6px 12px;
+  color: var(--text-100);
+  font-size: 0.85rem;
+  font-family: var(--font-sans);
+  outline: none;
+  width: 180px;
+  transition: border-color 0.15s ease;
+}
+
+.searchInput::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.searchInput:focus {
+  border-color: var(--main-300);
+}
+
+/* ── 범례 ── */
+.legend {
+  display: flex;
+  gap: 16px;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.legendDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.dotStaff   { background: #6fa3f5; }
+.dotRetired { background: #c9a227; }
+
+/* ── 그리드 ── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 10px;
+}
+
+/* ── 카드 공통 ── */
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 20px 8px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  transition: transform 0.15s ease, background 0.15s ease;
+  cursor: default;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.number {
+  font-size: 1.9rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--text-100);
+  letter-spacing: -1px;
+}
+
+.name {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* ── role 별 색상 ── */
+.card_staff {
+  border-color: rgba(111, 163, 245, 0.35);
+  background: rgba(111, 163, 245, 0.07);
+}
+
+.card_staff .number {
+  color: #6fa3f5;
+}
+
+.card_retired {
+  border-color: rgba(201, 162, 39, 0.4);
+  background: rgba(201, 162, 39, 0.08);
+}
+
+.card_retired .number {
+  color: #c9a227;
+}
+
+/* ── 배지 ── */
+.staffBadge,
+.retiredBadge {
+  position: absolute;
+  top: 6px;
+  right: 7px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 2px 5px;
+  border-radius: 4px;
+  letter-spacing: 0.3px;
+}
+
+.staffBadge {
+  background: rgba(111, 163, 245, 0.2);
+  color: #6fa3f5;
+}
+
+.retiredBadge {
+  background: rgba(201, 162, 39, 0.2);
+  color: #c9a227;
+}
+
+/* ── 검색 없음 ── */
+.empty {
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 0.95rem;
+  text-align: center;
+  padding: 60px 0;
+}

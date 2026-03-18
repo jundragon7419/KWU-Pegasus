@@ -1,10 +1,8 @@
 .home {
   width: 100%;
-
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0;
   background: var(--main-800);
 }
 
@@ -12,31 +10,224 @@
   width: 100%;
   display: flex;
   justify-content: center;
-  margin-bottom: 0;
 }
 
 .heroImage {
-  width: 70vw;
-  max-width: 1200px;
+  width: var(--content-width);
+  max-width: var(--content-max-width);
   height: auto;
   object-fit: contain;
   border-radius: 16px;
-  box-shadow: none;
 }
 
-.title {
-  font-size: 1.5rem;
-  margin-bottom: 8px;
-  color: #111111;
+/* ── 위젯 영역 ── */
+.widgets {
+  width: var(--content-width);
+  max-width: var(--content-max-width);
+  min-width: var(--content-min-width);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  padding: 32px 0 60px;
 }
 
-.longText {
+.widget {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.widgetHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.widgetTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-100);
+  letter-spacing: 0.3px;
+}
+
+.widgetMore {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.4);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.widgetMore:hover {
+  color: var(--main-300);
+}
+
+/* ── 공지사항 ── */
+.noticeList {
+  display: flex;
+  flex-direction: column;
+}
+
+.noticeRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 6px;
+  text-decoration: none;
+  border-radius: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background 0.12s ease;
+}
+
+.noticeRow:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.noticePinned {
+  background: rgba(166, 146, 109, 0.05);
+}
+
+.noticeDivider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 4px 0;
+}
+
+.pinIcon {
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.tag {
+  flex-shrink: 0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.3px;
+}
+
+.tagNotice {
+  background: rgba(166, 146, 109, 0.18);
+  color: var(--main-300);
+}
+
+.tagEvent {
+  background: rgba(111, 163, 245, 0.15);
+  color: #6fa3f5;
+}
+
+.tagGame {
+  background: rgba(100, 200, 120, 0.15);
+  color: #6dc87a;
+}
+
+.noticeTitle {
+  font-size: 0.88rem;
+  color: var(--text-100);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.noticeDate {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
+}
+
+/* ── 미니 달력 ── */
+.calendarWidget {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  transition: border-color 0.15s ease;
+}
+
+.calendarWidget:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.calendarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.calendarTitle {
+  font-size: 0.9rem;
+  font-weight: 700;
   color: var(--text-100);
 }
 
-.description {
-  color: #333333;
-  line-height: 1.6;
-  max-width: 800px;
+.calendarGrid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: 26px repeat(6, 1fr);
+  background: rgba(255, 255, 255, 0.1);
+  gap: 1px;
 }
 
+.calendarDayLabel {
+  background: rgba(30, 24, 18, 0.95);
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.calendarCell {
+  background: rgba(30, 24, 18, 0.85);
+  text-align: center;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.calendarToday {
+  color: var(--main-300);
+  font-weight: 800;
+  background: rgba(166, 146, 109, 0.15);
+}
+
+.dotRow {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+  margin-top: 2px;
+}
+
+.dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sun {
+  color: #f07070;
+}
+
+.calendarCell.sun {
+  color: #f07070;
+}
+
+.calendarToday.sun {
+  color: #f07070;
+}
