@@ -1,18 +1,37 @@
 .home {
   width: 100%;
-  padding: 24px;
+
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 12px;
-  background: #ffffff;
-  border-top: 1px solid #e5e7eb;
+  align-items: center;
+  gap: 0;
+  background: var(--main-800);
+}
+
+.heroImageWrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0;
+}
+
+.heroImage {
+  width: 70vw;
+  max-width: 1200px;
+  height: auto;
+  object-fit: contain;
+  border-radius: 16px;
+  box-shadow: none;
 }
 
 .title {
   font-size: 1.5rem;
   margin-bottom: 8px;
   color: #111111;
+}
+
+.longText {
+  color: var(--text-100);
 }
 
 .description {

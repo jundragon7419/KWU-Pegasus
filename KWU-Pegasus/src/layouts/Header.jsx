@@ -9,13 +9,13 @@ export default function Header() {
       </div>
 
       <nav className={styles.center}>
-        <a className={styles.navItem} href="#">Home</a>
-        <a className={styles.navItem} href="#">About</a>
-        <a className={styles.navItem} href="#">Docs</a>
+        <a className={styles.navItem} href="#">홈</a>
+        <a className={styles.navItem} href="#">일정</a>
       </nav>
 
       <div className={styles.right}>
         <button className={styles.loginButton}>로그인</button>
+        <button className={styles.signupButton}>회원가입</button>
       </div>
     </header>
   )

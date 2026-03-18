@@ -6,7 +6,9 @@ function App() {
   return (
     <div className={styles.appRoot}>
       <Header />
-      <Home />
+      <div className={styles.contentContainer}>
+        <Home />
+      </div>
     </div>
   )
 }
