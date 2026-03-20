@@ -1,0 +1,182 @@
+.page {
+  width: 100%;
+  padding: 40px 0 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-100);
+}
+
+/* ── 탭 ── */
+.tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding-bottom: 0;
+}
+
+.tab {
+  padding: 10px 20px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+  margin-bottom: -1px;
+}
+
+.tab:hover {
+  color: var(--text-100);
+}
+
+.tabActive {
+  color: var(--main-300);
+  border-bottom-color: var(--main-300);
+}
+
+/* ── 공통 ── */
+.empty {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.95rem;
+  text-align: center;
+  padding: 48px 0;
+}
+
+/* ── 테이블 ── */
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.table th {
+  text-align: left;
+  padding: 10px 12px;
+  color: rgba(255, 255, 255, 0.45);
+  font-weight: 600;
+  font-size: 0.8rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 12px 12px;
+  color: var(--text-100);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  vertical-align: middle;
+}
+
+.table tr:hover td {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* ── 버튼 ── */
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.approveBtn,
+.rejectBtn,
+.saveBtn {
+  padding: 5px 14px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.approveBtn {
+  background: rgba(100, 200, 120, 0.18);
+  color: #6dc87a;
+}
+
+.approveBtn:hover { opacity: 0.75; }
+
+.rejectBtn {
+  background: rgba(224, 92, 92, 0.15);
+  color: #e05c5c;
+}
+
+.rejectBtn:hover { opacity: 0.75; }
+
+.saveBtn {
+  background: var(--main-500);
+  color: var(--text-100);
+}
+
+.saveBtn:hover { opacity: 0.8; }
+
+/* ── 배지 ── */
+.badge {
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: var(--main-300);
+}
+
+.roleBadge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.role_root    { background: rgba(224, 92, 92, 0.15);   color: #e05c5c; }
+.role_staff   { background: rgba(166, 146, 109, 0.18); color: var(--main-300); }
+.role_manager { background: rgba(111, 163, 245, 0.15); color: #6fa3f5; }
+.role_user    { background: rgba(255, 255, 255, 0.07); color: rgba(255,255,255,0.5); }
+
+.statusBadge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.status_active  { background: rgba(100, 200, 120, 0.15); color: #6dc87a; }
+.status_pending { background: rgba(245, 166, 35, 0.15);  color: #f5a623; }
+.status_rejected{ background: rgba(224, 92, 92, 0.12);   color: #e05c5c; }
+
+/* ── 권한 변경 폼 ── */
+.roleForm {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.select {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 4px 8px;
+  color: var(--text-100);
+  font-size: 0.82rem;
+  font-family: var(--font-sans);
+  outline: none;
+}
+
+.select:focus {
+  border-color: var(--main-300);
+}
+
+.noChange {
+  color: rgba(255, 255, 255, 0.2);
+}

@@ -122,3 +122,30 @@
   background: var(--main-300);
   color: var(--main-800);
 }
+
+.submitButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.successText {
+  text-align: center;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.7;
+}
+
+.footer {
+  text-align: center;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.link {
+  color: var(--main-300);
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}

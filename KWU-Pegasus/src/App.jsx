@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import styles from './styles/App.module.css'
+import { AuthProvider } from './context/AuthContext'
 import Header from './layouts/Header'
 import Home from './pages/Home'
 import Login from './pages/Login'
@@ -13,10 +14,12 @@ import Board from './pages/Board'
 import BoardDetail from './pages/BoardDetail'
 import NoticeWrite from './pages/NoticeWrite'
 import BoardWrite from './pages/BoardWrite'
+import Admin from './pages/Admin'
 import NotFound from './pages/NotFound'
 
 function App() {
   return (
+    <AuthProvider>
     <BrowserRouter>
       <div className={styles.appRoot}>
         <Header />
@@ -34,11 +37,13 @@ function App() {
             <Route path="/board" element={<Board />} />
             <Route path="/board/write" element={<BoardWrite />} />
             <Route path="/board/:id" element={<BoardDetail />} />
+            <Route path="/admin" element={<Admin />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
       </div>
     </BrowserRouter>
+    </AuthProvider>
   )
 }
 
