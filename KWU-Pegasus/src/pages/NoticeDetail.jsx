@@ -1,12 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
+import { API_BASE } from '../lib/api'
 import styles from './NoticeDetail.module.css'
 
-const CATEGORY_LABEL = {
-  notice: '공지',
-  event: '행사',
-  game: '경기',
-}
+const CATEGORY_LABEL = { notice: '공지', event: '행사', game: '경기' }
 
 export default function NoticeDetail() {
   const { id } = useParams()
@@ -15,7 +12,7 @@ export default function NoticeDetail() {
   const [notFound, setNotFound] = useState(false)
 
   useEffect(() => {
-    fetch(`http://localhost:3001/api/notices/${id}`)
+    fetch(`${API_BASE}/api/notices/${id}`)
       .then(r => {
         if (r.status === 404) { setNotFound(true); return null }
         return r.json()

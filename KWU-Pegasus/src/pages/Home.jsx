@@ -1,15 +1,10 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { API_BASE } from '../lib/api'
+import { EVENT_TYPES } from '../lib/constants'
 import styles from './Home.module.css'
 
 const DAYS = ['일', '월', '화', '수', '목', '금', '토']
-
-const EVENT_TYPES = {
-  game:        { label: '경기',   color: '#6fa3f5' },
-  training:    { label: '훈련',   color: '#6dc87a' },
-  meeting:     { label: '모임',   color: '#c87adc' },
-  anniversary: { label: '기념일', color: '#f5a623' },
-}
 
 const CATEGORY_LABEL = { notice: '공지', event: '행사', game: '경기' }
 const CATEGORY_STYLE = { notice: styles.tagNotice, event: styles.tagEvent, game: styles.tagGame }
@@ -24,10 +19,10 @@ function MiniCalendar() {
   const [events, setEvents] = useState([])
 
   useEffect(() => {
-    fetch(`http://localhost:3001/api/holidays?year=${year}`)
+    fetch(`${API_BASE}/api/holidays?year=${year}`)
       .then(r => r.json())
       .then(data => setHolidays(data))
-    fetch(`http://localhost:3001/api/events?year=${year}`)
+    fetch(`${API_BASE}/api/events?year=${year}`)
       .then(r => r.json())
       .then(data => setEvents(data))
   }, [year])
@@ -104,7 +99,7 @@ export default function Home() {
   const [notices, setNotices] = useState([])
 
   useEffect(() => {
-    fetch('http://localhost:3001/api/notices')
+    fetch('${API_BASE}/api/notices')
       .then(r => r.json())
       .then(data => setNotices(data))
   }, [])

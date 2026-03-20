@@ -1,0 +1,59 @@
+.pagination {
+  display: flex;
+  gap: 4px;
+}
+
+.pageArrow {
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: none;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 1rem;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.pageArrow:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-100);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.pageArrow:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+.pageButton {
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: none;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.875rem;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.pageButton:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-100);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.pageButtonActive {
+  background: var(--main-500);
+  border-color: var(--main-500);
+  color: var(--text-100);
+  font-weight: 700;
+}
+
+.pageButtonActive:hover {
+  background: var(--main-400);
+  border-color: var(--main-400);
+}

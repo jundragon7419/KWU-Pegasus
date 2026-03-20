@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { API_BASE } from '../lib/api'
 import styles from './Write.module.css'
 
 const CATEGORIES = [
@@ -12,11 +13,16 @@ export default function NoticeWrite() {
   const navigate = useNavigate()
   const [category, setCategory] = useState('notice')
   const [title, setTitle] = useState('')
+  const [author, setAuthor] = useState('')
   const [content, setContent] = useState('')
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    // TODO: 서버 연동 후 실제 저장 로직 구현
+    await fetch(`${API_BASE}/api/notices`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ category, isPinned: false, title, author, content }),
+    })
     navigate('/notice')
   }
 
@@ -42,6 +48,19 @@ export default function NoticeWrite() {
               </label>
             ))}
           </div>
+        </div>
+
+        <div className={styles.field}>
+          <label className={styles.label} htmlFor="author">작성자</label>
+          <input
+            id="author"
+            type="text"
+            className={styles.input}
+            placeholder="이름을 입력하세요"
+            value={author}
+            onChange={e => setAuthor(e.target.value)}
+            required
+          />
         </div>
 
         <div className={styles.field}>

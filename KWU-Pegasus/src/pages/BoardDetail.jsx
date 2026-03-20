@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
+import { API_BASE } from '../lib/api'
 import styles from './BoardDetail.module.css'
 
 export default function BoardDetail() {
@@ -9,7 +10,7 @@ export default function BoardDetail() {
   const [notFound, setNotFound] = useState(false)
 
   useEffect(() => {
-    fetch(`http://localhost:3001/api/posts/${id}`)
+    fetch(`${API_BASE}/api/posts/${id}`)
       .then(r => {
         if (r.status === 404) { setNotFound(true); return null }
         return r.json()

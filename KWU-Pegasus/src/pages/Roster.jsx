@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { API_BASE } from '../lib/api'
 import styles from './Roster.module.css'
 
 const FILTERS = [
@@ -14,7 +15,7 @@ export default function Roster() {
   const [search, setSearch] = useState('')
 
   useEffect(() => {
-    fetch('http://localhost:3001/api/roster')
+    fetch(`${API_BASE}/api/roster`)
       .then(r => r.json())
       .then(data => setRoster(data))
   }, [])

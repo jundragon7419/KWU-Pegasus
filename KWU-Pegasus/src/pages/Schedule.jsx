@@ -1,16 +1,11 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
+import { API_BASE } from '../lib/api'
+import { EVENT_TYPES } from '../lib/constants'
 import styles from './Schedule.module.css'
 
 const DAYS = ['일', '월', '화', '수', '목', '금', '토']
 const MONTHS = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월']
 const MIN_YEAR = 2000
-
-const EVENT_TYPES = {
-  game:        { label: '경기',   color: '#6fa3f5' },
-  training:    { label: '훈련',   color: '#6dc87a' },
-  meeting:     { label: '모임',   color: '#c87adc' },
-  anniversary: { label: '기념일', color: '#f5a623' },
-}
 
 export default function Schedule() {
   const today = new Date()
@@ -23,13 +18,13 @@ export default function Schedule() {
   const [events, setEvents] = useState([])
 
   useEffect(() => {
-    fetch(`http://localhost:3001/api/holidays?year=${current.year}`)
+    fetch(`${API_BASE}/api/holidays?year=${current.year}`)
       .then(r => r.json())
       .then(data => setHolidays(data))
   }, [current.year])
 
   useEffect(() => {
-    fetch(`http://localhost:3001/api/events?year=${current.year}`)
+    fetch(`${API_BASE}/api/events?year=${current.year}`)
       .then(r => r.json())
       .then(data => setEvents(data))
   }, [current.year])

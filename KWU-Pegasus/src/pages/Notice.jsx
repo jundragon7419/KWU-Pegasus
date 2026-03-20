@@ -1,34 +1,26 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { API_BASE } from '../lib/api'
+import Pagination from '../components/Pagination'
 import styles from './Notice.module.css'
 
 const PAGE_SIZE = 10
 
-const CATEGORY_LABEL = {
-  notice: '공지',
-  event: '행사',
-  game: '경기',
-}
-
-const CATEGORY_STYLE = {
-  notice: styles.tagNotice,
-  event: styles.tagEvent,
-  game: styles.tagGame,
-}
+const CATEGORY_LABEL = { notice: '공지', event: '행사', game: '경기' }
+const CATEGORY_STYLE = { notice: styles.tagNotice, event: styles.tagEvent, game: styles.tagGame }
 
 export default function Notice() {
   const [notices, setNotices] = useState([])
   const [page, setPage] = useState(1)
 
   useEffect(() => {
-    fetch('http://localhost:3001/api/notices')
+    fetch(`${API_BASE}/api/notices`)
       .then(r => r.json())
       .then(data => setNotices(data))
   }, [])
 
   const pinned = notices.filter(n => n.isPinned)
   const normal = notices.filter(n => !n.isPinned)
-
   const totalPages = Math.max(1, Math.ceil(normal.length / PAGE_SIZE))
   const pagedNormal = normal.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
@@ -49,27 +41,7 @@ export default function Notice() {
       </div>
 
       <div className={styles.footer}>
-        <div className={styles.pagination}>
-          <button className={styles.pageArrow} onClick={() => setPage(p => Math.max(1, p - 5))} disabled={page === 1}>{'«'}</button>
-          <button className={styles.pageArrow} onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>{'‹'}</button>
-          {(() => {
-            const half = 2
-            let start = Math.max(1, page - half)
-            const end = Math.min(totalPages, start + 4)
-            start = Math.max(1, end - 4)
-            return Array.from({ length: end - start + 1 }, (_, i) => start + i).map(p => (
-              <button
-                key={p}
-                className={`${styles.pageButton} ${p === page ? styles.pageButtonActive : ''}`}
-                onClick={() => setPage(p)}
-              >
-                {p}
-              </button>
-            ))
-          })()}
-          <button className={styles.pageArrow} onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>{'›'}</button>
-          <button className={styles.pageArrow} onClick={() => setPage(p => Math.min(totalPages, p + 5))} disabled={page === totalPages}>{'»'}</button>
-        </div>
+        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
         <Link to="/notice/write" className={styles.writeButton}>글쓰기</Link>
       </div>
     </div>

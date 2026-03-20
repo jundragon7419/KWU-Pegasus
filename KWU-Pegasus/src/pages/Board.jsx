@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { API_BASE } from '../lib/api'
+import Pagination from '../components/Pagination'
 import styles from './Board.module.css'
 
 const PAGE_SIZE = 10
@@ -10,11 +12,11 @@ export default function Board() {
   const [page, setPage] = useState(1)
 
   useEffect(() => {
-    fetch('http://localhost:3001/api/posts')
+    fetch(`${API_BASE}/api/posts`)
       .then(r => r.json())
       .then(data => setPosts(data))
 
-    fetch('http://localhost:3001/api/notices')
+    fetch(`${API_BASE}/api/notices`)
       .then(r => r.json())
       .then(data => setPinnedNotices(data.filter(n => n.isPinned)))
   }, [])
@@ -59,27 +61,7 @@ export default function Board() {
       </div>
 
       <div className={styles.footer}>
-        <div className={styles.pagination}>
-          <button className={styles.pageArrow} onClick={() => setPage(p => Math.max(1, p - 5))} disabled={page === 1}>{'«'}</button>
-          <button className={styles.pageArrow} onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>{'‹'}</button>
-          {(() => {
-            const half = 2
-            let start = Math.max(1, page - half)
-            const end = Math.min(totalPages, start + 4)
-            start = Math.max(1, end - 4)
-            return Array.from({ length: end - start + 1 }, (_, i) => start + i).map(p => (
-              <button
-                key={p}
-                className={`${styles.pageButton} ${p === page ? styles.pageButtonActive : ''}`}
-                onClick={() => setPage(p)}
-              >
-                {p}
-              </button>
-            ))
-          })()}
-          <button className={styles.pageArrow} onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>{'›'}</button>
-          <button className={styles.pageArrow} onClick={() => setPage(p => Math.min(totalPages, p + 5))} disabled={page === totalPages}>{'»'}</button>
-        </div>
+        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
         <Link to="/board/write" className={styles.writeButton}>글쓰기</Link>
       </div>
     </div>
