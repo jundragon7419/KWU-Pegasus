@@ -45,7 +45,7 @@ function MiniCalendar() {
             <div
               key={i}
               className={`${styles.calendarCell} ${isToday ? styles.calendarToday : ''} ${isRed && d ? styles.sun : ''}`}
-              title={[...holidays, ...events.map(e => EVENT_TYPES[e.type].label + ' ' + e.title)].join(', ')}
+              title={[...holidays, ...events.map(e => EVENT_TYPES[e.type].label + ' ' + e.name)].join(', ')}
             >
               {d ?? ''}
               {d && (isHoliday || events.length > 0) && (

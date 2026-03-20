@@ -9,6 +9,9 @@ import Schedule from './pages/Schedule'
 import Roster from './pages/Roster'
 import Notice from './pages/Notice'
 import NoticeDetail from './pages/NoticeDetail'
+import Board from './pages/Board'
+import BoardDetail from './pages/BoardDetail'
+import NotFound from './pages/NotFound'
 
 function App() {
   return (
@@ -25,6 +28,9 @@ function App() {
             <Route path="/roster" element={<Roster />} />
             <Route path="/notice" element={<Notice />} />
             <Route path="/notice/:id" element={<NoticeDetail />} />
+            <Route path="/board" element={<Board />} />
+            <Route path="/board/:id" element={<BoardDetail />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
       </div>

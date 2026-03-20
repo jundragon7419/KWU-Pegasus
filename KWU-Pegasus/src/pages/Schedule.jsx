@@ -170,11 +170,11 @@ export default function Schedule() {
                     ))}
                     {events.map(ev => (
                       <span
-                        key={ev.id}
+                        key={ev.name + ev.day}
                         className={styles.eventChip}
                         style={{ background: EVENT_TYPES[ev.type].color + '2a', color: EVENT_TYPES[ev.type].color, borderColor: EVENT_TYPES[ev.type].color + '60' }}
                       >
-                        {ev.title}
+                        {ev.name}
                       </span>
                     ))}
                   </>
