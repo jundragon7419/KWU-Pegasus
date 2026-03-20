@@ -1,11 +1,18 @@
-import { useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { NOTICES } from '../data/notices'
-import { getHolidayMap } from '../data/holidays'
-import { getEventMap, EVENT_TYPES } from '../data/events'
 import styles from './Home.module.css'
 
 const DAYS = ['일', '월', '화', '수', '목', '금', '토']
+
+const EVENT_TYPES = {
+  game:        { label: '경기',   color: '#6fa3f5' },
+  training:    { label: '훈련',   color: '#6dc87a' },
+  meeting:     { label: '모임',   color: '#c87adc' },
+  anniversary: { label: '기념일', color: '#f5a623' },
+}
+
+const CATEGORY_LABEL = { notice: '공지', event: '행사', game: '경기' }
+const CATEGORY_STYLE = { notice: styles.tagNotice, event: styles.tagEvent, game: styles.tagGame }
 
 function MiniCalendar() {
   const navigate = useNavigate()
@@ -13,12 +20,41 @@ function MiniCalendar() {
   const year = today.getFullYear()
   const month = today.getMonth()
 
-  const holidayMap = useMemo(() => getHolidayMap(year), [year])
-  const eventMap = useMemo(() => getEventMap(year, month), [year, month])
+  const [holidays, setHolidays] = useState([])
+  const [events, setEvents] = useState([])
+
+  useEffect(() => {
+    fetch(`http://localhost:3001/api/holidays?year=${year}`)
+      .then(r => r.json())
+      .then(data => setHolidays(data))
+    fetch(`http://localhost:3001/api/events?year=${year}`)
+      .then(r => r.json())
+      .then(data => setEvents(data))
+  }, [year])
+
+  const holidayMap = useMemo(() => {
+    const map = new Map()
+    for (const h of holidays) {
+      const key = `${String(h.month).padStart(2, '0')}-${String(h.day).padStart(2, '0')}`
+      if (!map.has(key)) map.set(key, [])
+      map.get(key).push(h.name)
+    }
+    return map
+  }, [holidays])
+
+  const eventMap = useMemo(() => {
+    const map = new Map()
+    for (const e of events) {
+      if (e.month !== month + 1) continue
+      const day = String(e.day).padStart(2, '0')
+      if (!map.has(day)) map.set(day, [])
+      map.get(day).push(e)
+    }
+    return map
+  }, [events, month])
 
   const firstDay = new Date(year, month, 1).getDay()
   const daysInMonth = new Date(year, month + 1, 0).getDate()
-
   const cells = []
   for (let i = 0; i < firstDay; i++) cells.push(null)
   for (let d = 1; d <= daysInMonth; d++) cells.push(d)
@@ -36,22 +72,22 @@ function MiniCalendar() {
         {cells.map((d, i) => {
           const col = i % 7
           const key = d ? `${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}` : null
-          const holidays = key ? (holidayMap.get(key) ?? []) : []
-          const isHoliday = holidays.length > 0
+          const dayHolidays = key ? (holidayMap.get(key) ?? []) : []
+          const isHoliday = dayHolidays.length > 0
           const isToday = d === today.getDate()
           const isRed = col === 0 || isHoliday
-          const events = d ? (eventMap.get(String(d).padStart(2, '0')) ?? []) : []
+          const dayEvents = d ? (eventMap.get(String(d).padStart(2, '0')) ?? []) : []
           return (
             <div
               key={i}
               className={`${styles.calendarCell} ${isToday ? styles.calendarToday : ''} ${isRed && d ? styles.sun : ''}`}
-              title={[...holidays, ...events.map(e => EVENT_TYPES[e.type].label + ' ' + e.name)].join(', ')}
+              title={[...dayHolidays, ...dayEvents.map(e => EVENT_TYPES[e.type].label + ' ' + e.name)].join(', ')}
             >
               {d ?? ''}
-              {d && (isHoliday || events.length > 0) && (
+              {d && (isHoliday || dayEvents.length > 0) && (
                 <div className={styles.dotRow}>
                   {isHoliday && <span className={styles.dot} style={{ background: '#f07070' }} />}
-                  {events.map(ev => (
+                  {dayEvents.map(ev => (
                     <span key={ev.id} className={styles.dot} style={{ background: EVENT_TYPES[ev.type].color }} />
                   ))}
                 </div>
@@ -64,12 +100,17 @@ function MiniCalendar() {
   )
 }
 
-const CATEGORY_LABEL = { notice: '공지', event: '행사', game: '경기' }
-const CATEGORY_STYLE = { notice: styles.tagNotice, event: styles.tagEvent, game: styles.tagGame }
-
 export default function Home() {
-  const pinned = NOTICES.filter(n => n.isPinned)
-  const recent = NOTICES.filter(n => !n.isPinned).slice(0, 8 - pinned.length)
+  const [notices, setNotices] = useState([])
+
+  useEffect(() => {
+    fetch('http://localhost:3001/api/notices')
+      .then(r => r.json())
+      .then(data => setNotices(data))
+  }, [])
+
+  const pinned = notices.filter(n => n.isPinned)
+  const recent = notices.filter(n => !n.isPinned).slice(0, 8 - pinned.length)
 
   return (
     <section className={styles.home}>
@@ -78,7 +119,6 @@ export default function Home() {
       </div>
 
       <div className={styles.widgets}>
-        {/* 공지사항 */}
         <div className={styles.widget}>
           <div className={styles.widgetHeader}>
             <span className={styles.widgetTitle}>공지사항</span>
@@ -104,7 +144,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* 달력 */}
         <div className={styles.widget}>
           <div className={styles.widgetHeader}>
             <span className={styles.widgetTitle}>일정</span>

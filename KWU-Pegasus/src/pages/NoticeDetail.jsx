@@ -1,5 +1,5 @@
+import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { getNotice, NOTICES } from '../data/notices'
 import styles from './NoticeDetail.module.css'
 
 const CATEGORY_LABEL = {
@@ -11,9 +11,19 @@ const CATEGORY_LABEL = {
 export default function NoticeDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const notice = getNotice(id)
+  const [notice, setNotice] = useState(null)
+  const [notFound, setNotFound] = useState(false)
 
-  if (!notice) {
+  useEffect(() => {
+    fetch(`http://localhost:3001/api/notices/${id}`)
+      .then(r => {
+        if (r.status === 404) { setNotFound(true); return null }
+        return r.json()
+      })
+      .then(data => { if (data) setNotice(data) })
+  }, [id])
+
+  if (notFound) {
     return (
       <div className={styles.notFound}>
         <p>존재하지 않는 게시글입니다.</p>
@@ -22,9 +32,7 @@ export default function NoticeDetail() {
     )
   }
 
-  const currentIndex = NOTICES.findIndex(n => n.id === notice.id)
-  const prev = NOTICES[currentIndex + 1] ?? null
-  const next = NOTICES[currentIndex - 1] ?? null
+  if (!notice) return null
 
   return (
     <div className={styles.page}>
@@ -51,25 +59,6 @@ export default function NoticeDetail() {
           )}
         </div>
       </article>
-
-      <div className={styles.nav}>
-        {next ? (
-          <Link to={`/notice/${next.id}`} className={styles.navItem}>
-            <span className={styles.navLabel}>다음 글</span>
-            <span className={styles.navTitle}>{next.title}</span>
-          </Link>
-        ) : (
-          <div className={styles.navItem} />
-        )}
-        {prev ? (
-          <Link to={`/notice/${prev.id}`} className={`${styles.navItem} ${styles.navPrev}`}>
-            <span className={styles.navLabel}>이전 글</span>
-            <span className={styles.navTitle}>{prev.title}</span>
-          </Link>
-        ) : (
-          <div className={styles.navItem} />
-        )}
-      </div>
     </div>
   )
 }

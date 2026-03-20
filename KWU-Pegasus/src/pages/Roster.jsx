@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import { ROSTER } from '../data/roster'
+import { useState, useEffect } from 'react'
 import styles from './Roster.module.css'
 
 const FILTERS = [
@@ -10,10 +9,17 @@ const FILTERS = [
 ]
 
 export default function Roster() {
+  const [roster, setRoster] = useState([])
   const [filter, setFilter] = useState('all')
   const [search, setSearch] = useState('')
 
-  const filtered = ROSTER.filter(p => {
+  useEffect(() => {
+    fetch('http://localhost:3001/api/roster')
+      .then(r => r.json())
+      .then(data => setRoster(data))
+  }, [])
+
+  const filtered = roster.filter(p => {
     const matchRole = filter === 'all' || p.role === filter
     const matchSearch = search === '' ||
       p.name.includes(search) ||

@@ -1,18 +1,26 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { POSTS } from '../data/board'
-import { NOTICES } from '../data/notices'
 import styles from './Board.module.css'
 
 const PAGE_SIZE = 10
 
-const pinnedNotices = NOTICES.filter(n => n.isPinned)
-
 export default function Board() {
+  const [posts, setPosts] = useState([])
+  const [pinnedNotices, setPinnedNotices] = useState([])
   const [page, setPage] = useState(1)
 
-  const totalPages = Math.max(1, Math.ceil(POSTS.length / PAGE_SIZE))
-  const paged = POSTS.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  useEffect(() => {
+    fetch('http://localhost:3001/api/posts')
+      .then(r => r.json())
+      .then(data => setPosts(data))
+
+    fetch('http://localhost:3001/api/notices')
+      .then(r => r.json())
+      .then(data => setPinnedNotices(data.filter(n => n.isPinned)))
+  }, [])
+
+  const totalPages = Math.max(1, Math.ceil(posts.length / PAGE_SIZE))
+  const paged = posts.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
     <div className={styles.page}>
@@ -72,7 +80,6 @@ export default function Board() {
           <button className={styles.pageArrow} onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>{'›'}</button>
           <button className={styles.pageArrow} onClick={() => setPage(p => Math.min(totalPages, p + 5))} disabled={page === totalPages}>{'»'}</button>
         </div>
-        {/* TODO: 로그인 및 권한 확인 후 표시 */}
         <Link to="/board/write" className={styles.writeButton}>글쓰기</Link>
       </div>
     </div>

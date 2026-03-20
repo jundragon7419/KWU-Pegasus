@@ -1,13 +1,23 @@
+import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { getPost, POSTS } from '../data/board'
 import styles from './BoardDetail.module.css'
 
 export default function BoardDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const post = getPost(id)
+  const [post, setPost] = useState(null)
+  const [notFound, setNotFound] = useState(false)
 
-  if (!post) {
+  useEffect(() => {
+    fetch(`http://localhost:3001/api/posts/${id}`)
+      .then(r => {
+        if (r.status === 404) { setNotFound(true); return null }
+        return r.json()
+      })
+      .then(data => { if (data) setPost(data) })
+  }, [id])
+
+  if (notFound) {
     return (
       <div className={styles.notFound}>
         <p>존재하지 않는 게시글입니다.</p>
@@ -16,9 +26,7 @@ export default function BoardDetail() {
     )
   }
 
-  const currentIndex = POSTS.findIndex(p => p.id === post.id)
-  const prev = POSTS[currentIndex + 1] ?? null
-  const next = POSTS[currentIndex - 1] ?? null
+  if (!post) return null
 
   return (
     <div className={styles.page}>
@@ -44,25 +52,6 @@ export default function BoardDetail() {
           )}
         </div>
       </article>
-
-      <div className={styles.nav}>
-        {next ? (
-          <Link to={`/board/${next.id}`} className={styles.navItem}>
-            <span className={styles.navLabel}>다음 글</span>
-            <span className={styles.navTitle}>{next.title}</span>
-          </Link>
-        ) : (
-          <div className={styles.navItem} />
-        )}
-        {prev ? (
-          <Link to={`/board/${prev.id}`} className={`${styles.navItem} ${styles.navPrev}`}>
-            <span className={styles.navLabel}>이전 글</span>
-            <span className={styles.navTitle}>{prev.title}</span>
-          </Link>
-        ) : (
-          <div className={styles.navItem} />
-        )}
-      </div>
     </div>
   )
 }

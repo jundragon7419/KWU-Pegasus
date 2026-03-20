@@ -1,6 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { NOTICES } from '../data/notices'
 import styles from './Notice.module.css'
 
 const PAGE_SIZE = 10
@@ -18,10 +17,17 @@ const CATEGORY_STYLE = {
 }
 
 export default function Notice() {
+  const [notices, setNotices] = useState([])
   const [page, setPage] = useState(1)
 
-  const pinned = NOTICES.filter(n => n.isPinned)
-  const normal = NOTICES.filter(n => !n.isPinned)
+  useEffect(() => {
+    fetch('http://localhost:3001/api/notices')
+      .then(r => r.json())
+      .then(data => setNotices(data))
+  }, [])
+
+  const pinned = notices.filter(n => n.isPinned)
+  const normal = notices.filter(n => !n.isPinned)
 
   const totalPages = Math.max(1, Math.ceil(normal.length / PAGE_SIZE))
   const pagedNormal = normal.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
@@ -64,7 +70,6 @@ export default function Notice() {
           <button className={styles.pageArrow} onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>{'›'}</button>
           <button className={styles.pageArrow} onClick={() => setPage(p => Math.min(totalPages, p + 5))} disabled={page === totalPages}>{'»'}</button>
         </div>
-        {/* TODO: 로그인 및 권한 확인 후 표시 */}
         <Link to="/notice/write" className={styles.writeButton}>글쓰기</Link>
       </div>
     </div>

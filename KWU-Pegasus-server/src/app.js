@@ -11,16 +11,17 @@ app.use(cors({
 app.use(express.json())
 
 // ── 라우터 ────────────────────────────────────────
-// TODO: Phase 3에서 라우터 추가
-// const authRouter    = require('./routes/auth')
-// const noticesRouter = require('./routes/notices')
-// const postsRouter   = require('./routes/posts')
-// const rosterRouter  = require('./routes/roster')
+const rosterRouter   = require('./routes/roster')
+const postsRouter    = require('./routes/posts')
+const noticesRouter  = require('./routes/notices')
+const eventsRouter   = require('./routes/events')
+const holidaysRouter = require('./routes/holidays')
 
-// app.use('/api/auth',    authRouter)
-// app.use('/api/notices', noticesRouter)
-// app.use('/api/posts',   postsRouter)
-// app.use('/api/roster',  rosterRouter)
+app.use('/api/roster',   rosterRouter)
+app.use('/api/posts',    postsRouter)
+app.use('/api/notices',  noticesRouter)
+app.use('/api/events',   eventsRouter)
+app.use('/api/holidays', holidaysRouter)
 
 // ── 헬스체크 ──────────────────────────────────────
 app.get('/api/health', (req, res) => {

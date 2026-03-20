@@ -1,11 +1,16 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
-import { getHolidayMap } from '../data/holidays'
-import { getEventMap, EVENT_TYPES } from '../data/events'
 import styles from './Schedule.module.css'
 
 const DAYS = ['일', '월', '화', '수', '목', '금', '토']
 const MONTHS = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월']
 const MIN_YEAR = 2000
+
+const EVENT_TYPES = {
+  game:        { label: '경기',   color: '#6fa3f5' },
+  training:    { label: '훈련',   color: '#6dc87a' },
+  meeting:     { label: '모임',   color: '#c87adc' },
+  anniversary: { label: '기념일', color: '#f5a623' },
+}
 
 export default function Schedule() {
   const today = new Date()
@@ -14,8 +19,42 @@ export default function Schedule() {
   const [pickerYear, setPickerYear] = useState(current.year)
   const pickerRef = useRef(null)
 
-  const holidayMap = useMemo(() => getHolidayMap(current.year), [current.year])
-  const eventMap = useMemo(() => getEventMap(current.year, current.month), [current.year, current.month])
+  const [holidays, setHolidays] = useState([])
+  const [events, setEvents] = useState([])
+
+  useEffect(() => {
+    fetch(`http://localhost:3001/api/holidays?year=${current.year}`)
+      .then(r => r.json())
+      .then(data => setHolidays(data))
+  }, [current.year])
+
+  useEffect(() => {
+    fetch(`http://localhost:3001/api/events?year=${current.year}`)
+      .then(r => r.json())
+      .then(data => setEvents(data))
+  }, [current.year])
+
+  const holidayMap = useMemo(() => {
+    const map = new Map()
+    for (const h of holidays) {
+      if (h.year !== current.year && !h.isFixed) continue
+      const key = `${String(h.month).padStart(2, '0')}-${String(h.day).padStart(2, '0')}`
+      if (!map.has(key)) map.set(key, [])
+      map.get(key).push(h.name)
+    }
+    return map
+  }, [holidays, current.year])
+
+  const eventMap = useMemo(() => {
+    const map = new Map()
+    for (const e of events) {
+      if (e.month !== current.month + 1) continue
+      const day = String(e.day).padStart(2, '0')
+      if (!map.has(day)) map.set(day, [])
+      map.get(day).push(e)
+    }
+    return map
+  }, [events, current.month])
 
   function prevMonth() {
     setCurrent(({ year, month }) => {
@@ -150,9 +189,9 @@ export default function Schedule() {
 
           {cells.map((day, idx) => {
             const col = idx % 7
-            const holidays = day ? getHolidays(day) : []
-            const isHoliday = holidays.length > 0
-            const events = day ? (eventMap.get(String(day).padStart(2, '0')) ?? []) : []
+            const dayHolidays = day ? getHolidays(day) : []
+            const isHoliday = dayHolidays.length > 0
+            const dayEvents = day ? (eventMap.get(String(day).padStart(2, '0')) ?? []) : []
             return (
               <div
                 key={idx}
@@ -165,10 +204,10 @@ export default function Schedule() {
                 {day && (
                   <>
                     <span className={styles.dayNumber}>{day}</span>
-                    {holidays.map((name, i) => (
+                    {dayHolidays.map((name, i) => (
                       <span key={i} className={styles.holidayName}>{name}</span>
                     ))}
-                    {events.map(ev => (
+                    {dayEvents.map(ev => (
                       <span
                         key={ev.name + ev.day}
                         className={styles.eventChip}
