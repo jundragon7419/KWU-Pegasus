@@ -4,6 +4,14 @@
 
 ---
 
+## 🌐 프론트엔드 현황 (Vercel 배포)
+
+> 백엔드 연동 이전 프론트엔드 단독 버전입니다.
+
+**[https://kwu-pegasus-git-forvercel-jundragon7419s-projects.vercel.app](https://kwu-pegasus-git-forvercel-jundragon7419s-projects.vercel.app)**
+
+---
+
 ## 프로젝트 구조
 
 ```
