@@ -1,0 +1,162 @@
+.page {
+  width: 100%;
+  padding: 40px 0 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-100);
+  margin: 0;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── 필드 ── */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.3px;
+}
+
+.input,
+.textarea,
+.select {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  color: var(--text-100);
+  font-size: 0.95rem;
+  font-family: var(--font-sans);
+  padding: 10px 14px;
+  outline: none;
+  transition: border-color 0.15s ease, background 0.15s ease;
+  box-sizing: border-box;
+}
+
+.input:focus,
+.textarea:focus,
+.select:focus {
+  border-color: var(--main-400);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.input::placeholder,
+.textarea::placeholder {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.textarea {
+  min-height: 320px;
+  resize: vertical;
+  line-height: 1.7;
+}
+
+.select {
+  appearance: none;
+  cursor: pointer;
+}
+
+.select option {
+  background: #2a1f14;
+  color: var(--text-100);
+}
+
+/* ── 카테고리 라디오 ── */
+.categoryRow {
+  display: flex;
+  gap: 10px;
+}
+
+.radioLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.5);
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.radioLabel:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  color: var(--text-100);
+}
+
+.radioInput {
+  display: none;
+}
+
+.radioInput:checked + .radioLabel {
+  border-color: var(--main-400);
+  color: var(--main-300);
+  background: rgba(166, 146, 109, 0.1);
+}
+
+/* ── 하단 버튼 ── */
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.cancelButton {
+  padding: 9px 22px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: none;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.9rem;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.cancelButton:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  color: var(--text-100);
+}
+
+.submitButton {
+  padding: 9px 28px;
+  border-radius: 8px;
+  border: none;
+  background: var(--main-500);
+  color: var(--text-100);
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.submitButton:hover {
+  background: var(--main-300);
+  color: var(--main-800);
+}
