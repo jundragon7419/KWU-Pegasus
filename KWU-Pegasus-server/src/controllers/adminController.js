@@ -45,6 +45,46 @@ exports.getUsers = async (req, res, next) => {
   }
 }
 
+// 회원 명단 조회 (staff 이상)
+exports.getMembers = async (req, res, next) => {
+  try {
+    const [rows] = await pool.query('SELECT student_id, name FROM members ORDER BY name ASC')
+    res.json(rows)
+  } catch (err) {
+    next(err)
+  }
+}
+
+// 회원 명단 추가 (staff 이상)
+exports.addMember = async (req, res, next) => {
+  try {
+    const { student_id, name } = req.body
+    if (!student_id || !/^\d{10}$/.test(student_id)) {
+      return res.status(400).json({ message: '학번은 10자리 숫자여야 합니다.' })
+    }
+    if (!name) {
+      return res.status(400).json({ message: '이름을 입력해주세요.' })
+    }
+    await pool.query('INSERT INTO members (student_id, name) VALUES (?, ?)', [student_id, name])
+    res.status(201).json({ message: '회원이 추가되었습니다.' })
+  } catch (err) {
+    if (err.code === 'ER_DUP_ENTRY') {
+      return res.status(409).json({ message: '이미 등록된 학번입니다.' })
+    }
+    next(err)
+  }
+}
+
+// 회원 명단 삭제 (staff 이상)
+exports.deleteMember = async (req, res, next) => {
+  try {
+    await pool.query('DELETE FROM members WHERE student_id = ?', [req.params.student_id])
+    res.json({ message: '삭제되었습니다.' })
+  } catch (err) {
+    next(err)
+  }
+}
+
 // 활성 로스터 연도 변경 (staff 이상)
 exports.setRosterYear = async (req, res, next) => {
   try {

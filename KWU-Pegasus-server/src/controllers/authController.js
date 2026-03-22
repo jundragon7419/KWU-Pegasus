@@ -5,7 +5,7 @@ const pool = require('../db')
 // 회원가입 신청
 exports.signup = async (req, res, next) => {
   try {
-    const { username, password, email, ob_yb } = req.body
+    const { username, name, password, email, ob_yb, student_id } = req.body
 
     const [existing] = await pool.query(
       'SELECT id FROM users WHERE username = ? OR email = ?',
@@ -15,10 +15,24 @@ exports.signup = async (req, res, next) => {
       return res.status(409).json({ message: '이미 사용 중인 아이디 또는 이메일입니다.' })
     }
 
+    let role = 'user'
+
+    if (student_id) {
+      // 학번+이름을 members 테이블에서 검증
+      const [members] = await pool.query(
+        'SELECT student_id FROM members WHERE student_id = ? AND name = ?',
+        [student_id, name]
+      )
+      if (members.length === 0) {
+        return res.status(400).json({ message: '학번 또는 이름이 회원 명단과 일치하지 않습니다.' })
+      }
+      role = 'player'
+    }
+
     const hashed = await bcrypt.hash(password, 10)
     await pool.query(
-      'INSERT INTO users (username, password, email, ob_yb) VALUES (?, ?, ?, ?)',
-      [username, hashed, email, ob_yb]
+      'INSERT INTO users (username, name, student_id, password, email, ob_yb, role) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [username, name || null, student_id || null, hashed, email, ob_yb, role]
     )
 
     res.status(201).json({ message: '회원가입 신청이 완료됐습니다. 관리자 승인 후 로그인할 수 있습니다.' })

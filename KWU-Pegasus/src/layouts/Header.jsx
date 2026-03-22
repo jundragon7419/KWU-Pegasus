@@ -2,6 +2,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import styles from './Header.module.css'
 
+const ROLE_LABEL = { user: '일반', player: '선수', manager: '매니저', staff: 'STAFF', root: 'ROOT' }
+
 export default function Header() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
@@ -34,6 +36,7 @@ export default function Header() {
       <div className={styles.right}>
         {user ? (
           <>
+            <span className={styles.roleBadge}>{ROLE_LABEL[user.role] ?? user.role}</span>
             <span className={styles.username}>{user.username}</span>
             <button className={styles.logoutButton} onClick={handleLogout}>로그아웃</button>
           </>

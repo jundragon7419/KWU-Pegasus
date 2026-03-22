@@ -4,7 +4,7 @@ import { API_BASE } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import styles from './Admin.module.css'
 
-const ROLE_LABEL = { user: '일반', manager: '매니저', staff: 'STAFF', root: 'ROOT' }
+const ROLE_LABEL = { user: '일반', player: '선수', manager: '매니저', staff: 'STAFF', root: 'ROOT' }
 const STAFF_TYPE_LABEL = { president: '회장', coach: '감독' }
 
 export default function Admin() {
@@ -43,11 +43,18 @@ export default function Admin() {
         >
           로스터 연도
         </button>
+        <button
+          className={`${styles.tab} ${tab === 'members' ? styles.tabActive : ''}`}
+          onClick={() => setTab('members')}
+        >
+          회원 명단
+        </button>
       </div>
 
       {tab === 'pending' && <PendingTab token={token} />}
       {tab === 'users'   && <UsersTab token={token} currentUser={user} />}
       {tab === 'roster'  && <RosterYearTab token={token} />}
+      {tab === 'members' && <MembersTab token={token} />}
     </div>
   )
 }
@@ -176,6 +183,104 @@ function UsersTab({ token, currentUser }) {
   )
 }
 
+/* ── 회원 명단 탭 ── */
+function MembersTab({ token }) {
+  const [list, setList] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [studentId, setStudentId] = useState('')
+  const [name, setName] = useState('')
+  const [msg, setMsg] = useState('')
+
+  const load = useCallback(() => {
+    setLoading(true)
+    fetch(`${API_BASE}/api/admin/members`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.json())
+      .then(data => { setList(data); setLoading(false) })
+  }, [token])
+
+  useEffect(() => { load() }, [load])
+
+  async function handleAdd(e) {
+    e.preventDefault()
+    setMsg('')
+    const res = await fetch(`${API_BASE}/api/admin/members`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ student_id: studentId, name }),
+    })
+    const data = await res.json()
+    setMsg(data.message)
+    if (res.ok) { setStudentId(''); setName(''); load() }
+  }
+
+  async function handleDelete(id) {
+    if (!confirm('삭제하시겠습니까?')) return
+    await fetch(`${API_BASE}/api/admin/members/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    load()
+  }
+
+  return (
+    <div className={styles.membersWrap}>
+      <form className={styles.membersForm} onSubmit={handleAdd}>
+        <input
+          className={styles.memberInput}
+          type="text"
+          inputMode="numeric"
+          maxLength={10}
+          placeholder="학번 (10자리)"
+          value={studentId}
+          onChange={e => setStudentId(e.target.value.replace(/\D/g, ''))}
+          required
+        />
+        <input
+          className={styles.memberInput}
+          type="text"
+          placeholder="이름"
+          value={name}
+          onChange={e => setName(e.target.value)}
+          required
+        />
+        <button className={styles.saveBtn} type="submit">추가</button>
+      </form>
+      {msg && <p className={styles.rosterMsg}>{msg}</p>}
+
+      {loading ? (
+        <p className={styles.empty}>불러오는 중...</p>
+      ) : list.length === 0 ? (
+        <p className={styles.empty}>등록된 회원이 없습니다.</p>
+      ) : (
+        <div className={styles.tableWrap}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>학번</th>
+                <th>이름</th>
+                <th>삭제</th>
+              </tr>
+            </thead>
+            <tbody>
+              {list.map(m => (
+                <tr key={m.student_id}>
+                  <td>{m.student_id}</td>
+                  <td>{m.name}</td>
+                  <td>
+                    <button className={styles.rejectBtn} onClick={() => handleDelete(m.student_id)}>삭제</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  )
+}
+
 /* ── 로스터 연도 탭 ── */
 function RosterYearTab({ token }) {
   const [activeYear, setActiveYear] = useState(null)
@@ -253,8 +358,8 @@ function UserRow({ u, currentUser, onRoleChange }) {
 
   const roleOptions =
     currentUser.role === 'root'
-      ? ['user', 'manager', 'staff']
-      : ['user', 'manager']
+      ? ['user', 'player', 'manager', 'staff']
+      : ['user', 'player', 'manager']
 
   function handleSave() {
     onRoleChange(u.id, role, staffType)
