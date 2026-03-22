@@ -151,9 +151,32 @@
   font-weight: 700;
 }
 
-.status_active  { background: rgba(100, 200, 120, 0.15); color: #6dc87a; }
-.status_pending { background: rgba(245, 166, 35, 0.15);  color: #f5a623; }
-.status_rejected{ background: rgba(224, 92, 92, 0.12);   color: #e05c5c; }
+.status_active   { background: rgba(100, 200, 120, 0.15); color: #6dc87a; }
+.status_pending  { background: rgba(245, 166, 35, 0.15);  color: #f5a623; }
+.status_rejected { background: rgba(224, 92, 92, 0.12);   color: #e05c5c; }
+.status_none     { background: rgba(255, 255, 255, 0.06); color: rgba(255,255,255,0.4); }
+.status_approved { background: rgba(100, 200, 120, 0.15); color: #6dc87a; }
+
+.role_player { background: rgba(111, 163, 245, 0.15); color: #6fa3f5; }
+
+.numberInput {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 4px 8px;
+  color: var(--text-100);
+  font-size: 0.82rem;
+  font-family: var(--font-sans);
+  outline: none;
+  width: 70px;
+}
+.numberInput:focus { border-color: var(--main-300); }
+
+.rowMsg {
+  font-size: 0.78rem;
+  color: #e05c5c;
+  margin-top: 4px;
+}
 
 /* ── 권한 변경 폼 ── */
 .roleForm {
@@ -260,6 +283,19 @@
 .rosterMsg {
   font-size: 0.85rem;
   color: var(--main-300);
+}
+
+/* ── 로스터 관리 탭 ── */
+.rosterMgmtWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.yearPicker {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 /* ── 회원 명단 탭 ── */

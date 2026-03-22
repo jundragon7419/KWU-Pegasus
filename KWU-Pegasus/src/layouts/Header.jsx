@@ -36,7 +36,7 @@ export default function Header() {
         {user ? (
           <>
             <span className={styles.roleBadge}>{ROLE_LABEL[user.role] ?? user.role}</span>
-            <span className={styles.username}>{user.username}</span>
+            <Link to="/mypage" className={styles.username}>{user.username}</Link>
             <button className={styles.logoutButton} onClick={handleLogout}>로그아웃</button>
           </>
         ) : (

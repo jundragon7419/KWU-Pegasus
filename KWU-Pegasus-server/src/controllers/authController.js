@@ -2,40 +2,29 @@ const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const pool = require('../db')
 
-// 회원가입 신청
+// 회원가입 — 즉시 활성화 (아이디 + 비밀번호 + 이메일만)
 exports.signup = async (req, res, next) => {
   try {
-    const { username, name, password, email, ob_yb, student_id } = req.body
+    const { username, password, email } = req.body
+    if (!username || !password || !email) {
+      return res.status(400).json({ message: '아이디, 비밀번호, 이메일을 모두 입력해주세요.' })
+    }
 
     const [existing] = await pool.query(
-      'SELECT 1 FROM users WHERE username = ? OR email = ? OR (student_id IS NOT NULL AND student_id = ?) LIMIT 1',
-      [username, email, student_id || null]
+      'SELECT 1 FROM users WHERE username = ? OR email = ? LIMIT 1',
+      [username, email]
     )
     if (existing.length > 0) {
       return res.status(409).json({ message: '이미 사용 중인 아이디 또는 이메일입니다.' })
     }
 
-    let role = 'user'
-
-    if (student_id) {
-      // 학번+이름을 members 테이블에서 검증
-      const [members] = await pool.query(
-        'SELECT student_id FROM members WHERE student_id = ? AND name = ?',
-        [student_id, name]
-      )
-      if (members.length === 0) {
-        return res.status(400).json({ message: '학번 또는 이름이 회원 명단과 일치하지 않습니다.' })
-      }
-      role = 'player'
-    }
-
     const hashed = await bcrypt.hash(password, 10)
     await pool.query(
-      'INSERT INTO users (username, name, student_id, password, email, ob_yb, role) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [username, name || null, student_id || null, hashed, email, ob_yb, role]
+      'INSERT INTO users (username, password, email) VALUES (?, ?, ?)',
+      [username, hashed, email]
     )
 
-    res.status(201).json({ message: '회원가입 신청이 완료됐습니다. 관리자 승인 후 로그인할 수 있습니다.' })
+    res.status(201).json({ message: '회원가입이 완료됐습니다. 바로 로그인할 수 있습니다.' })
   } catch (err) {
     next(err)
   }
@@ -47,14 +36,12 @@ exports.login = async (req, res, next) => {
     const { username, password } = req.body
 
     const [rows] = await pool.query(
-      'SELECT id, username, password, role, staff_type, ob_yb, status FROM users WHERE username = ?',
+      'SELECT id, username, password, role, staff_type, ob_yb, membership_status FROM users WHERE username = ?',
       [username]
     )
     const user = rows[0]
 
     if (!user) return res.status(401).json({ message: '아이디 또는 비밀번호가 올바르지 않습니다.' })
-    if (user.status === 'pending') return res.status(403).json({ message: '관리자 승인 대기 중입니다.' })
-    if (user.status === 'rejected') return res.status(403).json({ message: '가입이 거부됐습니다.' })
 
     const match = await bcrypt.compare(password, user.password)
     if (!match) return res.status(401).json({ message: '아이디 또는 비밀번호가 올바르지 않습니다.' })
@@ -65,7 +52,17 @@ exports.login = async (req, res, next) => {
       { expiresIn: '7d' }
     )
 
-    res.json({ token, user: { id: user.id, username: user.username, role: user.role, staff_type: user.staff_type, ob_yb: user.ob_yb } })
+    res.json({
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        role: user.role,
+        staff_type: user.staff_type,
+        ob_yb: user.ob_yb,
+        membership_status: user.membership_status,
+      },
+    })
   } catch (err) {
     next(err)
   }
@@ -75,7 +72,7 @@ exports.login = async (req, res, next) => {
 exports.me = async (req, res, next) => {
   try {
     const [rows] = await pool.query(
-      'SELECT id, username, email, ob_yb, role, staff_type, status, created_at FROM users WHERE id = ?',
+      'SELECT id, username, email, name, student_id, ob_yb, role, staff_type, membership_status, created_at FROM users WHERE id = ?',
       [req.user.id]
     )
     if (rows.length === 0) return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' })

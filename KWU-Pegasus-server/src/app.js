@@ -18,6 +18,7 @@ const eventsRouter   = require('./routes/events')
 const holidaysRouter = require('./routes/holidays')
 const authRouter     = require('./routes/auth')
 const adminRouter    = require('./routes/admin')
+const mypageRouter   = require('./routes/mypage')
 
 app.use('/api/roster',   rosterRouter)
 app.use('/api/posts',    postsRouter)
@@ -26,6 +27,7 @@ app.use('/api/events',   eventsRouter)
 app.use('/api/holidays', holidaysRouter)
 app.use('/api/auth',     authRouter)
 app.use('/api/admin',    adminRouter)
+app.use('/api/mypage',   mypageRouter)
 
 // ── 헬스체크 ──────────────────────────────────────
 app.get('/api/health', (req, res) => {

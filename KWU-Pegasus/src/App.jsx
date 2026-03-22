@@ -15,6 +15,7 @@ import BoardDetail from './pages/board/BoardDetail'
 import NoticeWrite from './pages/notice/NoticeWrite'
 import BoardWrite from './pages/board/BoardWrite'
 import Admin from './pages/Admin'
+import MyPage from './pages/MyPage'
 import NotFound from './pages/NotFound'
 
 function App() {
@@ -37,6 +38,7 @@ function App() {
             <Route path="/board" element={<Board />} />
             <Route path="/board/write" element={<BoardWrite />} />
             <Route path="/board/:id" element={<BoardDetail />} />
+            <Route path="/mypage" element={<MyPage />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

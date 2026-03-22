@@ -5,9 +5,13 @@ import styles from './Roster.module.css'
 const FILTERS = [
   { key: 'all',     label: '전체' },
   { key: 'player',  label: '선수' },
-  { key: 'staff',   label: '감독 / 회장' },
+  { key: 'staff',   label: '감독 / 회장' },  // coach + president 통합 필터
   { key: 'retired', label: '영구결번' },
 ]
+
+const ROSTER_ROLE_LABEL = {
+  player: '선수', coach: '감독', president: '회장', retired: '영구결번',
+}
 
 export default function Roster() {
   const [roster, setRoster] = useState([])
@@ -36,7 +40,9 @@ export default function Roster() {
   }, [selectedYear])
 
   const filtered = useMemo(() => roster.filter(p => {
-    const matchRole = filter === 'all' || p.role === filter
+    const matchRole =
+      filter === 'all' ||
+      (filter === 'staff' ? (p.role === 'coach' || p.role === 'president') : p.role === filter)
     const matchSearch = search === '' ||
       p.name.includes(search) ||
       String(p.number).includes(search)
@@ -103,15 +109,12 @@ export default function Roster() {
           {filtered.map(p => (
             <div
               key={p.number}
-              className={`${styles.card} ${styles[`card_${p.role}`]}`}
+              className={`${styles.card} ${styles[p.role === 'coach' || p.role === 'president' ? 'card_staff' : `card_${p.role}`]}`}
             >
               <span className={styles.number}>{p.number}</span>
               <span className={styles.name}>{p.name}</span>
-              {p.role === 'retired' && (
-                <span className={styles.retiredBadge}>영구결번</span>
-              )}
-              {p.role === 'staff' && (
-                <span className={styles.staffBadge}>{p.title}</span>
+              {(p.role === 'coach' || p.role === 'president' || p.role === 'retired') && (
+                <span className={styles.staffBadge}>{ROSTER_ROLE_LABEL[p.role]}</span>
               )}
             </div>
           ))}

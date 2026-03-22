@@ -5,13 +5,9 @@ import styles from './Signup.module.css'
 
 export default function Signup() {
   const [username, setUsername] = useState('')
-  const [name, setName] = useState('')
   const [password, setPassword] = useState('')
   const [passwordConfirm, setPasswordConfirm] = useState('')
   const [email, setEmail] = useState('')
-  const [obYb, setObYb] = useState('')
-  const [isPlayer, setIsPlayer] = useState(false)
-  const [studentId, setStudentId] = useState('')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -24,24 +20,13 @@ export default function Signup() {
       setError('비밀번호가 일치하지 않습니다.')
       return
     }
-    if (!obYb) {
-      setError('OB/YB를 선택해주세요.')
-      return
-    }
-    if (isPlayer && !/^\d{10}$/.test(studentId)) {
-      setError('학번은 10자리 숫자여야 합니다.')
-      return
-    }
 
     setLoading(true)
     try {
-      const body = { username, name, password, email, ob_yb: obYb }
-      if (isPlayer) body.student_id = studentId
-
       const res = await fetch(`${API_BASE}/api/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ username, password, email }),
       })
       const data = await res.json()
 
@@ -62,10 +47,10 @@ export default function Signup() {
     return (
       <div className={styles.page}>
         <div className={styles.card}>
-          <h1 className={styles.title}>회원가입 신청 완료</h1>
+          <h1 className={styles.title}>회원가입 완료</h1>
           <p className={styles.successText}>
-            회원가입 신청이 완료됐습니다.<br />
-            관리자 승인 후 로그인이 가능합니다.
+            회원가입이 완료됐습니다.<br />
+            바로 로그인할 수 있습니다.
           </p>
           <Link to="/login" className={styles.submitButton} style={{ textAlign: 'center', textDecoration: 'none', display: 'block', marginTop: 0 }}>
             로그인 페이지로
@@ -91,19 +76,6 @@ export default function Signup() {
               value={username}
               onChange={e => setUsername(e.target.value)}
               autoComplete="username"
-              required
-            />
-          </div>
-
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="name">이름 (실명)</label>
-            <input
-              id="name"
-              className={styles.input}
-              type="text"
-              placeholder="실명을 입력하세요"
-              value={name}
-              onChange={e => setName(e.target.value)}
               required
             />
           </div>
@@ -153,63 +125,10 @@ export default function Signup() {
             )}
           </div>
 
-          <div className={styles.field}>
-            <span className={styles.label}>구분</span>
-            <div className={styles.radioGroup}>
-              <label className={`${styles.radioLabel} ${obYb === 'ob' ? styles.radioSelected : ''}`}>
-                <input
-                  className={styles.radioInput}
-                  type="radio"
-                  name="obYb"
-                  value="ob"
-                  checked={obYb === 'ob'}
-                  onChange={e => setObYb(e.target.value)}
-                />
-                OB
-              </label>
-              <label className={`${styles.radioLabel} ${obYb === 'yb' ? styles.radioSelected : ''}`}>
-                <input
-                  className={styles.radioInput}
-                  type="radio"
-                  name="obYb"
-                  value="yb"
-                  checked={obYb === 'yb'}
-                  onChange={e => setObYb(e.target.value)}
-                />
-                YB
-              </label>
-            </div>
-          </div>
-
-          <div className={styles.field}>
-            <label className={`${styles.checkLabel}`}>
-              <input
-                type="checkbox"
-                className={styles.checkInput}
-                checked={isPlayer}
-                onChange={e => { setIsPlayer(e.target.checked); setStudentId('') }}
-              />
-              선수 / 스태프로 가입
-            </label>
-            {isPlayer && (
-              <input
-                className={styles.input}
-                style={{ marginTop: 8 }}
-                type="text"
-                inputMode="numeric"
-                maxLength={10}
-                placeholder="학번 10자리를 입력하세요"
-                value={studentId}
-                onChange={e => setStudentId(e.target.value.replace(/\D/g, ''))}
-                required
-              />
-            )}
-          </div>
-
           {error && <p className={styles.errorText}>{error}</p>}
 
           <button className={styles.submitButton} type="submit" disabled={loading}>
-            {loading ? '신청 중...' : '회원가입'}
+            {loading ? '처리 중...' : '회원가입'}
           </button>
         </form>
 
