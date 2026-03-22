@@ -221,3 +221,83 @@ user    일반 회원. ob(졸업생) / yb(재학생) 구분.
 ```
 Authorization: Bearer <token>
 ```
+
+---
+
+## DB 구조
+
+```mermaid
+erDiagram
+    members {
+        CHAR10  student_id  PK
+        VARCHAR name
+    }
+
+    users {
+        INT     id          PK
+        VARCHAR username    UK
+        VARCHAR name
+        CHAR10  student_id  UK
+        VARCHAR password
+        VARCHAR email       UK
+        ENUM    ob_yb
+        ENUM    role
+        ENUM    staff_type
+        ENUM    status
+        DATETIME created_at
+    }
+
+    roster {
+        INT     year    PK
+        INT     number  PK
+        VARCHAR name
+        ENUM    role
+        VARCHAR title
+    }
+
+    settings {
+        VARCHAR key     PK
+        VARCHAR value
+    }
+
+    events {
+        INT     id      PK
+        INT     year
+        INT     month
+        INT     day
+        ENUM    type
+        VARCHAR name
+    }
+
+    holidays {
+        INT     id       PK
+        INT     year
+        INT     month
+        INT     day
+        VARCHAR type
+        VARCHAR name
+        TINYINT is_fixed
+    }
+
+    posts {
+        INT     id      PK
+        VARCHAR title
+        VARCHAR author
+        DATE    date
+        INT     views
+        TEXT    content
+    }
+
+    notices {
+        INT     id        PK
+        ENUM    category
+        TINYINT is_pinned
+        VARCHAR title
+        VARCHAR author
+        DATE    date
+        INT     views
+        TEXT    content
+    }
+
+    members ||--o{ users : "학번 인증"
+```
