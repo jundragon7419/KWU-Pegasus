@@ -99,7 +99,7 @@ export default function Home() {
   const [notices, setNotices] = useState([])
 
   useEffect(() => {
-    fetch('${API_BASE}/api/notices')
+    fetch(`${API_BASE}/api/notices`)
       .then(r => r.json())
       .then(data => setNotices(data))
   }, [])

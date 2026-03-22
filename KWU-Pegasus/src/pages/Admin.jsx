@@ -37,10 +37,17 @@ export default function Admin() {
         >
           회원 관리
         </button>
+        <button
+          className={`${styles.tab} ${tab === 'roster' ? styles.tabActive : ''}`}
+          onClick={() => setTab('roster')}
+        >
+          로스터 연도
+        </button>
       </div>
 
       {tab === 'pending' && <PendingTab token={token} />}
       {tab === 'users'   && <UsersTab token={token} currentUser={user} />}
+      {tab === 'roster'  && <RosterYearTab token={token} />}
     </div>
   )
 }
@@ -165,6 +172,76 @@ function UsersTab({ token, currentUser }) {
           ))}
         </tbody>
       </table>
+    </div>
+  )
+}
+
+/* ── 로스터 연도 탭 ── */
+function RosterYearTab({ token }) {
+  const [activeYear, setActiveYear] = useState(null)
+  const [years, setYears] = useState([])
+  const [input, setInput] = useState('')
+  const [msg, setMsg] = useState('')
+
+  const load = useCallback(() => {
+    Promise.all([
+      fetch(`${API_BASE}/api/roster/active-year`).then(r => r.json()),
+      fetch(`${API_BASE}/api/roster/years`).then(r => r.json()),
+    ]).then(([activeData, yearsData]) => {
+      setActiveYear(activeData.year)
+      setYears(yearsData)
+    })
+  }, [])
+
+  useEffect(() => { load() }, [load])
+
+  async function handleSetYear(year) {
+    const res = await fetch(`${API_BASE}/api/admin/roster-year`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ year }),
+    })
+    const data = await res.json()
+    setMsg(data.message)
+    load()
+  }
+
+  return (
+    <div className={styles.rosterYearWrap}>
+      <p className={styles.rosterYearDesc}>
+        현재 활성 로스터 연도: <strong>{activeYear}</strong>
+      </p>
+
+      <div className={styles.rosterYearList}>
+        {years.map(y => (
+          <button
+            key={y}
+            className={`${styles.yearSelectBtn} ${y === activeYear ? styles.yearSelectActive : ''}`}
+            onClick={() => handleSetYear(y)}
+          >
+            {y}
+            {y === activeYear && <span className={styles.activeMark}> ✓ 활성</span>}
+          </button>
+        ))}
+      </div>
+
+      <div className={styles.rosterYearForm}>
+        <input
+          className={styles.yearInput}
+          type="number"
+          placeholder="새 연도 입력 (예: 2027)"
+          value={input}
+          onChange={e => setInput(e.target.value)}
+        />
+        <button
+          className={styles.saveBtn}
+          onClick={() => { if (input) handleSetYear(parseInt(input)) }}
+        >
+          활성 연도 변경
+        </button>
+      </div>
+
+      {msg && <p className={styles.rosterMsg}>{msg}</p>}
     </div>
   )
 }

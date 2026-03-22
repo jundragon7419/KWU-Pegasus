@@ -13,12 +13,27 @@ export default function Roster() {
   const [roster, setRoster] = useState([])
   const [filter, setFilter] = useState('all')
   const [search, setSearch] = useState('')
+  const [activeYear, setActiveYear] = useState(null)
+  const [years, setYears] = useState([])
+  const [selectedYear, setSelectedYear] = useState(null)
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/roster`)
+    Promise.all([
+      fetch(`${API_BASE}/api/roster/active-year`).then(r => r.json()),
+      fetch(`${API_BASE}/api/roster/years`).then(r => r.json()),
+    ]).then(([activeData, yearsData]) => {
+      setActiveYear(activeData.year)
+      setYears(yearsData)
+      setSelectedYear(activeData.year)
+    })
+  }, [])
+
+  useEffect(() => {
+    if (!selectedYear) return
+    fetch(`${API_BASE}/api/roster?year=${selectedYear}`)
       .then(r => r.json())
       .then(data => setRoster(data))
-  }, [])
+  }, [selectedYear])
 
   const filtered = roster.filter(p => {
     const matchRole = filter === 'all' || p.role === filter
@@ -31,8 +46,22 @@ export default function Roster() {
   return (
     <div className={styles.page}>
       <div className={styles.pageHeader}>
-        <p className={styles.season}>2026 KWU PEGASUS</p>
+        <p className={styles.season}>{selectedYear} KWU PEGASUS</p>
         <h1 className={styles.title}>선수단 명단</h1>
+
+        {years.length > 1 && (
+          <div className={styles.yearRow}>
+            {years.map(y => (
+              <button
+                key={y}
+                className={`${styles.yearBtn} ${selectedYear === y ? styles.yearActive : ''}`}
+                onClick={() => setSelectedYear(y)}
+              >
+                {y}
+              </button>
+            ))}
+          </div>
+        )}
 
         <div className={styles.controls}>
           <div className={styles.filterRow}>

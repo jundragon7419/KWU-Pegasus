@@ -45,6 +45,23 @@ exports.getUsers = async (req, res, next) => {
   }
 }
 
+// 활성 로스터 연도 변경 (staff 이상)
+exports.setRosterYear = async (req, res, next) => {
+  try {
+    const { year } = req.body
+    if (!year || isNaN(parseInt(year))) {
+      return res.status(400).json({ message: '유효한 연도를 입력해주세요.' })
+    }
+    await pool.query(
+      "INSERT INTO settings (`key`, `value`) VALUES ('active_roster_year', ?) ON DUPLICATE KEY UPDATE `value` = ?",
+      [String(year), String(year)]
+    )
+    res.json({ message: '활성 로스터 연도 변경 완료', year: parseInt(year) })
+  } catch (err) {
+    next(err)
+  }
+}
+
 // 권한 변경
 // staff 지정 → root만 가능
 // manager 지정 → staff 이상 가능
