@@ -8,8 +8,8 @@ CREATE DATABASE IF NOT EXISTS kwu_pegasus
 USE kwu_pegasus;
 
 -- ── 유저 ────────────────────────────────────────────────────────
--- role:              user | player | manager | staff | root
--- staff_type:        president(회장) | coach(감독) — staff일 때만 사용
+-- role:              normal | manager | root
+-- manager_type:      president(회장) | coach(감독) | manager(매니저) — manager일 때만 사용
 -- membership_status: none(미신청) | pending(신청중) | approved(승인) | rejected(거부)
 CREATE TABLE IF NOT EXISTS users (
   id                INT           NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -19,22 +19,23 @@ CREATE TABLE IF NOT EXISTS users (
   name              VARCHAR(50)   NULL DEFAULT NULL,
   student_id        CHAR(10)      NULL DEFAULT NULL UNIQUE,
   ob_yb             ENUM('ob','yb') NULL DEFAULT NULL,
-  role              ENUM('user','player','manager','staff','root') NOT NULL DEFAULT 'user',
-  staff_type        ENUM('president','coach') DEFAULT NULL,
+  role              ENUM('normal','manager','root') NOT NULL DEFAULT 'normal',
+  manager_type      ENUM('president','coach','manager') DEFAULT NULL,
   membership_status ENUM('none','pending','approved','rejected') NOT NULL DEFAULT 'none',
   created_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ── 로스터 ──────────────────────────────────────────────────────
 -- role: coach(감독) | president(회장) | player(선수)
--- user_id: 로스터 신청 승인 시 연결
+-- student_id: 관리자가 직접 입력, users.student_id와 매칭 시 멤버 연동
 CREATE TABLE IF NOT EXISTS roster (
-  year     INT          NOT NULL,
-  number   INT          NOT NULL,
-  name     VARCHAR(50)  NOT NULL,
-  role     ENUM('coach','president','player') NOT NULL DEFAULT 'player',
-  user_id  INT          NULL DEFAULT NULL,
-  PRIMARY KEY (year, number)
+  year        INT          NOT NULL,
+  number      INT          NOT NULL,
+  name        VARCHAR(50)  NOT NULL,
+  student_id  CHAR(10)     NOT NULL,
+  role        ENUM('coach','president','player') NOT NULL DEFAULT 'player',
+  PRIMARY KEY (year, number),
+  UNIQUE KEY uq_roster_student (year, student_id)
 );
 
 -- ── 영구결번 ─────────────────────────────────────────────────────
@@ -42,19 +43,6 @@ CREATE TABLE IF NOT EXISTS roster (
 CREATE TABLE IF NOT EXISTS retired_numbers (
   number   INT          NOT NULL PRIMARY KEY,
   name     VARCHAR(50)  NOT NULL
-);
-
--- ── 로스터 신청 ─────────────────────────────────────────────────
--- 멤버 승인 후 해당 연도 로스터 등재 신청
--- 관리자가 승인 시 등번호 지정 → roster 테이블에 삽입
-CREATE TABLE IF NOT EXISTS roster_requests (
-  id         INT      NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  user_id    INT      NOT NULL,
-  year       INT      NOT NULL,
-  status     ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
-  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE KEY uq_roster_req (user_id, year),
-  FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
 -- ── 설정 (활성 로스터 연도 등) ────────────────────────────────
@@ -114,34 +102,7 @@ CREATE TABLE IF NOT EXISTS holidays (
 -- ── 설정 ────────────────────────────────────────────────────────
 INSERT IGNORE INTO settings (`key`, `value`) VALUES ('active_roster_year', '2026');
 
--- ── 로스터 ──────────────────────────────────────────────────────
-INSERT IGNORE INTO roster (year, number, name, role, user_id) VALUES
-(2026,0,'김승원','player',NULL),(2026,1,'김규민','player',NULL),(2026,2,'박재민','player',NULL),
-(2026,3,'방현빈','player',NULL),(2026,4,'이종현','player',NULL),(2026,5,'송원준','player',NULL),
-(2026,6,'이재현','player',NULL),(2026,7,'장우진','player',NULL),(2026,8,'한종원','player',NULL),
-(2026,9,'정현수','player',NULL),(2026,10,'강상현','player',NULL),(2026,11,'심동현','coach',NULL),
-(2026,12,'유지현','player',NULL),(2026,13,'이찬영','player',NULL),(2026,14,'박기훈','player',NULL),
-(2026,15,'윤주강','player',NULL),(2026,16,'김민석','player',NULL),(2026,17,'최민기','player',NULL),
-(2026,18,'김기민','president',NULL),(2026,19,'안지언','player',NULL),(2026,20,'이준용','player',NULL),
-(2026,21,'김주헌','player',NULL),(2026,22,'이희승','player',NULL),(2026,23,'배성우','player',NULL),
-(2026,24,'김건희','player',NULL),(2026,27,'박종현','player',NULL),(2026,28,'신찬혁','player',NULL),
-(2026,29,'이우성','player',NULL),(2026,32,'배윤재','player',NULL),(2026,33,'오진택','player',NULL),
-(2026,34,'정선우','player',NULL),(2026,35,'이가온','player',NULL),(2026,36,'한규혁','player',NULL),
-(2026,37,'이승주','player',NULL),(2026,38,'이운하','player',NULL),(2026,39,'신현재','player',NULL),
-(2026,41,'임세훈','player',NULL),(2026,43,'최승민','player',NULL),
-(2026,44,'권민수','player',NULL),(2026,45,'신호정','player',NULL),(2026,46,'장현호','player',NULL),
-(2026,47,'김지환','player',NULL),(2026,49,'이송주','player',NULL),(2026,50,'김성현','player',NULL),
-(2026,51,'박찬진','player',NULL),(2026,52,'유주찬','player',NULL),(2026,53,'한윤호','player',NULL),
-(2026,54,'정성훈','player',NULL),(2026,55,'정민재','player',NULL),(2026,56,'이제영','player',NULL),
-(2026,57,'최재원','player',NULL),(2026,58,'지건희','player',NULL),(2026,59,'신주환','player',NULL),
-(2026,60,'임준규','player',NULL),(2026,61,'장현우','player',NULL),(2026,63,'이지용','player',NULL),
-(2026,64,'양민우','player',NULL),(2026,66,'원정빈','player',NULL),(2026,68,'안현규','player',NULL),
-(2026,71,'심부근','player',NULL),(2026,79,'안선우','player',NULL),(2026,92,'유재혁','player',NULL),
-(2026,93,'한희성','player',NULL),(2026,95,'정우인','player',NULL),(2026,98,'최강민','player',NULL);
 
--- ── 영구결번 ─────────────────────────────────────────────────────
-INSERT IGNORE INTO retired_numbers (number, name) VALUES
-(42, '김종선');
 
 -- ── 게시판 ──────────────────────────────────────────────────────
 INSERT IGNORE INTO posts (title, author, date, views, content) VALUES

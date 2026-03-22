@@ -1,5 +1,9 @@
 export const ROLE_LABEL = {
-  user: '일반', player: '선수', manager: '매니저', staff: 'STAFF', root: 'ROOT',
+  normal: '일반', manager: '관리자', root: 'ROOT',
+}
+
+export const MANAGER_TYPE_LABEL = {
+  president: '회장', coach: '감독', manager: '매니저',
 }
 
 export const CATEGORY_LABEL = { notice: '공지', event: '행사', game: '경기' }

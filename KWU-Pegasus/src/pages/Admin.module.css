@@ -139,9 +139,8 @@
 }
 
 .role_root    { background: rgba(224, 92, 92, 0.15);   color: #e05c5c; }
-.role_staff   { background: rgba(166, 146, 109, 0.18); color: var(--main-300); }
-.role_manager { background: rgba(111, 163, 245, 0.15); color: #6fa3f5; }
-.role_user    { background: rgba(255, 255, 255, 0.07); color: rgba(255,255,255,0.5); }
+.role_manager { background: rgba(166, 146, 109, 0.18); color: var(--main-300); }
+.role_normal  { background: rgba(255, 255, 255, 0.07); color: rgba(255,255,255,0.5); }
 
 .statusBadge {
   display: inline-block;
@@ -202,6 +201,12 @@
 
 .noChange {
   color: rgba(255, 255, 255, 0.2);
+}
+
+.rosterInfo {
+  font-size: 0.85rem;
+  color: #6fa3f5;
+  font-weight: 600;
 }
 
 /* ── 로스터 연도 탭 ── */
@@ -290,6 +295,15 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.rosterAddForm {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 
 .yearPicker {

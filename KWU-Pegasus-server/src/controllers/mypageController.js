@@ -4,7 +4,7 @@ const pool = require('../db')
 exports.getMe = async (req, res, next) => {
   try {
     const [rows] = await pool.query(
-      'SELECT id, username, email, name, student_id, ob_yb, role, staff_type, membership_status, created_at FROM users WHERE id = ?',
+      'SELECT id, username, email, name, student_id, ob_yb, role, manager_type, membership_status, created_at FROM users WHERE id = ?',
       [req.user.id]
     )
     if (rows.length === 0) return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' })
@@ -71,46 +71,3 @@ exports.requestMembership = async (req, res, next) => {
   }
 }
 
-// 내 로스터 신청 현황 조회
-exports.getRosterRequest = async (req, res, next) => {
-  try {
-    const [rows] = await pool.query(
-      'SELECT id, year, status, created_at FROM roster_requests WHERE user_id = ? ORDER BY created_at DESC',
-      [req.user.id]
-    )
-    res.json(rows)
-  } catch (err) {
-    next(err)
-  }
-}
-
-// 로스터 신청 — membership_status=approved 이고 해당 연도 미신청인 경우만
-exports.requestRoster = async (req, res, next) => {
-  try {
-    const [rows] = await pool.query(
-      'SELECT membership_status, role FROM users WHERE id = ?',
-      [req.user.id]
-    )
-    const user = rows[0]
-    if (user.membership_status !== 'approved') {
-      return res.status(403).json({ message: '멤버 승인 후 로스터 신청이 가능합니다.' })
-    }
-
-    // 활성 연도 조회
-    const [settings] = await pool.query(
-      "SELECT `value` FROM settings WHERE `key` = 'active_roster_year'"
-    )
-    const year = settings.length ? parseInt(settings[0].value) : new Date().getFullYear()
-
-    await pool.query(
-      'INSERT INTO roster_requests (user_id, year) VALUES (?, ?)',
-      [req.user.id, year]
-    )
-    res.status(201).json({ message: `${year}년 로스터 신청이 완료됐습니다.`, year })
-  } catch (err) {
-    if (err.code === 'ER_DUP_ENTRY') {
-      return res.status(409).json({ message: '이미 해당 연도에 신청했습니다.' })
-    }
-    next(err)
-  }
-}

@@ -27,7 +27,11 @@ export default function Header() {
         <Link className={styles.navItem} to="/roster">선수단</Link>
         <Link className={styles.navItem} to="/notice">공지사항</Link>
         <Link className={styles.navItem} to="/board">게시판</Link>
-        {user && (user.role === 'staff' || user.role === 'root') && (
+
+        {user && (
+          <Link className={styles.navItem} to="/mypage">마이페이지</Link>
+        )}
+        {user && (user.role === 'manager' || user.role === 'root') && (
           <Link className={styles.navItemAdmin} to="/admin">관리자</Link>
         )}
       </nav>
@@ -36,7 +40,7 @@ export default function Header() {
         {user ? (
           <>
             <span className={styles.roleBadge}>{ROLE_LABEL[user.role] ?? user.role}</span>
-            <Link to="/mypage" className={styles.username}>{user.username}</Link>
+            <span className={styles.username}>{user.username}</span>
             <button className={styles.logoutButton} onClick={handleLogout}>로그아웃</button>
           </>
         ) : (

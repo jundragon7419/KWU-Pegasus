@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { API_BASE } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
-import { ROLE_LABEL } from '../lib/constants'
+import { ROLE_LABEL, MANAGER_TYPE_LABEL } from '../lib/constants'
 import styles from './Admin.module.css'
 
 const ROSTER_ROLE_OPTIONS = [
@@ -14,19 +14,20 @@ const ROSTER_ROLE_OPTIONS = [
 const ROSTER_ROLE_LABEL = { player: '선수', coach: '감독', president: '회장' }
 
 export default function Admin() {
-  const { user, token } = useAuth()
+  const { user, token, loading } = useAuth()
   const navigate = useNavigate()
   const [tab, setTab] = useState('pending')
 
   useEffect(() => {
-    if (!user || (user.role !== 'staff' && user.role !== 'root' && user.role !== 'manager')) {
+    if (!loading && (!user || (user.role !== 'manager' && user.role !== 'root'))) {
       navigate('/unauthorized')
     }
-  }, [user, navigate])
+  }, [user, loading, navigate])
 
-  if (!user || (user.role !== 'staff' && user.role !== 'root' && user.role !== 'manager')) return null
+  if (loading) return null
+  if (!user || (user.role !== 'manager' && user.role !== 'root')) return null
 
-  const isStaffOrRoot = user.role === 'staff' || user.role === 'root'
+  const isRoot = user.role === 'root'
 
   return (
     <div className={styles.page}>
@@ -36,35 +37,29 @@ export default function Admin() {
         <button className={`${styles.tab} ${tab === 'pending' ? styles.tabActive : ''}`} onClick={() => setTab('pending')}>
           멤버 승인
         </button>
-        <button className={`${styles.tab} ${tab === 'roster' ? styles.tabActive : ''}`} onClick={() => setTab('roster')}>
-          로스터 승인
-        </button>
         <button className={`${styles.tab} ${tab === 'rosterMgmt' ? styles.tabActive : ''}`} onClick={() => setTab('rosterMgmt')}>
           로스터 관리
         </button>
-        {isStaffOrRoot && (
-          <button className={`${styles.tab} ${tab === 'retired' ? styles.tabActive : ''}`} onClick={() => setTab('retired')}>
-            영구결번 관리
-          </button>
-        )}
-        {isStaffOrRoot && (
+        <button className={`${styles.tab} ${tab === 'retired' ? styles.tabActive : ''}`} onClick={() => setTab('retired')}>
+          영구결번 관리
+        </button>
+        {isRoot && (
           <button className={`${styles.tab} ${tab === 'users' ? styles.tabActive : ''}`} onClick={() => setTab('users')}>
             회원 관리
           </button>
         )}
       </div>
 
-      {tab === 'pending'    && <PendingTab token={token} currentUser={user} />}
-      {tab === 'roster'     && <RosterRequestTab token={token} />}
+      {tab === 'pending'    && <PendingTab token={token} />}
       {tab === 'rosterMgmt' && <RosterManagementTab token={token} />}
-      {tab === 'retired'    && isStaffOrRoot && <RetiredTab token={token} />}
-      {tab === 'users'      && isStaffOrRoot && <UsersTab token={token} currentUser={user} />}
+      {tab === 'retired'    && <RetiredTab token={token} />}
+      {tab === 'users'      && isRoot && <UsersTab token={token} currentUser={user} />}
     </div>
   )
 }
 
 /* ── 멤버 승인 탭 ── */
-function PendingTab({ token, currentUser }) {
+function PendingTab({ token }) {
   const [list, setList] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -97,7 +92,7 @@ function PendingTab({ token, currentUser }) {
         </thead>
         <tbody>
           {list.map(u => (
-            <PendingRow key={u.id} u={u} token={token} currentUser={currentUser} onDone={load} />
+            <PendingRow key={u.id} u={u} token={token} onDone={load} />
           ))}
         </tbody>
       </table>
@@ -105,21 +100,11 @@ function PendingTab({ token, currentUser }) {
   )
 }
 
-function PendingRow({ u, token, currentUser, onDone }) {
-  const [role, setRole] = useState('player')
-  const [staffType, setStaffType] = useState('president')
-
-  const roleOptions = currentUser.role === 'root'
-    ? ['player', 'manager', 'staff']
-    : ['player', 'manager']
-
+function PendingRow({ u, token, onDone }) {
   async function handleApprove() {
-    const body = { role }
-    if (role === 'staff') body.staff_type = staffType
     await fetch(`${API_BASE}/api/admin/approve-member/${u.id}`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+      headers: { Authorization: `Bearer ${token}` },
     })
     onDone()
   }
@@ -141,116 +126,8 @@ function PendingRow({ u, token, currentUser, onDone }) {
       <td>{u.ob_yb?.toUpperCase() ?? '—'}</td>
       <td>{u.created_at?.slice(0, 10)}</td>
       <td className={styles.actions}>
-        <div className={styles.roleForm}>
-          <select className={styles.select} value={role} onChange={e => setRole(e.target.value)}>
-            {roleOptions.map(r => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}
-          </select>
-          {role === 'staff' && (
-            <select className={styles.select} value={staffType} onChange={e => setStaffType(e.target.value)}>
-              <option value="president">회장</option>
-              <option value="coach">감독</option>
-            </select>
-          )}
-          <button className={styles.approveBtn} onClick={handleApprove}>승인</button>
-          <button className={styles.rejectBtn} onClick={handleReject}>거부</button>
-        </div>
-      </td>
-    </tr>
-  )
-}
-
-/* ── 로스터 승인 탭 ── */
-function RosterRequestTab({ token }) {
-  const [list, setList] = useState([])
-  const [loading, setLoading] = useState(true)
-
-  const load = useCallback(() => {
-    setLoading(true)
-    fetch(`${API_BASE}/api/admin/roster-requests`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(r => r.json())
-      .then(data => { setList(data); setLoading(false) })
-  }, [token])
-
-  useEffect(() => { load() }, [load])
-
-  if (loading) return <p className={styles.empty}>불러오는 중...</p>
-  if (list.length === 0) return <p className={styles.empty}>로스터 신청이 없습니다.</p>
-
-  return (
-    <div className={styles.tableWrap}>
-      <table className={styles.table}>
-        <thead>
-          <tr>
-            <th>아이디</th>
-            <th>이름</th>
-            <th>권한</th>
-            <th>연도</th>
-            <th>신청일</th>
-            <th>처리</th>
-          </tr>
-        </thead>
-        <tbody>
-          {list.map(r => (
-            <RosterRequestRow key={r.id} r={r} token={token} onDone={load} />
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
-}
-
-function RosterRequestRow({ r, token, onDone }) {
-  const [number, setNumber] = useState('')
-  const [role, setRole] = useState('player')
-  const [msg, setMsg] = useState('')
-
-  async function handleApprove() {
-    setMsg('')
-    const res = await fetch(`${API_BASE}/api/admin/roster-requests/${r.id}/approve`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ number: parseInt(number), role }),
-    })
-    const data = await res.json()
-    if (res.ok) { onDone() } else { setMsg(data.message) }
-  }
-
-  async function handleReject() {
-    if (!confirm('거부하시겠습니까?')) return
-    await fetch(`${API_BASE}/api/admin/roster-requests/${r.id}/reject`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}` },
-    })
-    onDone()
-  }
-
-  return (
-    <tr>
-      <td>{r.username}</td>
-      <td>{r.name ?? '—'}</td>
-      <td>{ROLE_LABEL[r.user_role]}</td>
-      <td>{r.year}</td>
-      <td>{r.created_at?.slice(0, 10)}</td>
-      <td className={styles.actions}>
-        <div className={styles.roleForm}>
-          <input
-            className={styles.numberInput}
-            type="number"
-            min="0"
-            max="99"
-            placeholder="등번호"
-            value={number}
-            onChange={e => setNumber(e.target.value)}
-          />
-          <select className={styles.select} value={role} onChange={e => setRole(e.target.value)}>
-            {ROSTER_ROLE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
-          <button className={styles.approveBtn} onClick={handleApprove} disabled={!number}>승인</button>
-          <button className={styles.rejectBtn} onClick={handleReject}>거부</button>
-        </div>
-        {msg && <p className={styles.rowMsg}>{msg}</p>}
+        <button className={styles.approveBtn} onClick={handleApprove}>승인</button>
+        <button className={styles.rejectBtn} onClick={handleReject}>거부</button>
       </td>
     </tr>
   )
@@ -263,16 +140,26 @@ function RosterManagementTab({ token }) {
   const [roster, setRoster] = useState([])
   const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
+  // 추가 폼
+  const [addYear, setAddYear] = useState('')
+  const [addNumber, setAddNumber] = useState('')
+  const [addName, setAddName] = useState('')
+  const [addStudentId, setAddStudentId] = useState('')
+  const [addRole, setAddRole] = useState('player')
+  const [addMsg, setAddMsg] = useState('')
+
+  const loadYears = useCallback(() => {
     fetch(`${API_BASE}/api/roster/years`)
       .then(r => r.json())
       .then(data => {
         setYears(data)
-        if (data.length > 0) setSelectedYear(data[0])
+        if (data.length > 0 && !selectedYear) setSelectedYear(data[0])
       })
-  }, [])
+  }, [selectedYear])
 
-  useEffect(() => {
+  useEffect(() => { loadYears() }, [])
+
+  const loadRoster = useCallback(() => {
     if (!selectedYear) return
     setLoading(true)
     fetch(`${API_BASE}/api/admin/roster?year=${selectedYear}`, {
@@ -282,14 +169,31 @@ function RosterManagementTab({ token }) {
       .then(data => { setRoster(data); setLoading(false) })
   }, [selectedYear, token])
 
-  const reload = useCallback(() => {
-    if (!selectedYear) return
-    fetch(`${API_BASE}/api/admin/roster?year=${selectedYear}`, {
-      headers: { Authorization: `Bearer ${token}` },
+  useEffect(() => { loadRoster() }, [loadRoster])
+
+  async function handleAdd(e) {
+    e.preventDefault()
+    setAddMsg('')
+    const res = await fetch(`${API_BASE}/api/admin/roster`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        year: parseInt(addYear),
+        number: parseInt(addNumber),
+        name: addName,
+        student_id: addStudentId,
+        role: addRole,
+      }),
     })
-      .then(r => r.json())
-      .then(setRoster)
-  }, [selectedYear, token])
+    const data = await res.json()
+    setAddMsg(data.message)
+    if (res.ok) {
+      setAddNumber(''); setAddName(''); setAddStudentId(''); setAddRole('player')
+      loadYears()
+      if (parseInt(addYear) === selectedYear) loadRoster()
+      else setSelectedYear(parseInt(addYear))
+    }
+  }
 
   async function handleDelete(year, number) {
     if (!confirm(`${year}년 ${number}번을 삭제하시겠습니까?`)) return
@@ -297,11 +201,25 @@ function RosterManagementTab({ token }) {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     })
-    reload()
+    loadRoster()
   }
 
   return (
     <div className={styles.rosterMgmtWrap}>
+      {/* 추가 폼 */}
+      <form className={styles.rosterAddForm} onSubmit={handleAdd}>
+        <input className={styles.numberInput} style={{ width: '64px' }} type="number" placeholder="연도" value={addYear} onChange={e => setAddYear(e.target.value)} required />
+        <input className={styles.numberInput} style={{ width: '56px' }} type="number" min="0" max="99" placeholder="번호" value={addNumber} onChange={e => setAddNumber(e.target.value)} required />
+        <input className={styles.memberInput} type="text" placeholder="이름" value={addName} onChange={e => setAddName(e.target.value)} required />
+        <input className={styles.memberInput} type="text" inputMode="numeric" maxLength={10} placeholder="학번 10자리" value={addStudentId} onChange={e => setAddStudentId(e.target.value.replace(/\D/g, ''))} required />
+        <select className={styles.select} value={addRole} onChange={e => setAddRole(e.target.value)}>
+          {ROSTER_ROLE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+        </select>
+        <button className={styles.approveBtn} type="submit">추가</button>
+      </form>
+      {addMsg && <p className={styles.rowMsg}>{addMsg}</p>}
+
+      {/* 연도 탭 */}
       <div className={styles.yearPicker}>
         {years.map(y => (
           <button
@@ -315,7 +233,7 @@ function RosterManagementTab({ token }) {
       </div>
 
       {loading && <p className={styles.empty}>불러오는 중...</p>}
-      {!loading && roster.length === 0 && <p className={styles.empty}>등록된 선수가 없습니다.</p>}
+      {!loading && selectedYear && roster.length === 0 && <p className={styles.empty}>등록된 선수가 없습니다.</p>}
       {!loading && roster.length > 0 && (
         <div className={styles.tableWrap}>
           <table className={styles.table}>
@@ -323,6 +241,8 @@ function RosterManagementTab({ token }) {
               <tr>
                 <th>번호</th>
                 <th>이름</th>
+                <th>학번</th>
+                <th>멤버 ID</th>
                 <th>역할</th>
                 <th>관리</th>
               </tr>
@@ -334,7 +254,7 @@ function RosterManagementTab({ token }) {
                   entry={entry}
                   token={token}
                   onDelete={handleDelete}
-                  onDone={reload}
+                  onDone={loadRoster}
                 />
               ))}
             </tbody>
@@ -348,6 +268,8 @@ function RosterManagementTab({ token }) {
 function RosterEntryRow({ entry, token, onDelete, onDone }) {
   const [editing, setEditing] = useState(false)
   const [newNumber, setNewNumber] = useState(String(entry.number))
+  const [name, setName] = useState(entry.name)
+  const [studentId, setStudentId] = useState(entry.student_id)
   const [role, setRole] = useState(entry.role)
   const [msg, setMsg] = useState('')
 
@@ -356,7 +278,7 @@ function RosterEntryRow({ entry, token, onDelete, onDone }) {
     const res = await fetch(`${API_BASE}/api/admin/roster/${entry.year}/${entry.number}`, {
       method: 'PUT',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ newNumber: parseInt(newNumber), role }),
+      body: JSON.stringify({ newNumber: parseInt(newNumber), name, student_id: studentId, role }),
     })
     const data = await res.json()
     if (res.ok) { setEditing(false); onDone() } else { setMsg(data.message) }
@@ -369,14 +291,26 @@ function RosterEntryRow({ entry, token, onDelete, onDone }) {
           ? <input className={styles.numberInput} type="number" min="0" max="99" value={newNumber} onChange={e => setNewNumber(e.target.value)} />
           : entry.number}
       </td>
-      <td>{entry.name}</td>
       <td>
         {editing
-          ? (
-            <select className={styles.select} value={role} onChange={e => setRole(e.target.value)}>
+          ? <input className={styles.memberInput} type="text" value={name} onChange={e => setName(e.target.value)} />
+          : entry.name}
+      </td>
+      <td>
+        {editing
+          ? <input className={styles.numberInput} style={{ width: '100px' }} type="text" inputMode="numeric" maxLength={10} value={studentId} onChange={e => setStudentId(e.target.value.replace(/\D/g, ''))} />
+          : entry.student_id}
+      </td>
+      <td>
+        {entry.username
+          ? <span className={styles.rosterInfo}>{entry.username}</span>
+          : <span className={styles.noChange}>미가입</span>}
+      </td>
+      <td>
+        {editing
+          ? <select className={styles.select} value={role} onChange={e => setRole(e.target.value)}>
               {ROSTER_ROLE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
-          )
           : ROSTER_ROLE_LABEL[entry.role] ?? entry.role}
       </td>
       <td className={styles.actions}>
@@ -485,9 +419,9 @@ function UsersTab({ token, currentUser }) {
 
   useEffect(() => { load() }, [load])
 
-  async function handleRoleChange(id, role, staff_type) {
+  async function handleRoleChange(id, role, manager_type) {
     const body = { role }
-    if (role === 'staff') body.staff_type = staff_type
+    if (role === 'manager') body.manager_type = manager_type
     await fetch(`${API_BASE}/api/admin/users/${id}/role`, {
       method: 'PUT',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -508,6 +442,7 @@ function UsersTab({ token, currentUser }) {
             <th>구분</th>
             <th>현재 권한</th>
             <th>멤버 상태</th>
+            <th>로스터</th>
             <th>권한 변경</th>
           </tr>
         </thead>
@@ -523,14 +458,10 @@ function UsersTab({ token, currentUser }) {
 
 function UserRow({ u, currentUser, onRoleChange }) {
   const [role, setRole] = useState(u.role)
-  const [staffType, setStaffType] = useState(u.staff_type ?? 'president')
+  const [managerType, setManagerType] = useState(u.manager_type ?? 'manager')
   const canChange = u.role !== 'root' && u.id !== currentUser.id
 
   const MEMBERSHIP_LABEL = { none: '미신청', pending: '대기', approved: '멤버', rejected: '거부' }
-
-  const roleOptions = currentUser.role === 'root'
-    ? ['user', 'player', 'manager', 'staff']
-    : ['user', 'player', 'manager']
 
   return (
     <tr>
@@ -539,8 +470,8 @@ function UserRow({ u, currentUser, onRoleChange }) {
       <td>{u.ob_yb?.toUpperCase() ?? '—'}</td>
       <td>
         <span className={`${styles.roleBadge} ${styles[`role_${u.role}`]}`}>
-          {ROLE_LABEL[u.role]}
-          {u.staff_type === 'president' ? ' (회장)' : u.staff_type === 'coach' ? ' (감독)' : ''}
+          {ROLE_LABEL[u.role] ?? u.role}
+          {u.manager_type ? ` (${MANAGER_TYPE_LABEL[u.manager_type]})` : ''}
         </span>
       </td>
       <td>
@@ -549,18 +480,26 @@ function UserRow({ u, currentUser, onRoleChange }) {
         </span>
       </td>
       <td>
+        {u.roster_year != null
+          ? <span className={styles.rosterInfo}>{u.roster_number}번</span>
+          : <span className={styles.noChange}>—</span>}
+      </td>
+      <td>
         {canChange ? (
           <div className={styles.roleForm}>
             <select className={styles.select} value={role} onChange={e => setRole(e.target.value)}>
-              {roleOptions.map(r => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}
+              <option value="normal">일반</option>
+              <option value="manager">관리자</option>
+              <option value="root">ROOT</option>
             </select>
-            {role === 'staff' && (
-              <select className={styles.select} value={staffType} onChange={e => setStaffType(e.target.value)}>
+            {role === 'manager' && (
+              <select className={styles.select} value={managerType} onChange={e => setManagerType(e.target.value)}>
                 <option value="president">회장</option>
                 <option value="coach">감독</option>
+                <option value="manager">매니저</option>
               </select>
             )}
-            <button className={styles.saveBtn} onClick={() => onRoleChange(u.id, role, staffType)}>저장</button>
+            <button className={styles.saveBtn} onClick={() => onRoleChange(u.id, role, managerType)}>저장</button>
           </div>
         ) : (
           <span className={styles.noChange}>—</span>
