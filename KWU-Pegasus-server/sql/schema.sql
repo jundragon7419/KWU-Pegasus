@@ -59,7 +59,8 @@ CREATE TABLE IF NOT EXISTS events (
   month  INT          NOT NULL,
   day    INT          NOT NULL,
   type   ENUM('game','training','meeting','anniversary') NOT NULL,
-  name   VARCHAR(100) NOT NULL
+  name   VARCHAR(100) NOT NULL,
+  UNIQUE KEY uq_event (year, month, day, name)
 );
 
 -- ── 공휴일 ──────────────────────────────────────────────────────
