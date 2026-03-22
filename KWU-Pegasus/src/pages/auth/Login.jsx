@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { API_BASE } from '../lib/api'
-import { useAuth } from '../context/AuthContext'
+import { API_BASE } from '../../lib/api'
+import { useAuth } from '../../context/AuthContext'
 import styles from './Login.module.css'
 
 export default function Login() {

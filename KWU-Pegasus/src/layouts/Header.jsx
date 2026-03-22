@@ -1,8 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { ROLE_LABEL } from '../lib/constants'
 import styles from './Header.module.css'
-
-const ROLE_LABEL = { user: '일반', player: '선수', manager: '매니저', staff: 'STAFF', root: 'ROOT' }
 
 export default function Header() {
   const { user, logout } = useAuth()

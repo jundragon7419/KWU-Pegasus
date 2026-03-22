@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { API_BASE } from '../lib/api'
-import Pagination from '../components/Pagination'
+import { API_BASE } from '../../lib/api'
+import Pagination from '../../components/Pagination'
 import styles from './Board.module.css'
 
 const PAGE_SIZE = 10

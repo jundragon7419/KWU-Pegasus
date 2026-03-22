@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { API_BASE } from '../lib/api'
-import styles from './Write.module.css'
+import { API_BASE } from '../../lib/api'
+import styles from '../Write.module.css'
 
 export default function BoardWrite() {
   const navigate = useNavigate()

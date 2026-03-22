@@ -5,7 +5,7 @@ const app = express()
 
 // ── 미들웨어 ──────────────────────────────────────
 app.use(cors({
-  origin: 'http://localhost:5173', // Vite 개발 서버
+  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
   credentials: true,
 }))
 app.use(express.json())
@@ -39,6 +39,9 @@ app.use((req, res) => {
 
 // ── 에러 핸들러 ───────────────────────────────────
 app.use((err, req, res, next) => {
+  if (err.code === 'ER_DUP_ENTRY') {
+    return res.status(409).json({ message: '이미 존재하는 데이터입니다.' })
+  }
   console.error(err.stack)
   res.status(500).json({ message: '서버 오류가 발생했습니다.' })
 })

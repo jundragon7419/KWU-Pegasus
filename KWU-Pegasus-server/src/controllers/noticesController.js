@@ -18,8 +18,8 @@ exports.getNotice = async (req, res, next) => {
       [req.params.id]
     )
     if (rows.length === 0) return res.status(404).json({ message: '공지사항을 찾을 수 없습니다.' })
-    await pool.query('UPDATE notices SET views = views + 1 WHERE id = ?', [req.params.id])
     res.json(rows[0])
+    pool.query('UPDATE notices SET views = views + 1 WHERE id = ?', [req.params.id]).catch(() => {})
   } catch (err) {
     next(err)
   }
@@ -27,7 +27,8 @@ exports.getNotice = async (req, res, next) => {
 
 exports.createNotice = async (req, res, next) => {
   try {
-    const { category, isPinned, title, author, content } = req.body
+    const { category, isPinned, title, content } = req.body
+    const author = req.user.username
     const [result] = await pool.query(
       'INSERT INTO notices (category, is_pinned, title, author, date, views, content) VALUES (?, ?, ?, ?, CURDATE(), 0, ?)',
       [category, isPinned ? 1 : 0, title, author, content]

@@ -17,18 +17,18 @@ KWU-Pegasus-server/
 ├── server.js               진입점
 ├── .env                    환경변수 (git 제외)
 ├── sql/
-│   └── schema.sql          DB 전체 테이블 생성 쿼리
+│   └── schema.sql          DB 전체 테이블 생성 + 시드 쿼리
 └── src/
-    ├── app.js              Express 앱 설정
+    ├── app.js              Express 앱 설정 (CORS, 라우터 등록, 에러 핸들러)
     ├── db.js               MySQL 커넥션 풀
     ├── controllers/
-    │   ├── authController.js     회원가입 / 로그인
-    │   ├── adminController.js    관리자 (승인, 권한 관리)
-    │   ├── rosterController.js   선수단
-    │   ├── postsController.js    게시판
-    │   ├── noticesController.js  공지사항
-    │   ├── eventsController.js   팀 일정
-    │   └── holidaysController.js 공휴일
+    │   ├── authController.js     회원가입 / 로그인 / 내 정보
+    │   ├── adminController.js    관리자 (승인, 권한, 회원 명단, 로스터 연도)
+    │   ├── rosterController.js   선수단 조회
+    │   ├── postsController.js    게시판 CRUD
+    │   ├── noticesController.js  공지사항 CRUD
+    │   ├── eventsController.js   팀 일정 조회/추가/삭제
+    │   └── holidaysController.js 공휴일 조회
     ├── routes/
     │   ├── auth.js
     │   ├── admin.js
@@ -38,7 +38,7 @@ KWU-Pegasus-server/
     │   ├── events.js
     │   └── holidays.js
     └── middlewares/
-        └── auth.js         JWT 인증 / 권한 미들웨어
+        └── auth.js         JWT 인증 / 권한 미들웨어 (authenticate, requireRole)
 ```
 
 ## 시작하기
@@ -59,11 +59,13 @@ DB_USER=root
 DB_PASSWORD=비밀번호
 DB_NAME=kwu_pegasus
 JWT_SECRET=임의의_시크릿_키
+CORS_ORIGIN=http://localhost:5173
 ```
 
 ### 3. DB 세팅
 
 MySQL Workbench에서 `sql/schema.sql` 을 실행합니다.
+테이블 생성과 기본 시드 데이터(공휴일 등)가 함께 적용됩니다.
 
 ### 4. 서버 실행
 
@@ -92,20 +94,23 @@ npm start
 **POST /signup**
 ```json
 {
-  "username": "홍길동",
+  "username": "아이디",
   "password": "비밀번호",
   "email": "example@email.com",
-  "ob_yb": "yb"
+  "name": "홍길동",
+  "ob_yb": "yb",
+  "student_id": "2021000000"
 }
 ```
+> `student_id` 입력 시 `members` 테이블의 학번+이름과 대조하여 일치하면 `role=player` 자동 부여.
 
 **POST /login**
 ```json
-{ "username": "홍길동", "password": "비밀번호" }
+{ "username": "아이디", "password": "비밀번호" }
 ```
 ```json
 // 응답
-{ "token": "JWT토큰", "user": { "id": 1, "username": "홍길동", "role": "user", ... } }
+{ "token": "JWT토큰", "user": { "id": 1, "username": "아이디", "role": "player", ... } }
 ```
 
 ---
@@ -121,11 +126,15 @@ npm start
 | POST | `/reject/:id` | 회원가입 거부 |
 | GET | `/users` | 전체 유저 목록 |
 | PUT | `/users/:id/role` | 권한 변경 |
+| GET | `/members` | 회원 명단 조회 |
+| POST | `/members` | 회원 명단 추가 |
+| DELETE | `/members/:student_id` | 회원 명단 삭제 |
+| PUT | `/roster-year` | 활성 로스터 연도 변경 |
 
 **PUT /users/:id/role**
 ```json
 { "role": "manager" }
-// staff 지정 시
+// staff 지정 시 (root만 가능)
 { "role": "staff", "staff_type": "president" }
 // staff_type: "president"(회장) | "coach"(감독)
 ```
@@ -136,41 +145,43 @@ npm start
 
 | 메서드 | 경로 | 설명 |
 |--------|------|------|
-| GET | `/` | 전체 선수단 조회 |
+| GET | `/` | 선수단 조회 (쿼리: `?year=2026`, 생략 시 활성 연도) |
+| GET | `/years` | 등록된 연도 목록 |
+| GET | `/active-year` | 현재 활성 연도 |
 
 ---
 
 ### 게시판 `/api/posts`
 
-| 메서드 | 경로 | 설명 |
-|--------|------|------|
-| GET | `/` | 전체 게시글 목록 |
-| GET | `/:id` | 게시글 상세 (조회수 +1) |
-| POST | `/` | 게시글 작성 |
-| PUT | `/:id` | 게시글 수정 |
-| DELETE | `/:id` | 게시글 삭제 |
+| 메서드 | 경로 | 설명 | 인증 |
+|--------|------|------|------|
+| GET | `/` | 전체 게시글 목록 | - |
+| GET | `/:id` | 게시글 상세 (조회수 +1) | - |
+| POST | `/` | 게시글 작성 | player 이상 |
+| PUT | `/:id` | 게시글 수정 | player 이상 |
+| DELETE | `/:id` | 게시글 삭제 | player 이상 |
 
 ---
 
 ### 공지사항 `/api/notices`
 
-| 메서드 | 경로 | 설명 |
-|--------|------|------|
-| GET | `/` | 전체 공지사항 (고정글 상단) |
-| GET | `/:id` | 공지사항 상세 (조회수 +1) |
-| POST | `/` | 공지사항 작성 |
-| PUT | `/:id` | 공지사항 수정 |
-| DELETE | `/:id` | 공지사항 삭제 |
+| 메서드 | 경로 | 설명 | 인증 |
+|--------|------|------|------|
+| GET | `/` | 전체 공지사항 (고정글 상단) | - |
+| GET | `/:id` | 공지사항 상세 (조회수 +1) | - |
+| POST | `/` | 공지사항 작성 | manager 이상 |
+| PUT | `/:id` | 공지사항 수정 | manager 이상 |
+| DELETE | `/:id` | 공지사항 삭제 | manager 이상 |
 
 ---
 
 ### 팀 일정 `/api/events`
 
-| 메서드 | 경로 | 설명 |
-|--------|------|------|
-| GET | `/?year=2026` | 연도별 일정 조회 |
-| POST | `/` | 일정 추가 |
-| DELETE | `/:id` | 일정 삭제 |
+| 메서드 | 경로 | 설명 | 인증 |
+|--------|------|------|------|
+| GET | `/?year=2026` | 연도별 일정 조회 | - |
+| POST | `/` | 일정 추가 | manager 이상 |
+| DELETE | `/:id` | 일정 삭제 | manager 이상 |
 
 ---
 
@@ -186,8 +197,9 @@ npm start
 
 ```
 root    최고 관리자. staff 지정 가능.
-staff   회장(president) 또는 감독(coach). manager 지정, 회원가입 승인 가능.
-manager 일반 관리 권한.
+staff   회장(president) 또는 감독(coach). 회원가입 승인, manager 지정 가능.
+manager 공지사항 작성, 일정 관리 등 일반 관리 권한.
+player  선수. 게시판 글쓰기 가능. 학번 인증으로 자동 부여.
 user    일반 회원. ob(졸업생) / yb(재학생) 구분.
 ```
 
@@ -197,6 +209,8 @@ user    일반 회원. ob(졸업생) / yb(재학생) 구분.
 신청 (pending) → staff 승인 → 활성화 (active)
               → staff 거부 → 거부됨 (rejected)
 ```
+
+학번+이름 입력 시 members 테이블과 대조 → 일치하면 승인 후 player 권한 자동 부여.
 
 ---
 

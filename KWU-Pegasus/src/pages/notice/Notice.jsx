@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { API_BASE } from '../lib/api'
-import Pagination from '../components/Pagination'
+import { API_BASE } from '../../lib/api'
+import { CATEGORY_LABEL } from '../../lib/constants'
+import Pagination from '../../components/Pagination'
 import styles from './Notice.module.css'
 
 const PAGE_SIZE = 10
 
-const CATEGORY_LABEL = { notice: '공지', event: '행사', game: '경기' }
 const CATEGORY_STYLE = { notice: styles.tagNotice, event: styles.tagEvent, game: styles.tagGame }
 
 export default function Notice() {

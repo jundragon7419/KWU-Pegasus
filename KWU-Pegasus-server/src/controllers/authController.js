@@ -8,8 +8,8 @@ exports.signup = async (req, res, next) => {
     const { username, name, password, email, ob_yb, student_id } = req.body
 
     const [existing] = await pool.query(
-      'SELECT id FROM users WHERE username = ? OR email = ?',
-      [username, email]
+      'SELECT 1 FROM users WHERE username = ? OR email = ? OR (student_id IS NOT NULL AND student_id = ?) LIMIT 1',
+      [username, email, student_id || null]
     )
     if (existing.length > 0) {
       return res.status(409).json({ message: '이미 사용 중인 아이디 또는 이메일입니다.' })

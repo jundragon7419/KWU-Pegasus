@@ -2,9 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { API_BASE } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
+import { ROLE_LABEL } from '../lib/constants'
 import styles from './Admin.module.css'
-
-const ROLE_LABEL = { user: '일반', player: '선수', manager: '매니저', staff: 'STAFF', root: 'ROOT' }
 const STAFF_TYPE_LABEL = { president: '회장', coach: '감독' }
 
 export default function Admin() {

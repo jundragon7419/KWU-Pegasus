@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { API_BASE } from '../lib/api'
 import styles from './Roster.module.css'
 
@@ -35,13 +35,13 @@ export default function Roster() {
       .then(data => setRoster(data))
   }, [selectedYear])
 
-  const filtered = roster.filter(p => {
+  const filtered = useMemo(() => roster.filter(p => {
     const matchRole = filter === 'all' || p.role === filter
     const matchSearch = search === '' ||
       p.name.includes(search) ||
       String(p.number).includes(search)
     return matchRole && matchSearch
-  })
+  }), [roster, filter, search])
 
   return (
     <div className={styles.page}>

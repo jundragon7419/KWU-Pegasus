@@ -18,8 +18,8 @@ exports.getPost = async (req, res, next) => {
       [req.params.id]
     )
     if (rows.length === 0) return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' })
-    await pool.query('UPDATE posts SET views = views + 1 WHERE id = ?', [req.params.id])
     res.json(rows[0])
+    pool.query('UPDATE posts SET views = views + 1 WHERE id = ?', [req.params.id]).catch(() => {})
   } catch (err) {
     next(err)
   }
@@ -27,7 +27,8 @@ exports.getPost = async (req, res, next) => {
 
 exports.createPost = async (req, res, next) => {
   try {
-    const { title, author, content } = req.body
+    const { title, content } = req.body
+    const author = req.user.username
     const [result] = await pool.query(
       'INSERT INTO posts (title, author, date, views, content) VALUES (?, ?, CURDATE(), 0, ?)',
       [title, author, content]

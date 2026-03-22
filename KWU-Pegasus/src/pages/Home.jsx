@@ -1,12 +1,11 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { API_BASE } from '../lib/api'
-import { EVENT_TYPES } from '../lib/constants'
+import { EVENT_TYPES, CATEGORY_LABEL } from '../lib/constants'
 import styles from './Home.module.css'
 
 const DAYS = ['일', '월', '화', '수', '목', '금', '토']
 
-const CATEGORY_LABEL = { notice: '공지', event: '행사', game: '경기' }
 const CATEGORY_STYLE = { notice: styles.tagNotice, event: styles.tagEvent, game: styles.tagGame }
 
 function MiniCalendar() {
@@ -104,8 +103,11 @@ export default function Home() {
       .then(data => setNotices(data))
   }, [])
 
-  const pinned = notices.filter(n => n.isPinned)
-  const recent = notices.filter(n => !n.isPinned).slice(0, 8 - pinned.length)
+  const { pinned, recent } = useMemo(() => {
+    const p = notices.filter(n => n.isPinned)
+    const r = notices.filter(n => !n.isPinned).slice(0, 8 - p.length)
+    return { pinned: p, recent: r }
+  }, [notices])
 
   return (
     <section className={styles.home}>
