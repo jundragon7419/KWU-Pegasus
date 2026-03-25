@@ -2,15 +2,30 @@
 -- KWU PEGASUS DATABASE SCHEMA
 -- ================================================================
 
-CREATE DATABASE IF NOT EXISTS kwu_pegasus
+DROP DATABASE IF EXISTS kwu_pegasus;
+CREATE DATABASE kwu_pegasus
   CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 USE kwu_pegasus;
 
 -- ── 유저 ────────────────────────────────────────────────────────
--- role:              normal | manager | root
--- manager_type:      president(회장) | coach(감독) | manager(매니저) — manager일 때만 사용
--- membership_status: none(미신청) | pending(신청중) | approved(승인) | rejected(거부)
+-- id               : 유저 고유 식별자. PK로 사용됨 (자동 증가)
+-- username         : 유저 닉네임(로그인 아이디). 중복 불가 (UNIQUE)
+-- password         : 비밀번호 (해시 저장)
+-- email            : 이메일 주소. 중복 불가 (UNIQUE)
+-- name             : 실명. 기본 NULL이며 멤버 등록 시 입력 필요
+-- student_id       : 학번 (10자리). 기본 NULL이며 멤버 등록 시 입력 필요. 중복 불가 (UNIQUE)
+-- ob_yb            : OB(졸업생) / YB(재학생) 구분. 기본 NULL이며 멤버 등록 시 지정 필요
+-- authority        : 계정 권한. 가입 시 basic이 기본으로 부여되며 상위 권한은 하위 권한을 모두 포함함
+--                     basic   - 최초 가입 시 부여. 아무 권한 없음
+--                     member  - 멤버 신청 후 상위 권한자가 승인 시 부여. 게시판 글쓰기·관리자 페이지 외 모든 페이지 사용 가능
+--                     manager - 멤버 가입 신청 수락 가능. 공지사항 작성 가능
+--                     staff   - 회장·감독 권한. 일반 멤버에게 manager 권한 부여 가능
+--                     root    - 최고 권한. 모든 기능 사용 가능하며 staff(회장·감독) 지정 가능
+-- staff_type       : authority가 staff일 때만 사용. 회장(president) 또는 감독(headcoach) 구분. 기본 NULL
+-- membership_status: 멤버 등록 진행 상태
+--                     none(미신청) | pending(신청중) | approved(승인) | rejected(거부)
+-- created_at       : 계정 생성 일시 (자동 기록)
 CREATE TABLE IF NOT EXISTS users (
   id                INT           NOT NULL AUTO_INCREMENT PRIMARY KEY,
   username          VARCHAR(50)   NOT NULL UNIQUE,
@@ -19,39 +34,60 @@ CREATE TABLE IF NOT EXISTS users (
   name              VARCHAR(50)   NULL DEFAULT NULL,
   student_id        CHAR(10)      NULL DEFAULT NULL UNIQUE,
   ob_yb             ENUM('ob','yb') NULL DEFAULT NULL,
-  role              ENUM('normal','manager','root') NOT NULL DEFAULT 'normal',
-  manager_type      ENUM('president','coach','manager') DEFAULT NULL,
+  authority         ENUM('basic','member','manager','staff','root') NOT NULL DEFAULT 'basic',
+  staff_type        ENUM('president','headcoach') NULL DEFAULT NULL,
   membership_status ENUM('none','pending','approved','rejected') NOT NULL DEFAULT 'none',
   created_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ── 로스터 ──────────────────────────────────────────────────────
--- role: coach(감독) | president(회장) | player(선수)
--- student_id: 관리자가 직접 입력, users.student_id와 매칭 시 멤버 연동
+-- year       : 해당 로스터의 연도. 연도마다 로스터가 독립적으로 관리됨
+-- number     : 해당 연도 로스터에 등록된 등번호. (year, number) 복합 PK
+-- name       : 선수 실명
+-- student_id : 학번 (10자리). 로스터 등록 시 관리자가 직접 입력.
+--              같은 연도 내 중복 불가 (UNIQUE per year).
+--              유저 테이블의 student_id와 일치하는 멤버가 있으면 user_id를 연동
+-- user_id    : users 테이블의 id. 기본 NULL이며,
+--              roster.student_id와 users.student_id가 일치할 때 자동으로 연동됨.
+--              연동 후 해당 유저의 멤버십 정보와 연결하여 차후 활용
+-- role       : 로스터 내 역할. 유저 권한(authority)과는 별개로 관리됨
+--               president  - 회장
+--               headcoach  - 감독
+--               retired    - 영구결번 등 명예 등록 선수
+--               player     - 일반 선수
 CREATE TABLE IF NOT EXISTS roster (
   year        INT          NOT NULL,
   number      INT          NOT NULL,
   name        VARCHAR(50)  NOT NULL,
   student_id  CHAR(10)     NOT NULL,
-  role        ENUM('coach','president','player') NOT NULL DEFAULT 'player',
+  user_id     INT          NULL DEFAULT NULL,
+  role        ENUM('president','headcoach','retired','player') NOT NULL DEFAULT 'player',
   PRIMARY KEY (year, number),
-  UNIQUE KEY uq_roster_student (year, student_id)
+  UNIQUE KEY uq_roster_student (year, student_id),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE
 );
 
--- ── 영구결번 ─────────────────────────────────────────────────────
--- 연도 무관하게 관리자가 직접 등록/삭제
-CREATE TABLE IF NOT EXISTS retired_numbers (
-  number   INT          NOT NULL PRIMARY KEY,
-  name     VARCHAR(50)  NOT NULL
-);
-
--- ── 설정 (활성 로스터 연도 등) ────────────────────────────────
+-- ── 설정 ────────────────────────────────────────────────────────
+-- 키-값 쌍으로 서버 전역 설정값을 저장하는 테이블
+-- key   : 설정 항목의 고유 이름. PK로 사용됨
+-- value : 설정값. 문자열로 저장
+-- 현재 사용 중인 설정값:
+--   active_roster_year - 현재 활성 시즌 연도.
+--                        로스터 조회 시 연도 미지정이면 이 값을 기본으로 사용.
+--                        관리자 페이지에서 변경 가능
 CREATE TABLE IF NOT EXISTS settings (
   `key`    VARCHAR(50)  NOT NULL PRIMARY KEY,
   `value`  VARCHAR(100) NOT NULL
 );
 
 -- ── 게시판 ──────────────────────────────────────────────────────
+-- 팀 멤버들이 자유롭게 글을 올리는 게시판 (차후 member 권한 이상 작성 가능)
+-- id      : 게시글 고유 식별자. PK (자동 증가)
+-- title   : 게시글 제목
+-- author  : 작성자 이름
+-- date    : 작성 날짜
+-- views   : 조회수. 기본 0
+-- content : 게시글 본문
 CREATE TABLE IF NOT EXISTS posts (
   id         INT          NOT NULL AUTO_INCREMENT PRIMARY KEY,
   title      VARCHAR(200) NOT NULL,
@@ -62,6 +98,18 @@ CREATE TABLE IF NOT EXISTS posts (
 );
 
 -- ── 공지사항 ────────────────────────────────────────────────────
+-- 관리자(manager 이상)가 작성하는 공지사항 테이블 (차후 작성 권한 제한 예정)
+-- id        : 공지 고유 식별자. PK (자동 증가)
+-- category  : 공지 분류
+--              notice - 일반 공지
+--              event  - 팀 행사 관련
+--              game   - 경기 관련
+-- is_pinned : 상단 고정 여부. 1이면 고정, 0이면 일반
+-- title     : 공지 제목
+-- author    : 작성자 이름
+-- date      : 작성 날짜
+-- views     : 조회수. 기본 0
+-- content   : 공지 본문
 CREATE TABLE IF NOT EXISTS notices (
   id         INT          NOT NULL AUTO_INCREMENT PRIMARY KEY,
   category   ENUM('notice','event','game') NOT NULL DEFAULT 'notice',
@@ -74,6 +122,17 @@ CREATE TABLE IF NOT EXISTS notices (
 );
 
 -- ── 팀 일정 ─────────────────────────────────────────────────────
+-- 캘린더에 표시되는 팀 일정 테이블. 같은 날 동일한 이름의 일정은 중복 불가
+-- id    : 일정 고유 식별자. PK (자동 증가)
+-- year  : 일정 연도
+-- month : 일정 월
+-- day   : 일정 일
+-- type  : 일정 유형
+--          game        - 공식 경기
+--          training    - 정기 훈련
+--          meeting     - 팀 회의
+--          anniversary - 기념일
+-- name  : 일정 이름
 CREATE TABLE IF NOT EXISTS events (
   id     INT          NOT NULL AUTO_INCREMENT PRIMARY KEY,
   year   INT          NOT NULL,
@@ -85,6 +144,14 @@ CREATE TABLE IF NOT EXISTS events (
 );
 
 -- ── 공휴일 ──────────────────────────────────────────────────────
+-- 캘린더에 표시되는 공휴일 테이블
+-- id       : 공휴일 고유 식별자. PK (자동 증가)
+-- year     : 공휴일 연도
+-- month    : 공휴일 월
+-- day      : 공휴일 일
+-- type     : 공휴일 유형 (기본 'holiday')
+-- name     : 공휴일 이름
+-- is_fixed : 매년 고정 여부. 1이면 매년 같은 날짜(삼일절 등), 0이면 해마다 날짜가 바뀌는 공휴일(설날·추석 등)
 CREATE TABLE IF NOT EXISTS holidays (
   id       INT          NOT NULL AUTO_INCREMENT PRIMARY KEY,
   year     INT          NOT NULL,
@@ -95,73 +162,3 @@ CREATE TABLE IF NOT EXISTS holidays (
   is_fixed TINYINT(1)   NOT NULL DEFAULT 0
 );
 
--- ================================================================
--- SEED DATA
--- ================================================================
-
--- ── 설정 ────────────────────────────────────────────────────────
-INSERT IGNORE INTO settings (`key`, `value`) VALUES ('active_roster_year', '2026');
-
-
-
--- ── 게시판 ──────────────────────────────────────────────────────
-INSERT IGNORE INTO posts (title, author, date, views, content) VALUES
-('2026 시즌 첫 훈련 후기', '김승원', '2026-03-02', 142, '오늘 시즌 첫 훈련이 있었습니다. 다들 겨울 동안 체력을 잘 키워왔는지 컨디션이 좋아 보였습니다. 올 시즌도 열심히 해봅시다!'),
-('지난 주 연습 경기 총평', '심동현', '2026-03-08', 98, '지난 주 연습 경기에서 아쉬운 부분들이 있었습니다. 수비 위치 선정과 타격 타이밍을 집중적으로 보완해야 할 것 같습니다.'),
-('새 유니폼 어떤가요?', '김기민', '2026-03-10', 215, '이번 시즌 새로 맞춘 유니폼 다들 받으셨죠? 착용감이나 디자인에 대한 의견 자유롭게 남겨주세요.'),
-('훈련 자유 참여 안내', '김기민', '2026-03-12', 77, '이번 주 목요일 훈련은 자유 참여입니다. 참석 가능한 분들은 오후 4시까지 운동장으로 와주세요.'),
-('스트레칭 중요성에 대해', '이찬영', '2026-03-15', 63, '부상 방지를 위해 훈련 전후 스트레칭을 꼭 챙겨주세요. 특히 어깨와 허리 스트레칭을 꼼꼼히 해주시면 좋겠습니다.'),
-('3월 첫 공식전 준비 현황', '심동현', '2026-03-17', 189, '다음 달 첫 공식전을 앞두고 포지션 배치를 확정했습니다. 각자 역할에 맞게 집중 훈련 부탁드립니다.'),
-('운동장 사용 일정 공유', '김기민', '2026-03-19', 54, '4월 운동장 사용 일정을 공유합니다. 개인 일정과 겹치는 분들은 미리 말씀해 주세요.');
-
--- ── 공지사항 ────────────────────────────────────────────────────
-INSERT IGNORE INTO notices (category, is_pinned, title, author, date, views, content) VALUES
-('notice', 1, '2026 시즌 운영 방침 안내', '김기민', '2026-02-20', 320, '2026 시즌을 맞아 팀 운영 방침을 안내드립니다. 훈련 결석 시 사전 연락 필수, 공식전 2회 이상 무단 결석 시 출전 제한 등 기본 규칙을 준수해 주시기 바랍니다.'),
-('notice', 1, '회비 납부 안내', '김기민', '2026-02-25', 278, '2026 시즌 회비 납부 기한은 3월 31일입니다. 계좌번호는 개별 연락드린 내용을 참고해 주세요. 기한 내 미납 시 시즌 참가가 제한될 수 있습니다.'),
-('event',  0, '4월 OB-YB 친선전 개최', '김기민', '2026-03-05', 198, '매년 진행되는 OB-YB 친선전을 4월 중 개최할 예정입니다. 졸업생 분들의 많은 참여 부탁드립니다. 일정은 추후 확정 후 공지하겠습니다.'),
-('game',   0, '2026 봄 리그 첫 경기 일정', '심동현', '2026-03-10', 412, '봄 리그 첫 경기가 4월 5일로 확정되었습니다. 상대팀은 건국대학교입니다. 전원 참석 부탁드리며 응원 나와주실 분들도 환영합니다.'),
-('notice', 0, '훈련복 수령 안내', '김기민', '2026-03-13', 145, '새 훈련복이 입고되었습니다. 이번 주 훈련 때 수령 가능합니다. 못 받으신 분은 총무에게 개별 연락 주세요.'),
-('game',   0, '4월 경기 일정 전체 공개', '심동현', '2026-03-18', 233, '4월 경기 일정을 공개합니다. 4/5 건국대, 4/12 성균관대, 4/19 연세대 순으로 진행됩니다. 각 경기 장소는 추후 개별 공지합니다.'),
-('event',  0, '종강 뒤풀이 장소 투표', '김기민', '2026-03-20', 167, '1학기 종강 뒤풀이 장소를 투표로 결정하려 합니다. 의견 있으신 분들은 단체 채팅방에 댓글 달아주세요.');
-
--- ── 팀 일정 ─────────────────────────────────────────────────────
-INSERT IGNORE INTO events (year, month, day, type, name) VALUES
-(2026,3,7,'training','정기 훈련'),
-(2026,3,14,'training','정기 훈련'),
-(2026,3,21,'training','정기 훈련'),
-(2026,3,22,'anniversary','KWU 페가수스 창단기념일'),
-(2026,3,28,'training','정기 훈련'),
-(2026,3,15,'meeting','2026 시즌 팀 미팅'),
-(2026,4,4,'training','정기 훈련'),
-(2026,4,5,'game','봄 리그 1차전 vs 건국대'),
-(2026,4,11,'training','정기 훈련'),
-(2026,4,12,'game','봄 리그 2차전 vs 성균관대'),
-(2026,4,18,'training','정기 훈련'),
-(2026,4,19,'game','봄 리그 3차전 vs 연세대'),
-(2026,4,20,'meeting','4월 정기 회의'),
-(2026,4,25,'training','정기 훈련'),
-(2026,5,2,'training','정기 훈련'),
-(2026,5,9,'training','정기 훈련'),
-(2026,5,16,'training','정기 훈련'),
-(2026,5,17,'game','봄 리그 4차전 vs 고려대'),
-(2026,5,23,'training','정기 훈련'),
-(2026,5,30,'training','정기 훈련'),
-(2026,6,6,'game','봄 리그 최종전');
-
--- ── 공휴일 ──────────────────────────────────────────────────────
-INSERT IGNORE INTO holidays (year, month, day, type, name, is_fixed) VALUES
-(2026,1,1,'holiday','신정',1),
-(2026,3,1,'holiday','삼일절',1),
-(2026,5,5,'holiday','어린이날',1),
-(2026,6,6,'holiday','현충일',1),
-(2026,8,15,'holiday','광복절',1),
-(2026,10,3,'holiday','개천절',1),
-(2026,10,9,'holiday','한글날',1),
-(2026,12,25,'holiday','크리스마스',1),
-(2026,1,28,'holiday','설날 연휴',0),
-(2026,1,29,'holiday','설날',0),
-(2026,1,30,'holiday','설날 연휴',0),
-(2026,5,15,'holiday','부처님오신날',0),
-(2026,10,4,'holiday','추석 연휴',0),
-(2026,10,5,'holiday','추석',0),
-(2026,10,6,'holiday','추석 연휴',0);
