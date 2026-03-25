@@ -36,7 +36,7 @@ exports.login = async (req, res, next) => {
     const { username, password } = req.body
 
     const [rows] = await pool.query(
-      'SELECT id, username, password, role, manager_type, ob_yb, membership_status FROM users WHERE username = ?',
+      'SELECT id, username, password, authority AS role, staff_type, ob_yb, membership_status FROM users WHERE username = ?',
       [username]
     )
     const user = rows[0]
@@ -47,7 +47,7 @@ exports.login = async (req, res, next) => {
     if (!match) return res.status(401).json({ message: '아이디 또는 비밀번호가 올바르지 않습니다.' })
 
     const token = jwt.sign(
-      { id: user.id, username: user.username, role: user.role, manager_type: user.manager_type, ob_yb: user.ob_yb },
+      { id: user.id, username: user.username, role: user.role, staff_type: user.staff_type, ob_yb: user.ob_yb },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     )
@@ -58,7 +58,7 @@ exports.login = async (req, res, next) => {
         id: user.id,
         username: user.username,
         role: user.role,
-        manager_type: user.manager_type,
+        staff_type: user.staff_type,
         ob_yb: user.ob_yb,
         membership_status: user.membership_status,
       },
@@ -72,7 +72,7 @@ exports.login = async (req, res, next) => {
 exports.me = async (req, res, next) => {
   try {
     const [rows] = await pool.query(
-      'SELECT id, username, email, name, student_id, ob_yb, role, manager_type, membership_status, created_at FROM users WHERE id = ?',
+      'SELECT id, username, email, name, student_id, ob_yb, authority AS role, staff_type, membership_status, created_at FROM users WHERE id = ?',
       [req.user.id]
     )
     if (rows.length === 0) return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' })

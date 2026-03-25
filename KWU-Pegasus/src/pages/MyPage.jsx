@@ -4,10 +4,14 @@ import { API_BASE } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import styles from './MyPage.module.css'
 
+const ROSTER_ROLE_LABEL = { player: '선수', headcoach: '감독', president: '회장' }
+const MEMBER_ROLES = ['member', 'manager', 'staff', 'root']
+
 export default function MyPage() {
   const { user, token, loading } = useAuth()
   const navigate = useNavigate()
   const [me, setMe] = useState(null)
+  const [rosterHistory, setRosterHistory] = useState([])
 
   const [name, setName] = useState('')
   const [studentId, setStudentId] = useState('')
@@ -32,6 +36,13 @@ export default function MyPage() {
   }, [token])
 
   useEffect(() => { load() }, [load])
+
+  useEffect(() => {
+    if (!token || !me || !MEMBER_ROLES.includes(me.role) || !me.student_id) return
+    fetch(`${API_BASE}/api/mypage/roster-history`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json())
+      .then(data => setRosterHistory(Array.isArray(data) ? data : []))
+  }, [token, me])
 
   async function handleProfileSave(e) {
     e.preventDefault()
@@ -65,6 +76,7 @@ export default function MyPage() {
 
   const memberStatus = me.membership_status
   const canEditProfile = memberStatus === 'none'
+  const showRosterHistory = MEMBER_ROLES.includes(me.role) && me.student_id
 
   return (
     <div className={styles.page}>
@@ -161,6 +173,25 @@ export default function MyPage() {
           )}
         </div>
       </section>
+
+      {showRosterHistory && (
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>로스터 이력</h2>
+          {rosterHistory.length === 0 ? (
+            <p className={styles.desc}>등록된 로스터 이력이 없습니다.</p>
+          ) : (
+            <div className={styles.rosterHistory}>
+              {rosterHistory.map(r => (
+                <span key={r.year} className={styles.rosterChip}>
+                  <span className={styles.rosterChipYear}>{r.year}</span>
+                  <span className={styles.rosterChipNumber}>#{r.number}</span>
+                  <span className={styles.rosterChipRole}>{ROSTER_ROLE_LABEL[r.roster_role] ?? r.roster_role}</span>
+                </span>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
     </div>
   )
 }

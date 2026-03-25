@@ -225,3 +225,17 @@ INSERT IGNORE INTO notices (category, is_pinned, title, author, date, views, con
 ('notice', 0, '훈련복 수령 안내',             '김기민', '2026-03-13', 145, '새 훈련복이 입고되었습니다. 이번 주 훈련 때 수령 가능합니다. 못 받으신 분은 총무에게 개별 연락 주세요.'),
 ('game',   0, '4월 경기 일정 전체 공개',       '심동현', '2026-03-18', 233, '4월 경기 일정을 공개합니다. 4/5 건국대, 4/12 성균관대, 4/19 연세대 순으로 진행됩니다. 각 경기 장소는 추후 개별 공지합니다.'),
 ('event',  0, '종강 뒤풀이 장소 투표',         '김기민', '2026-03-20', 167, '1학기 종강 뒤풀이 장소를 투표로 결정하려 합니다. 의견 있으신 분들은 단체 채팅방에 댓글 달아주세요.');
+
+-- ── 테스트 유저 ──────────────────────────────────────────────────
+-- 비밀번호 모두 'test1234' (bcrypt, 10 rounds)
+INSERT IGNORE INTO users (username, password, email, authority, membership_status) VALUES
+('test_basic',  '$2b$10$Anwcwh3cGPvjTSfFL4h.IuVVkqO4urnr4l3MpCjLZ6eXv5bU4OTIS', 'basic@test.com',  'basic',  'none');
+
+INSERT IGNORE INTO users (username, password, email, name, student_id, ob_yb, authority, membership_status) VALUES
+('test_member', '$2b$10$Anwcwh3cGPvjTSfFL4h.IuVVkqO4urnr4l3MpCjLZ6eXv5bU4OTIS', 'member@test.com', '박준호', '2022200001', 'yb', 'member', 'approved');
+
+INSERT IGNORE INTO users (username, password, email, name, student_id, ob_yb, authority, staff_type, membership_status) VALUES
+('test_staff',  '$2b$10$Anwcwh3cGPvjTSfFL4h.IuVVkqO4urnr4l3MpCjLZ6eXv5bU4OTIS', 'staff@test.com',  '심동현', '2021100004', 'yb', 'staff', 'president', 'approved');
+
+INSERT IGNORE INTO users (username, password, email, authority, membership_status) VALUES
+('test_root',   '$2b$10$Anwcwh3cGPvjTSfFL4h.IuVVkqO4urnr4l3MpCjLZ6eXv5bU4OTIS', 'root@test.com',   'root',   'none');

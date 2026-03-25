@@ -34,6 +34,8 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' })
 })
 
+app.get('/favicon.ico', (req, res) => res.status(204).end())
+
 // ── 404 처리 ──────────────────────────────────────
 app.use((req, res) => {
   res.status(404).json({ message: '존재하지 않는 API입니다.' })

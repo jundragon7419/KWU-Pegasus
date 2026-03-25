@@ -1,225 +1,63 @@
-# KWU Pegasus — 백엔드 서버
+# KWU Pegasus — 서버 & 클라이언트
 
-광운대학교 페가수스 아마야구 동아리 웹사이트의 백엔드 서버입니다.
+광운대학교 페가수스 아마야구 동아리 웹사이트입니다.
+
+---
 
 ## 기술 스택
 
+### 백엔드
 - **Runtime** Node.js
 - **Framework** Express 5
 - **Database** MySQL 8 + mysql2
 - **인증** JWT (jsonwebtoken) + bcrypt
-- **기타** dotenv, cors, nodemon
 
-## 디렉토리 구조
-
-```
-KWU-Pegasus-server/
-├── server.js               진입점
-├── .env                    환경변수 (git 제외)
-├── sql/
-│   └── schema.sql          DB 전체 테이블 생성 + 시드 쿼리
-└── src/
-    ├── app.js              Express 앱 설정 (CORS, 라우터 등록, 에러 핸들러)
-    ├── db.js               MySQL 커넥션 풀
-    ├── controllers/
-    │   ├── authController.js     회원가입 / 로그인 / 내 정보
-    │   ├── adminController.js    관리자 (승인, 권한, 회원 명단, 로스터 연도)
-    │   ├── rosterController.js   선수단 조회
-    │   ├── postsController.js    게시판 CRUD
-    │   ├── noticesController.js  공지사항 CRUD
-    │   ├── eventsController.js   팀 일정 조회/추가/삭제
-    │   └── holidaysController.js 공휴일 조회
-    ├── routes/
-    │   ├── auth.js
-    │   ├── admin.js
-    │   ├── roster.js
-    │   ├── posts.js
-    │   ├── notices.js
-    │   ├── events.js
-    │   └── holidays.js
-    └── middlewares/
-        └── auth.js         JWT 인증 / 권한 미들웨어 (authenticate, requireRole)
-```
-
-## 시작하기
-
-### 1. 패키지 설치
-```bash
-npm install
-```
-
-### 2. 환경변수 설정
-
-`.env` 파일을 생성하고 아래 내용을 입력합니다:
-
-```env
-PORT=3001
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=비밀번호
-DB_NAME=kwu_pegasus
-JWT_SECRET=임의의_시크릿_키
-CORS_ORIGIN=http://localhost:5173
-```
-
-### 3. DB 세팅
-
-MySQL Workbench에서 `sql/schema.sql` 을 실행합니다.
-테이블 생성과 기본 시드 데이터(공휴일 등)가 함께 적용됩니다.
-
-### 4. 서버 실행
-
-```bash
-# 개발
-npm run dev
-
-# 프로덕션
-npm start
-```
-
-서버는 기본적으로 `http://localhost:3001` 에서 실행됩니다.
-
----
-
-## API 명세
-
-### 인증 `/api/auth`
-
-| 메서드 | 경로 | 설명 | 인증 |
-|--------|------|------|------|
-| POST | `/signup` | 회원가입 신청 | - |
-| POST | `/login` | 로그인 (JWT 반환) | - |
-| GET | `/me` | 내 정보 조회 | 필요 |
-
-**POST /signup**
-```json
-{
-  "username": "아이디",
-  "password": "비밀번호",
-  "email": "example@email.com",
-  "name": "홍길동",
-  "ob_yb": "yb",
-  "student_id": "2021000000"
-}
-```
-> `student_id` 입력 시 `members` 테이블의 학번+이름과 대조하여 일치하면 `role=player` 자동 부여.
-
-**POST /login**
-```json
-{ "username": "아이디", "password": "비밀번호" }
-```
-```json
-// 응답
-{ "token": "JWT토큰", "user": { "id": 1, "username": "아이디", "role": "player", ... } }
-```
-
----
-
-### 관리자 `/api/admin`
-
-모든 엔드포인트는 `staff` 또는 `root` 권한 필요.
-
-| 메서드 | 경로 | 설명 |
-|--------|------|------|
-| GET | `/pending` | 승인 대기 회원 목록 |
-| POST | `/approve/:id` | 회원가입 승인 |
-| POST | `/reject/:id` | 회원가입 거부 |
-| GET | `/users` | 전체 유저 목록 |
-| PUT | `/users/:id/role` | 권한 변경 |
-| GET | `/members` | 회원 명단 조회 |
-| POST | `/members` | 회원 명단 추가 |
-| DELETE | `/members/:student_id` | 회원 명단 삭제 |
-| PUT | `/roster-year` | 활성 로스터 연도 변경 |
-
-**PUT /users/:id/role**
-```json
-{ "role": "manager" }
-// staff 지정 시 (root만 가능)
-{ "role": "staff", "staff_type": "president" }
-// staff_type: "president"(회장) | "coach"(감독)
-```
-
----
-
-### 선수단 `/api/roster`
-
-| 메서드 | 경로 | 설명 |
-|--------|------|------|
-| GET | `/` | 선수단 조회 (쿼리: `?year=2026`, 생략 시 활성 연도) |
-| GET | `/years` | 등록된 연도 목록 |
-| GET | `/active-year` | 현재 활성 연도 |
-
----
-
-### 게시판 `/api/posts`
-
-| 메서드 | 경로 | 설명 | 인증 |
-|--------|------|------|------|
-| GET | `/` | 전체 게시글 목록 | - |
-| GET | `/:id` | 게시글 상세 (조회수 +1) | - |
-| POST | `/` | 게시글 작성 | player 이상 |
-| PUT | `/:id` | 게시글 수정 | player 이상 |
-| DELETE | `/:id` | 게시글 삭제 | player 이상 |
-
----
-
-### 공지사항 `/api/notices`
-
-| 메서드 | 경로 | 설명 | 인증 |
-|--------|------|------|------|
-| GET | `/` | 전체 공지사항 (고정글 상단) | - |
-| GET | `/:id` | 공지사항 상세 (조회수 +1) | - |
-| POST | `/` | 공지사항 작성 | manager 이상 |
-| PUT | `/:id` | 공지사항 수정 | manager 이상 |
-| DELETE | `/:id` | 공지사항 삭제 | manager 이상 |
-
----
-
-### 팀 일정 `/api/events`
-
-| 메서드 | 경로 | 설명 | 인증 |
-|--------|------|------|------|
-| GET | `/?year=2026` | 연도별 일정 조회 | - |
-| POST | `/` | 일정 추가 | manager 이상 |
-| DELETE | `/:id` | 일정 삭제 | manager 이상 |
-
----
-
-### 공휴일 `/api/holidays`
-
-| 메서드 | 경로 | 설명 |
-|--------|------|------|
-| GET | `/?year=2026` | 연도별 공휴일 조회 |
+### 프론트엔드
+- **Framework** React 19 + Vite
+- **라우팅** React Router v7
+- **스타일** CSS Modules
 
 ---
 
 ## 권한 체계
 
+계정 권한은 5단계로 구분됩니다. 상위 권한은 하위 권한을 모두 포함합니다.
+
+| 권한 | 설명 | 헤더 표시 |
+|------|------|-----------|
+| `basic` | 최초 가입 시 부여. 읽기 전용 | 일반 |
+| `member` | 관리자 승인 후 부여. 게시판 글쓰기 가능 | 멤버 |
+| `manager` | staff/root가 임명. 공지·일정 관리 가능 | 매니저 |
+| `staff` | 회장·감독. 멤버를 매니저로 임명 가능 | 회장 / 감독 |
+| `root` | 최고 관리자. 모든 권한 변경 가능 | ROOT |
+
+`staff`는 `staff_type`으로 세분화됩니다: `president`(회장) / `headcoach`(감독).
+헤더 배지는 `staff`일 경우 `staff_type`을 우선 표시합니다.
+
+### 기능별 권한
+
+| 기능 | basic | member | manager | staff | root |
+|------|:-----:|:------:|:-------:|:-----:|:----:|
+| 공개 페이지 열람 | ✅ | ✅ | ✅ | ✅ | ✅ |
+| 마이페이지 | ✅ | ✅ | ✅ | ✅ | ✅ |
+| 멤버 신청 | ✅ | — | — | — | — |
+| 로스터 이력 조회 | — | ✅ | ✅ | ✅ | ✅ |
+| 게시판 글쓰기 | — | ✅ | ✅ | ✅ | ✅ |
+| 공지사항 글쓰기 | — | — | ✅ | ✅ | ✅ |
+| 관리자 페이지 | — | — | ✅ | ✅ | ✅ |
+| 멤버 신청 승인·거부 | — | — | ✅ | ✅ | ✅ |
+| 로스터 CRUD | — | — | ✅ | ✅ | ✅ |
+| 매니저 임명 | — | — | — | ✅ | ✅ |
+| 전체 권한 변경 | — | — | — | — | ✅ |
+| 회원 목록 조회 | — | — | — | — | ✅ |
+
+### 멤버 신청 플로우
+
 ```
-root    최고 관리자. staff 지정 가능.
-staff   회장(president) 또는 감독(coach). 회원가입 승인, manager 지정 가능.
-manager 공지사항 작성, 일정 관리 등 일반 관리 권한.
-player  선수. 게시판 글쓰기 가능. 학번 인증으로 자동 부여.
-user    일반 회원. ob(졸업생) / yb(재학생) 구분.
-```
-
-### 회원가입 플로우
-
-```
-신청 (pending) → staff 승인 → 활성화 (active)
-              → staff 거부 → 거부됨 (rejected)
-```
-
-학번+이름 입력 시 members 테이블과 대조 → 일치하면 승인 후 player 권한 자동 부여.
-
----
-
-## 인증 방식
-
-요청 헤더에 JWT 토큰을 포함합니다:
-
-```
-Authorization: Bearer <token>
+가입 (basic)
+  → 마이페이지에서 실명·학번·OB/YB 입력 후 신청 (pending)
+    → manager 이상 승인 → member 권한 부여
+    → manager 이상 거부 → rejected
 ```
 
 ---
@@ -228,55 +66,32 @@ Authorization: Bearer <token>
 
 ```mermaid
 erDiagram
-    members {
-        CHAR10  student_id  PK
-        VARCHAR name
-    }
-
     users {
-        INT     id          PK
-        VARCHAR username    UK
-        VARCHAR name
-        CHAR10  student_id  UK
+        INT     id              PK
+        VARCHAR username        UK
         VARCHAR password
-        VARCHAR email       UK
+        VARCHAR email           UK
+        VARCHAR name
+        CHAR10  student_id      UK
         ENUM    ob_yb
-        ENUM    role
+        ENUM    authority
         ENUM    staff_type
-        ENUM    status
+        ENUM    membership_status
         DATETIME created_at
     }
 
     roster {
-        INT     year    PK
-        INT     number  PK
+        INT     year        PK
+        INT     number      PK
         VARCHAR name
+        CHAR10  student_id
+        INT     user_id     FK
         ENUM    role
-        VARCHAR title
     }
 
     settings {
         VARCHAR key     PK
         VARCHAR value
-    }
-
-    events {
-        INT     id      PK
-        INT     year
-        INT     month
-        INT     day
-        ENUM    type
-        VARCHAR name
-    }
-
-    holidays {
-        INT     id       PK
-        INT     year
-        INT     month
-        INT     day
-        VARCHAR type
-        VARCHAR name
-        TINYINT is_fixed
     }
 
     posts {
@@ -299,5 +114,228 @@ erDiagram
         TEXT    content
     }
 
-    members ||--o{ users : "학번 인증"
+    events {
+        INT     id      PK
+        INT     year
+        INT     month
+        INT     day
+        ENUM    type
+        VARCHAR name
+    }
+
+    holidays {
+        INT     id       PK
+        INT     year
+        INT     month
+        INT     day
+        VARCHAR type
+        VARCHAR name
+        TINYINT is_fixed
+    }
+
+    users ||--o{ roster : "student_id 매칭"
 ```
+
+### 주요 컬럼 설명
+
+**`users.authority`** `basic | member | manager | staff | root`
+**`users.staff_type`** `president | headcoach` — authority가 staff일 때만 사용
+**`users.membership_status`** `none | pending | approved | rejected`
+
+**`roster.role`** `player | headcoach | president | retired`
+— 유저 권한(`authority`)과 별개로 관리되는 로스터 내 역할
+
+**`settings`** 키-값 전역 설정. 현재 사용: `active_roster_year`
+
+**`holidays.is_fixed`** `1`이면 매년 동일 날짜(삼일절 등), `0`이면 음력 기준 공휴일(설날·추석 등)
+
+---
+
+## 서버 구조
+
+```
+KWU-Pegasus-server/
+├── server.js                   진입점 (포트 바인딩)
+├── sql/
+│   ├── schema.sql              DB 전체 테이블 정의 (DDL)
+│   ├── seed.sql                전체 시드 데이터 (DML)
+│   └── seeds/                  연도별 참조용 시드 파일
+│       ├── roster/
+│       │   ├── roster_2025.sql
+│       │   └── roster_2026.sql
+│       ├── events/
+│       └── holidays/
+└── src/
+    ├── app.js                  Express 앱 설정 (CORS, 라우터, 에러 핸들러)
+    ├── db.js                   MySQL 커넥션 풀
+    ├── middlewares/
+    │   └── auth.js             JWT 인증 미들웨어 (authenticate, requireRole)
+    ├── controllers/
+    │   ├── authController.js       회원가입 / 로그인 / 내 정보
+    │   ├── mypageController.js     마이페이지 (프로필, 멤버 신청, 로스터 이력)
+    │   ├── adminController.js      관리자 (멤버 승인, 로스터 CRUD, 권한 변경, 매니저 임명)
+    │   ├── rosterController.js     선수단 공개 조회
+    │   ├── postsController.js      게시판 CRUD
+    │   ├── noticesController.js    공지사항 CRUD
+    │   ├── eventsController.js     팀 일정 조회·추가·삭제
+    │   └── holidaysController.js   공휴일 조회
+    └── routes/
+        ├── auth.js
+        ├── mypage.js
+        ├── admin.js
+        ├── roster.js
+        ├── posts.js
+        ├── notices.js
+        ├── events.js
+        └── holidays.js
+```
+
+---
+
+## API 명세
+
+### 인증 `/api/auth`
+
+| 메서드 | 경로 | 설명 | 권한 |
+|--------|------|------|------|
+| POST | `/signup` | 회원가입 | — |
+| POST | `/login` | 로그인 (JWT 반환) | — |
+| GET | `/me` | 내 정보 조회 | 로그인 |
+
+### 마이페이지 `/api/mypage`
+
+| 메서드 | 경로 | 설명 | 권한 |
+|--------|------|------|------|
+| GET | `/me` | 내 상세 정보 | 로그인 |
+| PUT | `/profile` | 프로필 수정 (실명·학번·OB/YB) | 로그인 |
+| POST | `/membership-request` | 멤버 신청 | 로그인 |
+| GET | `/roster-history` | 내 로스터 이력 | 로그인 |
+
+### 관리자 `/api/admin`
+
+| 메서드 | 경로 | 설명 | 권한 |
+|--------|------|------|------|
+| GET | `/pending-members` | 신청 대기 목록 | manager+ |
+| POST | `/approve-member/:id` | 멤버 신청 승인 → member 권한 부여 | manager+ |
+| POST | `/reject-member/:id` | 멤버 신청 거부 | manager+ |
+| GET | `/roster?year=` | 로스터 조회 (admin용) | manager+ |
+| POST | `/roster` | 로스터 항목 추가 | manager+ |
+| PUT | `/roster/:year/:number` | 로스터 항목 수정 | manager+ |
+| DELETE | `/roster/:year/:number` | 로스터 항목 삭제 | manager+ |
+| PUT | `/roster-year` | 활성 로스터 연도 변경 | manager+ |
+| GET | `/members` | member 목록 (매니저 임명용) | staff+ |
+| PUT | `/users/:id/set-manager` | member → manager 임명 | staff+ |
+| GET | `/users` | 전체 회원 목록 | root |
+| PUT | `/users/:id/role` | 권한 변경 | root |
+
+### 선수단 `/api/roster`
+
+| 메서드 | 경로 | 설명 |
+|--------|------|------|
+| GET | `/?year=` | 연도별 선수단 조회 (생략 시 활성 연도) |
+| GET | `/years` | 등록된 연도 목록 |
+| GET | `/active-year` | 현재 활성 연도 |
+
+### 게시판 `/api/posts`
+
+| 메서드 | 경로 | 설명 | 권한 |
+|--------|------|------|------|
+| GET | `/` | 목록 | — |
+| GET | `/:id` | 상세 (조회수 +1) | — |
+| POST | `/` | 작성 | member+ |
+| PUT | `/:id` | 수정 | member+ |
+| DELETE | `/:id` | 삭제 | member+ |
+
+### 공지사항 `/api/notices`
+
+| 메서드 | 경로 | 설명 | 권한 |
+|--------|------|------|------|
+| GET | `/` | 목록 (고정글 상단) | — |
+| GET | `/:id` | 상세 (조회수 +1) | — |
+| POST | `/` | 작성 | manager+ |
+| PUT | `/:id` | 수정 | manager+ |
+| DELETE | `/:id` | 삭제 | manager+ |
+
+### 팀 일정 `/api/events`
+
+| 메서드 | 경로 | 설명 | 권한 |
+|--------|------|------|------|
+| GET | `/?year=` | 연도별 일정 | — |
+| POST | `/` | 추가 | manager+ |
+| DELETE | `/:id` | 삭제 | manager+ |
+
+### 공휴일 `/api/holidays`
+
+| 메서드 | 경로 | 설명 |
+|--------|------|------|
+| GET | `/?year=` | 연도별 공휴일 |
+
+---
+
+## 프론트엔드 구조
+
+```
+KWU-Pegasus/src/
+├── main.jsx                        진입점
+├── App.jsx                         라우터 정의 + ProtectedRoute
+├── index.css                       전역 CSS 변수 (디자인 토큰)
+├── context/
+│   └── AuthContext.jsx             로그인 상태 전역 관리 (JWT 디코딩·저장)
+├── layouts/
+│   └── Header.jsx                  상단 네비게이션 바
+├── lib/
+│   ├── api.js                      API_BASE URL 상수
+│   └── constants.js                공통 레이블·타입 상수
+├── components/
+│   └── Pagination.jsx              페이지네이션 공통 컴포넌트
+└── pages/
+    ├── Home.jsx                    홈
+    ├── Schedule.jsx                팀 일정 캘린더
+    ├── Roster.jsx                  선수단 명단
+    ├── MyPage.jsx                  마이페이지 (프로필·멤버 신청·로스터 이력)
+    ├── Admin.jsx                   관리자 페이지
+    ├── Unauthorized.jsx            권한 없음 안내
+    ├── NotFound.jsx                404
+    ├── auth/
+    │   ├── Login.jsx
+    │   └── Signup.jsx
+    ├── board/
+    │   ├── Board.jsx               게시판 목록
+    │   ├── BoardDetail.jsx         게시글 상세
+    │   └── BoardWrite.jsx          게시글 작성
+    └── notice/
+        ├── Notice.jsx              공지사항 목록
+        ├── NoticeDetail.jsx        공지사항 상세
+        └── NoticeWrite.jsx         공지사항 작성
+```
+
+### 라우트 보호 (`ProtectedRoute`)
+
+```
+/board/write        member 이상
+/notice/write       manager 이상
+/admin              manager 이상
+/mypage             로그인 필요
+```
+
+미로그인 → `/login` 리다이렉트
+권한 부족 → `/unauthorized` 리다이렉트
+
+### 인증 흐름
+
+1. 로그인 시 서버에서 JWT 반환
+2. `remember me` 여부에 따라 `localStorage` 또는 `sessionStorage` 저장
+3. `AuthContext`에서 토큰을 디코딩해 `user` 객체 전역 제공
+4. API 요청 시 `Authorization: Bearer <token>` 헤더 첨부
+
+### 디자인 토큰 (`index.css`)
+
+| 변수 | 값 | 용도 |
+|------|----|------|
+| `--main-800` | `#011126` | 배경 (짙은 네이비) |
+| `--main-500` | `#A6926D` | 주요 강조 (골드) |
+| `--main-400` | `#C0AC87` | 중간 강조 |
+| `--main-300` | `#D9C5A0` | 연한 강조 |
+| `--text-100` | `#ffffff` | 기본 텍스트 |
+| `--color-red` | `#f07070` | 일요일·공휴일·경고 |
+| `--color-blue` | `#6fa3f5` | 토요일·감독·링크 |

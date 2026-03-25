@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { ROLE_LABEL } from '../lib/constants'
+import { ROLE_LABEL, STAFF_TYPE_LABEL } from '../lib/constants'
 import styles from './Header.module.css'
 
 export default function Header() {
@@ -11,6 +11,8 @@ export default function Header() {
     logout()
     navigate('/')
   }
+
+  const isAdmin = user && ['manager', 'staff', 'root'].includes(user.role)
 
   return (
     <header className={styles.header}>
@@ -31,7 +33,7 @@ export default function Header() {
         {user && (
           <Link className={styles.navItem} to="/mypage">마이페이지</Link>
         )}
-        {user && (user.role === 'manager' || user.role === 'root') && (
+        {isAdmin && (
           <Link className={styles.navItemAdmin} to="/admin">관리자</Link>
         )}
       </nav>
@@ -39,7 +41,11 @@ export default function Header() {
       <div className={styles.right}>
         {user ? (
           <>
-            <span className={styles.roleBadge}>{ROLE_LABEL[user.role] ?? user.role}</span>
+            <span className={styles.roleBadge}>
+              {user.role === 'staff' && user.staff_type
+                ? STAFF_TYPE_LABEL[user.staff_type] ?? user.staff_type
+                : ROLE_LABEL[user.role] ?? user.role}
+            </span>
             <span className={styles.username}>{user.username}</span>
             <button className={styles.logoutButton} onClick={handleLogout}>로그아웃</button>
           </>

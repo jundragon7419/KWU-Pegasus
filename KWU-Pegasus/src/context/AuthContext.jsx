@@ -22,7 +22,7 @@ export function AuthProvider({ children }) {
       const decoded = decodeToken(stored)
       if (decoded && decoded.exp * 1000 > Date.now()) {
         setToken(stored)
-        setUser({ id: decoded.id, username: decoded.username, role: decoded.role, manager_type: decoded.manager_type, ob_yb: decoded.ob_yb })
+        setUser({ id: decoded.id, username: decoded.username, role: decoded.role, staff_type: decoded.staff_type, ob_yb: decoded.ob_yb })
       } else {
         localStorage.removeItem('token')
         sessionStorage.removeItem('token')
@@ -39,7 +39,7 @@ export function AuthProvider({ children }) {
     }
     const decoded = decodeToken(token)
     setToken(token)
-    setUser({ id: decoded.id, username: decoded.username, role: decoded.role, manager_type: decoded.manager_type, ob_yb: decoded.ob_yb })
+    setUser({ id: decoded.id, username: decoded.username, role: decoded.role, staff_type: decoded.staff_type, ob_yb: decoded.ob_yb })
   }
 
   function logout() {

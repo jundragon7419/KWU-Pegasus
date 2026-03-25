@@ -17,7 +17,7 @@ exports.getPendingMembers = async (req, res, next) => {
 exports.approveMember = async (req, res, next) => {
   try {
     await pool.query(
-      "UPDATE users SET membership_status = 'approved' WHERE id = ?",
+      "UPDATE users SET membership_status = 'approved', authority = 'member' WHERE id = ? AND authority = 'basic'",
       [req.params.id]
     )
     res.json({ message: '승인 완료' })
@@ -34,46 +34,6 @@ exports.rejectMember = async (req, res, next) => {
       [req.params.id]
     )
     res.json({ message: '거부 완료' })
-  } catch (err) {
-    next(err)
-  }
-}
-
-// ── 영구결번 추가
-exports.addRetired = async (req, res, next) => {
-  try {
-    const { number, name } = req.body
-    if (!name || number == null) {
-      return res.status(400).json({ message: '번호와 이름을 입력해주세요.' })
-    }
-    await pool.query(
-      'INSERT INTO retired_numbers (number, name) VALUES (?, ?)',
-      [parseInt(number), name]
-    )
-    res.status(201).json({ message: '영구결번 등록 완료' })
-  } catch (err) {
-    if (err.code === 'ER_DUP_ENTRY') {
-      return res.status(409).json({ message: '이미 등록된 번호입니다.' })
-    }
-    next(err)
-  }
-}
-
-// ── 영구결번 전체 조회
-exports.getRetired = async (req, res, next) => {
-  try {
-    const [rows] = await pool.query('SELECT number, name FROM retired_numbers ORDER BY number ASC')
-    res.json(rows)
-  } catch (err) {
-    next(err)
-  }
-}
-
-// ── 영구결번 삭제
-exports.deleteRetired = async (req, res, next) => {
-  try {
-    await pool.query('DELETE FROM retired_numbers WHERE number = ?', [req.params.number])
-    res.json({ message: '삭제 완료' })
   } catch (err) {
     next(err)
   }
@@ -109,7 +69,7 @@ exports.addRosterEntry = async (req, res, next) => {
     if (!/^\d{10}$/.test(student_id)) {
       return res.status(400).json({ message: '학번은 10자리 숫자여야 합니다.' })
     }
-    const validRoles = ['coach', 'president', 'player']
+    const validRoles = ['headcoach', 'president', 'player', 'retired']
     if (!validRoles.includes(role)) {
       return res.status(400).json({ message: '유효한 역할을 선택해주세요.' })
     }
@@ -162,10 +122,11 @@ exports.updateRosterEntry = async (req, res, next) => {
 exports.getUsers = async (req, res, next) => {
   try {
     const [rows] = await pool.query(
-      `SELECT u.id, u.username, u.name, u.email, u.ob_yb, u.role, u.manager_type, u.membership_status, u.created_at,
+      `SELECT u.id, u.username, u.name, u.email, u.ob_yb, u.authority AS role, u.staff_type, u.membership_status, u.created_at,
               r.year AS roster_year, r.number AS roster_number
        FROM users u
        LEFT JOIN roster r ON r.student_id = u.student_id
+         AND r.year = (SELECT MAX(r2.year) FROM roster r2 WHERE r2.student_id = u.student_id)
        ORDER BY u.created_at ASC`
     )
     res.json(rows)
@@ -177,21 +138,54 @@ exports.getUsers = async (req, res, next) => {
 // ── 권한 변경 (root만 가능)
 exports.setRole = async (req, res, next) => {
   try {
-    const { role, manager_type } = req.body
+    const { role, staff_type } = req.body
 
-    if (!['normal', 'manager', 'root'].includes(role)) {
+    if (!['basic', 'member', 'manager', 'staff', 'root'].includes(role)) {
       return res.status(400).json({ message: '유효하지 않은 권한입니다.' })
     }
-    if (role === 'manager' && !['president', 'coach', 'manager'].includes(manager_type)) {
-      return res.status(400).json({ message: '관리자 직함을 선택해주세요.' })
+    if (role === 'staff' && !['president', 'headcoach'].includes(staff_type)) {
+      return res.status(400).json({ message: '스태프 직함을 선택해주세요.' })
     }
 
-    const newManagerType = role === 'manager' ? manager_type : null
+    const newStaffType = role === 'staff' ? staff_type : null
     await pool.query(
-      'UPDATE users SET role = ?, manager_type = ? WHERE id = ?',
-      [role, newManagerType, req.params.id]
+      'UPDATE users SET authority = ?, staff_type = ? WHERE id = ?',
+      [role, newStaffType, req.params.id]
     )
     res.json({ message: '권한 변경 완료' })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// ── 멤버 목록 (staff/root용, 매니저 임명에 사용)
+exports.getMembers = async (_req, res, next) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT id, username, name, ob_yb FROM users WHERE authority = 'member' ORDER BY created_at ASC`
+    )
+    res.json(rows)
+  } catch (err) {
+    next(err)
+  }
+}
+
+// ── 매니저 임명 (staff/root가 member → manager로 승격)
+exports.setManager = async (req, res, next) => {
+  try {
+    const [rows] = await pool.query(
+      'SELECT authority FROM users WHERE id = ?',
+      [req.params.id]
+    )
+    if (rows.length === 0) return res.status(404).json({ message: '유저를 찾을 수 없습니다.' })
+    if (rows[0].authority !== 'member') {
+      return res.status(400).json({ message: '멤버만 매니저로 임명할 수 있습니다.' })
+    }
+    await pool.query(
+      "UPDATE users SET authority = 'manager' WHERE id = ?",
+      [req.params.id]
+    )
+    res.json({ message: '매니저 임명 완료' })
   } catch (err) {
     next(err)
   }

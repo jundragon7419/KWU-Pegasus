@@ -147,3 +147,35 @@
   padding-top: 1.25rem;
   border-top: 1px solid #f3f4f6;
 }
+
+.rosterHistory {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.rosterChip {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  color: #374151;
+}
+
+.rosterChipYear {
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.rosterChipNumber {
+  font-weight: 700;
+}
+
+.rosterChipRole {
+  color: #9ca3af;
+  font-size: 0.78rem;
+}

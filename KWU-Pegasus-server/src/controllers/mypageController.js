@@ -4,7 +4,7 @@ const pool = require('../db')
 exports.getMe = async (req, res, next) => {
   try {
     const [rows] = await pool.query(
-      'SELECT id, username, email, name, student_id, ob_yb, role, manager_type, membership_status, created_at FROM users WHERE id = ?',
+      'SELECT id, username, email, name, student_id, ob_yb, authority AS role, staff_type, membership_status, created_at FROM users WHERE id = ?',
       [req.user.id]
     )
     if (rows.length === 0) return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' })
@@ -42,6 +42,23 @@ exports.updateProfile = async (req, res, next) => {
     if (err.code === 'ER_DUP_ENTRY') {
       return res.status(409).json({ message: '이미 등록된 학번입니다.' })
     }
+    next(err)
+  }
+}
+
+// 로스터 이력 조회 (student_id 매칭)
+exports.getRosterHistory = async (req, res, next) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT r.year, r.number, r.role AS roster_role
+       FROM roster r
+       JOIN users u ON u.student_id = r.student_id
+       WHERE u.id = ?
+       ORDER BY r.year ASC`,
+      [req.user.id]
+    )
+    res.json(rows)
+  } catch (err) {
     next(err)
   }
 }
