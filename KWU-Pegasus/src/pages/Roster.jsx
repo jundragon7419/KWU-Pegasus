@@ -10,7 +10,7 @@ const FILTERS = [
 ]
 
 const ROSTER_ROLE_LABEL = {
-  player: '선수', coach: '감독', president: '회장', retired: '영구결번',
+  player: '선수', headcoach: '감독', president: '회장', retired: '영구결번',
 }
 
 export default function Roster() {
@@ -36,13 +36,13 @@ export default function Roster() {
     if (!selectedYear) return
     fetch(`${API_BASE}/api/roster?year=${selectedYear}`)
       .then(r => r.json())
-      .then(data => setRoster(data))
+      .then(data => setRoster(Array.isArray(data) ? data : []))
   }, [selectedYear])
 
   const filtered = useMemo(() => roster.filter(p => {
     const matchRole =
       filter === 'all' ||
-      (filter === 'staff' ? (p.role === 'coach' || p.role === 'president') : p.role === filter)
+      (filter === 'staff' ? (p.role === 'headcoach' || p.role === 'president') : p.role === filter)
     const matchSearch = search === '' ||
       p.name.includes(search) ||
       String(p.number).includes(search)
@@ -109,11 +109,11 @@ export default function Roster() {
           {filtered.map(p => (
             <div
               key={p.number}
-              className={`${styles.card} ${styles[p.role === 'coach' || p.role === 'president' ? 'card_staff' : `card_${p.role}`]}`}
+              className={`${styles.card} ${styles[p.role === 'headcoach' || p.role === 'president' ? 'card_staff' : `card_${p.role}`]}`}
             >
               <span className={styles.number}>{p.number}</span>
               <span className={styles.name}>{p.name}</span>
-              {(p.role === 'coach' || p.role === 'president' || p.role === 'retired') && (
+              {(p.role === 'headcoach' || p.role === 'president' || p.role === 'retired') && (
                 <span className={styles.staffBadge}>{ROSTER_ROLE_LABEL[p.role]}</span>
               )}
             </div>

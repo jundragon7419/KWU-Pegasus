@@ -98,8 +98,8 @@
 }
 
 .tagEvent {
-  background: rgba(111, 163, 245, 0.15);
-  color: #6fa3f5;
+  background: color-mix(in srgb, var(--color-blue) 15%, transparent);
+  color: var(--color-blue);
 }
 
 .tagGame {

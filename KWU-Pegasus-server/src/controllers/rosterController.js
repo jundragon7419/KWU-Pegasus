@@ -14,10 +14,7 @@ exports.getRoster = async (req, res, next) => {
   try {
     const year = req.query.year ? parseInt(req.query.year) : await getActiveYear()
     const [rows] = await pool.query(
-      `SELECT year, number, name, role, user_id FROM roster WHERE year = ?
-       UNION ALL
-       SELECT NULL AS year, number, name, 'retired' AS role, NULL AS user_id FROM retired_numbers
-       ORDER BY number ASC`,
+      `SELECT year, number, name, role, user_id FROM roster WHERE year = ? ORDER BY number ASC`,
       [year]
     )
     res.json(rows)

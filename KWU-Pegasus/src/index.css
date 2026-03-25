@@ -1,15 +1,20 @@
 ﻿@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap');
 
 :root {
-  --main-900: #1F1F26;
+  /* 메인 팔레트 */
   --main-800: #011126;
-  --main-700: #594216;
   --main-500: #A6926D;
+  --main-400: #C0AC87;
   --main-300: #D9C5A0;
-  --bg: #f7f7f8;
-  --text-200: #111827;
+
+  /* 텍스트 */
   --text-100: #ffffff;
-  --surface: #ffffff;
+
+  /* 강조색 */
+  --color-red:  #f07070;
+  --color-blue: #6fa3f5;
+
+  /* 폰트 */
   --font-sans: 'Noto Sans KR', 'Roboto', system-ui, sans-serif;
 
   /* 레이아웃 */

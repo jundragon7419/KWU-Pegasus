@@ -156,7 +156,7 @@
 .status_none     { background: rgba(255, 255, 255, 0.06); color: rgba(255,255,255,0.4); }
 .status_approved { background: rgba(100, 200, 120, 0.15); color: #6dc87a; }
 
-.role_player { background: rgba(111, 163, 245, 0.15); color: #6fa3f5; }
+.role_player { background: color-mix(in srgb, var(--color-blue) 15%, transparent); color: var(--color-blue); }
 
 .numberInput {
   background: rgba(255, 255, 255, 0.07);
@@ -205,7 +205,7 @@
 
 .rosterInfo {
   font-size: 0.85rem;
-  color: #6fa3f5;
+  color: var(--color-blue);
   font-weight: 600;
 }
 

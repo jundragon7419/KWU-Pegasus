@@ -192,8 +192,9 @@ export default function Schedule() {
                 key={idx}
                 className={`${styles.cell}
                   ${!day ? styles.empty : ''}
-                  ${col === 0 || isHoliday ? styles.sun : ''}
+                  ${col === 0 ? styles.sun : ''}
                   ${col === 6 ? styles.sat : ''}
+                  ${isHoliday ? styles.holiday : ''}
                   ${isToday(day) ? styles.today : ''}`}
               >
                 {day && (

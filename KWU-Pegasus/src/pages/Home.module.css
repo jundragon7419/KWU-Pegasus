@@ -114,8 +114,8 @@
 }
 
 .tagEvent {
-  background: rgba(111, 163, 245, 0.15);
-  color: #6fa3f5;
+  background: color-mix(in srgb, var(--color-blue) 15%, transparent);
+  color: var(--color-blue);
 }
 
 .tagGame {
@@ -221,13 +221,13 @@
 }
 
 .sun {
-  color: #f07070;
+  color: var(--color-red);
 }
 
 .calendarCell.sun {
-  color: #f07070;
+  color: var(--color-red);
 }
 
 .calendarToday.sun {
-  color: #f07070;
+  color: var(--color-red);
 }

@@ -236,7 +236,7 @@
 .holidayName {
   display: block;
   font-size: 0.7rem;
-  color: #f07070;
+  color: var(--color-red);
   line-height: 1.4;
   margin-top: 2px;
   word-break: keep-all;
@@ -262,13 +262,18 @@
 /* 일요일 */
 .sun .dayNumber,
 .dayName.sun {
-  color: #f07070;
+  color: var(--color-red);
 }
 
 /* 토요일 */
 .sat .dayNumber,
 .dayName.sat {
-  color: #6fa3f5;
+  color: var(--color-blue);
+}
+
+/* 공휴일 */
+.holiday .dayNumber {
+  color: var(--color-red);
 }
 
 /* 오늘 */
@@ -282,6 +287,7 @@
   font-weight: 700;
 }
 
-.today.sun .dayNumber {
-  color: #f07070;
+.today.sun .dayNumber,
+.today.holiday .dayNumber {
+  color: var(--color-red);
 }

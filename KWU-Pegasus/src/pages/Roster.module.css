@@ -145,7 +145,7 @@
   border-radius: 50%;
 }
 
-.dotStaff   { background: #6fa3f5; }
+.dotStaff   { background: var(--color-blue); }
 .dotRetired { background: #c9a227; }
 
 /* ── 그리드 ── */
@@ -197,7 +197,7 @@
 }
 
 .card_staff .number {
-  color: #6fa3f5;
+  color: var(--color-blue);
 }
 
 .card_retired {
@@ -224,7 +224,7 @@
 
 .staffBadge {
   background: rgba(111, 163, 245, 0.2);
-  color: #6fa3f5;
+  color: var(--color-blue);
 }
 
 .retiredBadge {
