@@ -56,6 +56,10 @@
   overflow-x: auto;
 }
 
+.tableFixed {
+  table-layout: fixed;
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -310,6 +314,47 @@
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+/* ── 섹션 구분 행 ── */
+.sectionRow {
+  padding: 8px 12px !important;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.35);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.emptyRow {
+  padding: 16px 12px !important;
+  color: rgba(255, 255, 255, 0.25);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* ── 임명 탭 레이아웃 ── */
+.promoteWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── 서브 타이틀 / 그룹 ── */
+.subTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.55);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 20px 0 8px;
+}
+
+.userGroup {
+  display: flex;
+  flex-direction: column;
 }
 
 /* ── 회원 명단 탭 ── */

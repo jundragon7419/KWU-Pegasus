@@ -19,7 +19,7 @@ exports.getPost = async (req, res, next) => {
     )
     if (rows.length === 0) return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' })
     res.json(rows[0])
-    pool.query('UPDATE posts SET views = views + 1 WHERE id = ?', [req.params.id]).catch(() => {})
+    pool.query('UPDATE posts SET views = views + 1 WHERE id = ?', [req.params.id]).catch(err => console.error('View increment failed:', err))
   } catch (err) {
     next(err)
   }

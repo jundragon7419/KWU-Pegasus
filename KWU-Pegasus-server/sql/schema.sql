@@ -162,3 +162,11 @@ CREATE TABLE IF NOT EXISTS holidays (
   is_fixed TINYINT(1)   NOT NULL DEFAULT 0
 );
 
+-- ── 인덱스 ──────────────────────────────────────────────────────
+-- roster.student_id  : users.student_id와의 JOIN 및 이력 조회에 사용
+-- users.student_id   : 로스터 연동 시 매칭에 사용 (UNIQUE이나 명시적 인덱스 추가)
+-- events.year        : 연도별 일정 조회에 사용
+-- holidays.year      : 연도별 공휴일 조회에 사용
+CREATE INDEX idx_roster_student_id ON roster(student_id);
+CREATE INDEX idx_events_year       ON events(year);
+CREATE INDEX idx_holidays_year     ON holidays(year);

@@ -1,4 +1,5 @@
 const pool = require('../db')
+const { STUDENT_ID_REGEX, ROSTER_ROLES, USER_ROLES, STAFF_TYPES } = require('../lib/constants')
 
 // ── 멤버 신청 대기 목록 (membership_status=pending)
 exports.getPendingMembers = async (req, res, next) => {
@@ -66,11 +67,10 @@ exports.addRosterEntry = async (req, res, next) => {
     if (!year || number == null || !name || !student_id || !role) {
       return res.status(400).json({ message: '모든 항목을 입력해주세요.' })
     }
-    if (!/^\d{10}$/.test(student_id)) {
+    if (!STUDENT_ID_REGEX.test(student_id)) {
       return res.status(400).json({ message: '학번은 10자리 숫자여야 합니다.' })
     }
-    const validRoles = ['headcoach', 'president', 'player', 'retired']
-    if (!validRoles.includes(role)) {
+    if (!ROSTER_ROLES.includes(role)) {
       return res.status(400).json({ message: '유효한 역할을 선택해주세요.' })
     }
     await pool.query(
@@ -102,7 +102,7 @@ exports.updateRosterEntry = async (req, res, next) => {
   try {
     const { year, number } = req.params
     const { newNumber, name, student_id, role } = req.body
-    if (student_id && !/^\d{10}$/.test(student_id)) {
+    if (student_id && !STUDENT_ID_REGEX.test(student_id)) {
       return res.status(400).json({ message: '학번은 10자리 숫자여야 합니다.' })
     }
     await pool.query(
@@ -135,16 +135,26 @@ exports.getUsers = async (req, res, next) => {
   }
 }
 
-// ── 권한 변경 (root만 가능)
+// ── 권한 변경 (root: 전체, staff: member→basic/member/manager만 가능)
 exports.setRole = async (req, res, next) => {
   try {
     const { role, staff_type } = req.body
+    const callerRole = req.user.role
 
-    if (!['basic', 'member', 'manager', 'staff', 'root'].includes(role)) {
+    if (!USER_ROLES.includes(role)) {
       return res.status(400).json({ message: '유효하지 않은 권한입니다.' })
     }
-    if (role === 'staff' && !['president', 'headcoach'].includes(staff_type)) {
+    if (callerRole === 'staff' && ['staff', 'root'].includes(role)) {
+      return res.status(403).json({ message: '스태프는 해당 권한을 부여할 수 없습니다.' })
+    }
+    if (role === 'staff' && !STAFF_TYPES.includes(staff_type)) {
       return res.status(400).json({ message: '스태프 직함을 선택해주세요.' })
+    }
+
+    const [rows] = await pool.query('SELECT authority FROM users WHERE id = ?', [req.params.id])
+    if (rows.length === 0) return res.status(404).json({ message: '유저를 찾을 수 없습니다.' })
+    if (callerRole === 'staff' && rows[0].authority !== 'member') {
+      return res.status(403).json({ message: '스태프는 멤버의 권한만 변경할 수 있습니다.' })
     }
 
     const newStaffType = role === 'staff' ? staff_type : null
@@ -162,9 +172,59 @@ exports.setRole = async (req, res, next) => {
 exports.getMembers = async (_req, res, next) => {
   try {
     const [rows] = await pool.query(
-      `SELECT id, username, name, ob_yb FROM users WHERE authority = 'member' ORDER BY created_at ASC`
+      `SELECT id, username, name, ob_yb, authority, created_at FROM users WHERE authority = 'member' ORDER BY created_at ASC`
     )
     res.json(rows)
+  } catch (err) {
+    next(err)
+  }
+}
+
+// ── 현재 매니저 목록 (staff/root용)
+exports.getManagers = async (_req, res, next) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT id, username, name, ob_yb, authority, created_at FROM users WHERE authority = 'manager' ORDER BY username ASC`
+    )
+    res.json(rows)
+  } catch (err) {
+    next(err)
+  }
+}
+
+// ── 현재 스태프 목록 (root용)
+exports.getStaffs = async (_req, res, next) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT id, username, name, ob_yb, staff_type, authority, created_at FROM users WHERE authority = 'staff'
+       ORDER BY FIELD(staff_type, 'president', 'headcoach'), username ASC`
+    )
+    res.json(rows)
+  } catch (err) {
+    next(err)
+  }
+}
+
+// ── 스태프 임명 (root가 member/manager → staff로 승격)
+exports.setStaff = async (req, res, next) => {
+  try {
+    const { staff_type } = req.body
+    if (!STAFF_TYPES.includes(staff_type)) {
+      return res.status(400).json({ message: '스태프 직함을 선택해주세요.' })
+    }
+    const [rows] = await pool.query(
+      'SELECT authority FROM users WHERE id = ?',
+      [req.params.id]
+    )
+    if (rows.length === 0) return res.status(404).json({ message: '유저를 찾을 수 없습니다.' })
+    if (!['member', 'manager'].includes(rows[0].authority)) {
+      return res.status(400).json({ message: '멤버 또는 매니저만 스태프로 임명할 수 있습니다.' })
+    }
+    await pool.query(
+      "UPDATE users SET authority = 'staff', staff_type = ? WHERE id = ?",
+      [staff_type, req.params.id]
+    )
+    res.json({ message: '스태프 임명 완료' })
   } catch (err) {
     next(err)
   }

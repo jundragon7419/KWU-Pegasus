@@ -2,9 +2,9 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { API_BASE } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
+import { ROSTER_ROLE_LABEL } from '../lib/constants'
 import styles from './MyPage.module.css'
 
-const ROSTER_ROLE_LABEL = { player: '선수', headcoach: '감독', president: '회장' }
 const MEMBER_ROLES = ['member', 'manager', 'staff', 'root']
 
 export default function MyPage() {

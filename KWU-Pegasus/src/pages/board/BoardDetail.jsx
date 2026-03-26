@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { API_BASE } from '../../lib/api'
+import ContentRenderer from '../../components/ContentRenderer'
 import styles from './BoardDetail.module.css'
 
 export default function BoardDetail() {
@@ -48,9 +49,7 @@ export default function BoardDetail() {
         <div className={styles.divider} />
 
         <div className={styles.body}>
-          {post.content.split('\n').map((line, i) =>
-            line === '' ? <br key={i} /> : <p key={i}>{line}</p>
-          )}
+          <ContentRenderer content={post.content} />
         </div>
       </article>
     </div>

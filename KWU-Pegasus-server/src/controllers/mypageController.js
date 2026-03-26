@@ -1,14 +1,13 @@
 const pool = require('../db')
+const { STUDENT_ID_REGEX } = require('../lib/constants')
+const { getUserById } = require('../lib/userQuery')
 
 // 내 정보 조회
 exports.getMe = async (req, res, next) => {
   try {
-    const [rows] = await pool.query(
-      'SELECT id, username, email, name, student_id, ob_yb, authority AS role, staff_type, membership_status, created_at FROM users WHERE id = ?',
-      [req.user.id]
-    )
-    if (rows.length === 0) return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' })
-    res.json(rows[0])
+    const user = await getUserById(req.user.id)
+    if (!user) return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' })
+    res.json(user)
   } catch (err) {
     next(err)
   }
@@ -29,7 +28,7 @@ exports.updateProfile = async (req, res, next) => {
     if (!name || !ob_yb) {
       return res.status(400).json({ message: '이름과 OB/YB를 입력해주세요.' })
     }
-    if (student_id && !/^\d{10}$/.test(student_id)) {
+    if (student_id && !STUDENT_ID_REGEX.test(student_id)) {
       return res.status(400).json({ message: '학번은 10자리 숫자여야 합니다.' })
     }
 

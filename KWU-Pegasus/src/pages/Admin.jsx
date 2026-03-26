@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { API_BASE } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
-import { ROLE_LABEL, STAFF_TYPE_LABEL } from '../lib/constants'
+import { ROLE_LABEL, STAFF_TYPE_LABEL, ROSTER_ROLE_LABEL } from '../lib/constants'
 import styles from './Admin.module.css'
 
 const ROSTER_ROLE_OPTIONS = [
@@ -10,8 +10,6 @@ const ROSTER_ROLE_OPTIONS = [
   { value: 'president', label: '회장' },
   { value: 'retired',   label: '영구결번' },
 ]
-
-const ROSTER_ROLE_LABEL = { player: '선수', headcoach: '감독', president: '회장', retired: '영구결번' }
 
 export default function Admin() {
   const { user, token } = useAuth()
@@ -37,16 +35,22 @@ export default function Admin() {
           </button>
         )}
         {isRoot && (
+          <button className={`${styles.tab} ${tab === 'staffPromote' ? styles.tabActive : ''}`} onClick={() => setTab('staffPromote')}>
+            스태프 임명
+          </button>
+        )}
+        {isStaffOrRoot && (
           <button className={`${styles.tab} ${tab === 'users' ? styles.tabActive : ''}`} onClick={() => setTab('users')}>
             회원 관리
           </button>
         )}
       </div>
 
-      {tab === 'pending'    && <PendingTab token={token} />}
-      {tab === 'rosterMgmt' && <RosterManagementTab token={token} />}
-      {tab === 'promote'    && isStaffOrRoot && <PromoteTab token={token} />}
-      {tab === 'users'      && isRoot && <UsersTab token={token} currentUser={user} />}
+      {tab === 'pending'      && <PendingTab token={token} />}
+      {tab === 'rosterMgmt'  && <RosterManagementTab token={token} />}
+      {tab === 'promote'     && isStaffOrRoot && <PromoteTab token={token} />}
+      {tab === 'staffPromote' && isRoot && <StaffPromoteTab token={token} />}
+      {tab === 'users'       && isStaffOrRoot && <UsersTab token={token} currentUser={user} />}
     </div>
   )
 }
@@ -321,22 +325,28 @@ function RosterEntryRow({ entry, token, onDelete, onDone }) {
   )
 }
 
+function formatDatetime(str) {
+  if (!str) return '—'
+  return String(str).replace('T', ' ').slice(0, 16)
+}
+
 /* ── 매니저 임명 탭 ── */
 function PromoteTab({ token }) {
-  const [list, setList] = useState([])
+  const [members, setMembers] = useState([])
+  const [managers, setManagers] = useState([])
   const [loading, setLoading] = useState(true)
   const [msg, setMsg] = useState('')
 
   const load = useCallback(() => {
     setLoading(true)
-    fetch(`${API_BASE}/api/admin/members`, {
-      headers: { Authorization: `Bearer ${token}` },
+    Promise.all([
+      fetch(`${API_BASE}/api/admin/members`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()),
+      fetch(`${API_BASE}/api/admin/managers`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()),
+    ]).then(([membersData, managersData]) => {
+      setMembers(Array.isArray(membersData) ? membersData : [])
+      setManagers(Array.isArray(managersData) ? managersData : [])
+      setLoading(false)
     })
-      .then(r => r.json())
-      .then(data => {
-        setList(Array.isArray(data) ? data : [])
-        setLoading(false)
-      })
   }, [token])
 
   useEffect(() => { load() }, [load])
@@ -353,43 +363,221 @@ function PromoteTab({ token }) {
   }
 
   if (loading) return <p className={styles.empty}>불러오는 중...</p>
-  if (list.length === 0) return <p className={styles.empty}>임명 가능한 멤버가 없습니다.</p>
+
+  const promoteCols = (
+    <colgroup>
+      <col style={{ width: '18%' }} />
+      <col style={{ width: '14%' }} />
+      <col style={{ width: '8%' }} />
+      <col style={{ width: '12%' }} />
+      <col style={{ width: '22%' }} />
+      <col />
+    </colgroup>
+  )
+  const promoteHead = (
+    <thead>
+      <tr><th>아이디</th><th>이름</th><th>구분</th><th>현재 권한</th><th>회원가입일시</th><th>임명</th></tr>
+    </thead>
+  )
 
   return (
-    <div className={styles.tableWrap}>
+    <div className={styles.promoteWrap}>
       {msg && <p className={styles.rosterMsg}>{msg}</p>}
-      <table className={styles.table}>
-        <thead>
-          <tr>
-            <th>아이디</th>
-            <th>이름</th>
-            <th>구분</th>
-            <th>멤버 상태</th>
-            <th>임명</th>
-          </tr>
-        </thead>
-        <tbody>
-          {list.map(u => (
-            <tr key={u.id}>
-              <td>{u.username}</td>
-              <td>{u.name ?? '—'}</td>
-              <td>{u.ob_yb?.toUpperCase() ?? '—'}</td>
-              <td>승인됨</td>
-              <td>
-                <button className={styles.approveBtn} onClick={() => handlePromote(u.id)}>매니저 임명</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+
+      <h3 className={styles.subTitle}>현재 매니저</h3>
+      <div className={styles.tableWrap}>
+        <table className={`${styles.table} ${styles.tableFixed}`}>
+          {promoteCols}{promoteHead}
+          <tbody>
+            {managers.length === 0
+              ? <tr><td colSpan={6} className={styles.emptyRow}>임명된 매니저가 없습니다.</td></tr>
+              : managers.map(u => (
+                  <tr key={u.id}>
+                    <td>{u.username}</td>
+                    <td>{u.name ?? '—'}</td>
+                    <td>{u.ob_yb?.toUpperCase() ?? '—'}</td>
+                    <td>{ROLE_LABEL[u.authority]}</td>
+                    <td>{formatDatetime(u.created_at)}</td>
+                    <td><span className={styles.noChange}>—</span></td>
+                  </tr>
+                ))
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <h3 className={styles.subTitle}>매니저 임명 가능</h3>
+      <div className={styles.tableWrap}>
+        <table className={`${styles.table} ${styles.tableFixed}`}>
+          {promoteCols}{promoteHead}
+          <tbody>
+            {members.length === 0
+              ? <tr><td colSpan={6} className={styles.emptyRow}>임명 가능한 멤버가 없습니다.</td></tr>
+              : members.map(u => (
+                  <tr key={u.id}>
+                    <td>{u.username}</td>
+                    <td>{u.name ?? '—'}</td>
+                    <td>{u.ob_yb?.toUpperCase() ?? '—'}</td>
+                    <td>{ROLE_LABEL[u.authority]}</td>
+                    <td>{formatDatetime(u.created_at)}</td>
+                    <td>
+                      <button className={styles.approveBtn} onClick={() => handlePromote(u.id)}>매니저 임명</button>
+                    </td>
+                  </tr>
+                ))
+            }
+          </tbody>
+        </table>
+      </div>
     </div>
   )
+}
+
+/* ── 스태프 임명 탭 (root 전용) ── */
+function StaffPromoteTab({ token }) {
+  const [candidates, setCandidates] = useState([])
+  const [staffs, setStaffs] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [staffTypes, setStaffTypes] = useState({})
+  const [msg, setMsg] = useState('')
+
+  const load = useCallback(() => {
+    setLoading(true)
+    Promise.all([
+      fetch(`${API_BASE}/api/admin/members`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()),
+      fetch(`${API_BASE}/api/admin/managers`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()),
+      fetch(`${API_BASE}/api/admin/staffs`,  { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()),
+    ]).then(([membersData, managersData, staffsData]) => {
+      const combined = [
+        ...( Array.isArray(managersData) ? managersData : [] ),
+        ...( Array.isArray(membersData)  ? membersData  : [] ),
+      ]
+      setCandidates(combined)
+      setStaffs(Array.isArray(staffsData) ? staffsData : [])
+      setLoading(false)
+    })
+  }, [token])
+
+  useEffect(() => { load() }, [load])
+
+  function getStaffType(id) { return staffTypes[id] ?? 'president' }
+  function setStaffType(id, val) { setStaffTypes(prev => ({ ...prev, [id]: val })) }
+
+  async function handlePromote(id) {
+    setMsg('')
+    const res = await fetch(`${API_BASE}/api/admin/users/${id}/set-staff`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ staff_type: getStaffType(id) }),
+    })
+    const data = await res.json()
+    setMsg(data.message)
+    if (res.ok) load()
+  }
+
+  if (loading) return <p className={styles.empty}>불러오는 중...</p>
+
+  const staffCols = (
+    <colgroup>
+      <col style={{ width: '15%' }} />
+      <col style={{ width: '12%' }} />
+      <col style={{ width: '7%' }} />
+      <col style={{ width: '11%' }} />
+      <col style={{ width: '13%' }} />
+      <col style={{ width: '20%' }} />
+      <col />
+    </colgroup>
+  )
+  const staffHead = (
+    <thead>
+      <tr><th>아이디</th><th>이름</th><th>구분</th><th>현재 권한</th><th>직함</th><th>회원가입일시</th><th>임명</th></tr>
+    </thead>
+  )
+
+  return (
+    <div className={styles.promoteWrap}>
+      {msg && <p className={styles.rosterMsg}>{msg}</p>}
+
+      <h3 className={styles.subTitle}>현재 스태프</h3>
+      <div className={styles.tableWrap}>
+        <table className={`${styles.table} ${styles.tableFixed}`}>
+          {staffCols}{staffHead}
+          <tbody>
+            {staffs.length === 0
+              ? <tr><td colSpan={7} className={styles.emptyRow}>임명된 스태프가 없습니다.</td></tr>
+              : staffs.map(u => (
+                  <tr key={u.id}>
+                    <td>{u.username}</td>
+                    <td>{u.name ?? '—'}</td>
+                    <td>{u.ob_yb?.toUpperCase() ?? '—'}</td>
+                    <td>{ROLE_LABEL[u.authority]}</td>
+                    <td>{STAFF_TYPE_LABEL[u.staff_type] ?? '—'}</td>
+                    <td>{formatDatetime(u.created_at)}</td>
+                    <td><span className={styles.noChange}>—</span></td>
+                  </tr>
+                ))
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <h3 className={styles.subTitle}>스태프 임명 가능</h3>
+      <div className={styles.tableWrap}>
+        <table className={`${styles.table} ${styles.tableFixed}`}>
+          {staffCols}{staffHead}
+          <tbody>
+            {candidates.length === 0
+              ? <tr><td colSpan={7} className={styles.emptyRow}>임명 가능한 멤버 또는 매니저가 없습니다.</td></tr>
+              : candidates.map(u => (
+                  <tr key={u.id}>
+                    <td>{u.username}</td>
+                    <td>{u.name ?? '—'}</td>
+                    <td>{u.ob_yb?.toUpperCase() ?? '—'}</td>
+                    <td>{ROLE_LABEL[u.authority]}</td>
+                    <td>
+                      <select className={styles.select} value={getStaffType(u.id)} onChange={e => setStaffType(u.id, e.target.value)}>
+                        <option value="president">회장</option>
+                        <option value="headcoach">감독</option>
+                      </select>
+                    </td>
+                    <td>{formatDatetime(u.created_at)}</td>
+                    <td>
+                      <button className={styles.approveBtn} onClick={() => handlePromote(u.id)}>스태프 임명</button>
+                    </td>
+                  </tr>
+                ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+const ROLE_ORDER = { root: 0, staff: 1, manager: 2, member: 3, basic: 4 }
+const STAFF_TYPE_ORDER = { president: 0, headcoach: 1 }
+const MEMBERSHIP_LABEL = { none: '미신청', pending: '대기', approved: '멤버', rejected: '거부' }
+const ROLE_GROUP_LABEL = { root: 'ROOT', staff: '스태프', manager: '매니저', member: '멤버', basic: '일반' }
+
+function sortUsers(list) {
+  return [...list].sort((a, b) => {
+    const ra = ROLE_ORDER[a.role] ?? 99
+    const rb = ROLE_ORDER[b.role] ?? 99
+    if (ra !== rb) return ra - rb
+    if (a.role === 'staff') {
+      const sa = STAFF_TYPE_ORDER[a.staff_type] ?? 99
+      const sb = STAFF_TYPE_ORDER[b.staff_type] ?? 99
+      if (sa !== sb) return sa - sb
+    }
+    return a.username.localeCompare(b.username)
+  })
 }
 
 /* ── 회원 관리 탭 ── */
 function UsersTab({ token, currentUser }) {
   const [list, setList] = useState([])
   const [loading, setLoading] = useState(true)
+  const [msg, setMsg] = useState('')
 
   const load = useCallback(() => {
     setLoading(true)
@@ -402,97 +590,116 @@ function UsersTab({ token, currentUser }) {
 
   useEffect(() => { load() }, [load])
 
+  if (loading) return <p className={styles.empty}>불러오는 중...</p>
+
+  const isRoot = currentUser?.role === 'root'
+  const sorted = sortUsers(list)
+  const groups = ['root', 'staff', 'manager', 'member', 'basic']
+    .map(role => ({ role, users: sorted.filter(u => u.role === role) }))
+    .filter(g => g.users.length > 0)
+
+  const usersCols = (
+    <colgroup>
+      <col style={{ width: '15%' }} />
+      <col style={{ width: '12%' }} />
+      <col style={{ width: '7%' }} />
+      <col style={{ width: '10%' }} />
+      <col style={{ width: '12%' }} />
+      <col style={{ width: '14%' }} />
+      <col />
+    </colgroup>
+  )
+  const usersHead = (
+    <thead>
+      <tr>
+        <th>아이디</th><th>이름</th><th>구분</th><th>로스터</th><th>멤버 상태</th><th>현재 권한</th><th>권한 수정</th>
+      </tr>
+    </thead>
+  )
+
+  function getRoleDisplay(u) {
+    if (u.role === 'staff') return `스태프(${STAFF_TYPE_LABEL[u.staff_type] ?? u.staff_type})`
+    return ROLE_LABEL[u.role] ?? u.role
+  }
+
   async function handleRoleChange(id, role, staff_type) {
+    setMsg('')
     const body = { role }
     if (role === 'staff') body.staff_type = staff_type
-    await fetch(`${API_BASE}/api/admin/users/${id}/role`, {
+    const res = await fetch(`${API_BASE}/api/admin/users/${id}/role`, {
       method: 'PUT',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     })
-    load()
+    const data = await res.json()
+    setMsg(data.message)
+    if (res.ok) load()
   }
 
-  if (loading) return <p className={styles.empty}>불러오는 중...</p>
-
   return (
-    <div className={styles.tableWrap}>
-      <table className={styles.table}>
-        <thead>
-          <tr>
-            <th>아이디</th>
-            <th>이름</th>
-            <th>구분</th>
-            <th>현재 권한</th>
-            <th>멤버 상태</th>
-            <th>로스터</th>
-            <th>권한 변경</th>
-          </tr>
-        </thead>
-        <tbody>
-          {list.map(u => (
-            <UserRow key={u.id} u={u} currentUser={currentUser} onRoleChange={handleRoleChange} />
-          ))}
-        </tbody>
-      </table>
+    <div>
+      {msg && <p className={styles.rosterMsg}>{msg}</p>}
+      {groups.map(({ role, users }) => (
+        <div key={role} className={styles.userGroup}>
+          <h3 className={styles.subTitle}>{ROLE_GROUP_LABEL[role]}</h3>
+          <div className={styles.tableWrap}>
+            <table className={`${styles.table} ${styles.tableFixed}`}>
+              {usersCols}{usersHead}
+              <tbody>
+                {users.map(u => (
+                  <tr key={u.id}>
+                    <td>{u.username}</td>
+                    <td>{u.name ?? '—'}</td>
+                    <td>{u.ob_yb?.toUpperCase() ?? '—'}</td>
+                    <td>
+                      {u.roster_year != null
+                        ? <span className={styles.rosterInfo}>{u.roster_number}번</span>
+                        : <span className={styles.noChange}>—</span>}
+                    </td>
+                    <td>
+                      <span className={`${styles.statusBadge} ${styles[`status_${u.membership_status}`]}`}>
+                        {MEMBERSHIP_LABEL[u.membership_status] ?? u.membership_status}
+                      </span>
+                    </td>
+                    <td>{getRoleDisplay(u)}</td>
+                    <td>
+                      {u.role === 'member'
+                        ? <RoleChangeCell u={u} isRoot={isRoot} onSave={handleRoleChange} />
+                        : <span className={styles.noChange}>—</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
 
-function UserRow({ u, currentUser, onRoleChange }) {
+function RoleChangeCell({ u, isRoot, onSave }) {
+  const roleOptions = isRoot
+    ? ['basic', 'member', 'manager', 'staff', 'root']
+    : ['basic', 'member', 'manager']
+
   const [role, setRole] = useState(u.role)
-  const [staffType, setStaffType] = useState(u.staff_type ?? 'president')
-  const canChange = u.role !== 'root' && u.id !== currentUser.id
-
-  const MEMBERSHIP_LABEL = { none: '미신청', pending: '대기', approved: '멤버', rejected: '거부' }
-
-  function getRoleDisplay(r, st) {
-    if (r === 'staff') return `${ROLE_LABEL[r]} (${STAFF_TYPE_LABEL[st] ?? st})`
-    return ROLE_LABEL[r] ?? r
-  }
+  const [staffType, setStaffType] = useState('president')
 
   return (
-    <tr>
-      <td>{u.username}</td>
-      <td>{u.name ?? '—'}</td>
-      <td>{u.ob_yb?.toUpperCase() ?? '—'}</td>
-      <td>
-        <span className={`${styles.roleBadge} ${styles[`role_${u.role}`]}`}>
-          {getRoleDisplay(u.role, u.staff_type)}
-        </span>
-      </td>
-      <td>
-        <span className={`${styles.statusBadge} ${styles[`status_${u.membership_status}`]}`}>
-          {MEMBERSHIP_LABEL[u.membership_status] ?? u.membership_status}
-        </span>
-      </td>
-      <td>
-        {u.roster_year != null
-          ? <span className={styles.rosterInfo}>{u.roster_number}번</span>
-          : <span className={styles.noChange}>—</span>}
-      </td>
-      <td>
-        {canChange ? (
-          <div className={styles.roleForm}>
-            <select className={styles.select} value={role} onChange={e => setRole(e.target.value)}>
-              <option value="basic">일반</option>
-              <option value="member">멤버</option>
-              <option value="manager">매니저</option>
-              <option value="staff">스태프</option>
-              <option value="root">ROOT</option>
-            </select>
-            {role === 'staff' && (
-              <select className={styles.select} value={staffType} onChange={e => setStaffType(e.target.value)}>
-                <option value="president">회장</option>
-                <option value="headcoach">감독</option>
-              </select>
-            )}
-            <button className={styles.saveBtn} onClick={() => onRoleChange(u.id, role, staffType)}>저장</button>
-          </div>
-        ) : (
-          <span className={styles.noChange}>—</span>
-        )}
-      </td>
-    </tr>
+    <div className={styles.roleForm}>
+      <select className={styles.select} value={role} onChange={e => setRole(e.target.value)}>
+        {roleOptions.map(r => (
+          <option key={r} value={r}>{ROLE_LABEL[r]}</option>
+        ))}
+      </select>
+      {role === 'staff' && (
+        <select className={styles.select} value={staffType} onChange={e => setStaffType(e.target.value)}>
+          <option value="president">회장</option>
+          <option value="headcoach">감독</option>
+        </select>
+      )}
+      <button className={styles.saveBtn} onClick={() => onSave(u.id, role, staffType)}>저장</button>
+    </div>
   )
 }

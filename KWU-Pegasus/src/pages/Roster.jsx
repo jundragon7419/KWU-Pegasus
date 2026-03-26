@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { API_BASE } from '../lib/api'
+import { ROSTER_ROLE_LABEL } from '../lib/constants'
 import styles from './Roster.module.css'
 
 const FILTERS = [
@@ -8,10 +9,6 @@ const FILTERS = [
   { key: 'staff',   label: '감독 / 회장' },  // coach + president 통합 필터
   { key: 'retired', label: '영구결번' },
 ]
-
-const ROSTER_ROLE_LABEL = {
-  player: '선수', headcoach: '감독', president: '회장', retired: '영구결번',
-}
 
 export default function Roster() {
   const [roster, setRoster] = useState([])

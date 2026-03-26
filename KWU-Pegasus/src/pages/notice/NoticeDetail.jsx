@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { API_BASE } from '../../lib/api'
+import { CATEGORY_LABEL } from '../../lib/constants'
+import ContentRenderer from '../../components/ContentRenderer'
 import styles from './NoticeDetail.module.css'
-
-const CATEGORY_LABEL = { notice: '공지', event: '행사', game: '경기' }
 
 export default function NoticeDetail() {
   const { id } = useParams()
@@ -51,9 +51,7 @@ export default function NoticeDetail() {
         <div className={styles.divider} />
 
         <div className={styles.body}>
-          {notice.content.split('\n').map((line, i) =>
-            line === '' ? <br key={i} /> : <p key={i}>{line}</p>
-          )}
+          <ContentRenderer content={notice.content} />
         </div>
       </article>
     </div>

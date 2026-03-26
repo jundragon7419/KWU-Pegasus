@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const pool = require('../db')
+const { getUserById } = require('../lib/userQuery')
 
 // 회원가입 — 즉시 활성화 (아이디 + 비밀번호 + 이메일만)
 exports.signup = async (req, res, next) => {
@@ -71,12 +72,9 @@ exports.login = async (req, res, next) => {
 // 내 정보 조회
 exports.me = async (req, res, next) => {
   try {
-    const [rows] = await pool.query(
-      'SELECT id, username, email, name, student_id, ob_yb, authority AS role, staff_type, membership_status, created_at FROM users WHERE id = ?',
-      [req.user.id]
-    )
-    if (rows.length === 0) return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' })
-    res.json(rows[0])
+    const user = await getUserById(req.user.id)
+    if (!user) return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' })
+    res.json(user)
   } catch (err) {
     next(err)
   }
