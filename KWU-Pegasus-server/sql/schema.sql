@@ -69,15 +69,15 @@ CREATE TABLE IF NOT EXISTS roster (
 
 -- ── 설정 ────────────────────────────────────────────────────────
 -- 키-값 쌍으로 서버 전역 설정값을 저장하는 테이블
--- key   : 설정 항목의 고유 이름. PK로 사용됨
--- value : 설정값. 문자열로 저장
+-- setting_key : 설정 항목의 고유 이름. PK로 사용됨
+-- setting_val : 설정값. 문자열로 저장
 -- 현재 사용 중인 설정값:
 --   active_roster_year - 현재 활성 시즌 연도.
 --                        로스터 조회 시 연도 미지정이면 이 값을 기본으로 사용.
 --                        관리자 페이지에서 변경 가능
 CREATE TABLE IF NOT EXISTS settings (
-  `key`    VARCHAR(50)  NOT NULL PRIMARY KEY,
-  `value`  VARCHAR(100) NOT NULL
+  setting_key VARCHAR(50)  NOT NULL PRIMARY KEY,
+  setting_val VARCHAR(100) NOT NULL
 );
 
 -- ── 게시판 ──────────────────────────────────────────────────────

@@ -300,7 +300,7 @@ exports.setRosterYear = async (req, res, next) => {
       return res.status(400).json({ message: '유효한 연도를 입력해주세요.' })
     }
     await pool.query(
-      "INSERT INTO settings (`key`, `value`) VALUES ('active_roster_year', ?) ON DUPLICATE KEY UPDATE `value` = ?",
+      "INSERT INTO settings (setting_key, setting_val) VALUES ('active_roster_year', ?) ON DUPLICATE KEY UPDATE setting_val = ?",
       [String(year), String(year)]
     )
     res.json({ message: '활성 로스터 연도 변경 완료', year: parseInt(year) })
