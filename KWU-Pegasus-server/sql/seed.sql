@@ -229,13 +229,13 @@ INSERT IGNORE INTO notices (category, is_pinned, title, author, date, views, con
 -- ── 테스트 유저 ──────────────────────────────────────────────────
 -- 비밀번호 모두 'test1234' (bcrypt, 10 rounds)
 INSERT IGNORE INTO users (username, password, email, authority, membership_status) VALUES
-('test_basic',  '$2b$10$Anwcwh3cGPvjTSfFL4h.IuVVkqO4urnr4l3MpCjLZ6eXv5bU4OTIS', 'basic@test.com',  'basic',  'none');
+('test_basic',  '$2b$10$nPKh.YAmQVVEY2MREL/ciOErvGC5ho4Vww0mq.XwoZfumx.oSyqXq', 'basic@test.com',  'basic',  'none');
 
 INSERT IGNORE INTO users (username, password, email, name, student_id, ob_yb, authority, membership_status) VALUES
-('test_member', '$2b$10$Anwcwh3cGPvjTSfFL4h.IuVVkqO4urnr4l3MpCjLZ6eXv5bU4OTIS', 'member@test.com', '박준호', '2022200001', 'yb', 'member', 'approved');
+('test_member', '$2b$10$nPKh.YAmQVVEY2MREL/ciOErvGC5ho4Vww0mq.XwoZfumx.oSyqXq', 'member@test.com', '박준호', '2022200001', 'yb', 'member', 'approved');
 
 INSERT IGNORE INTO users (username, password, email, name, student_id, ob_yb, authority, staff_type, membership_status) VALUES
-('test_staff',  '$2b$10$Anwcwh3cGPvjTSfFL4h.IuVVkqO4urnr4l3MpCjLZ6eXv5bU4OTIS', 'staff@test.com',  '심동현', '2021100004', 'yb', 'staff', 'president', 'approved');
+('test_staff',  '$2b$10$nPKh.YAmQVVEY2MREL/ciOErvGC5ho4Vww0mq.XwoZfumx.oSyqXq', 'staff@test.com',  '심동현', '2021100004', 'yb', 'staff', 'president', 'approved');
 
 INSERT IGNORE INTO users (username, password, email, authority, membership_status) VALUES
-('test_root',   '$2b$10$Anwcwh3cGPvjTSfFL4h.IuVVkqO4urnr4l3MpCjLZ6eXv5bU4OTIS', 'root@test.com',   'root',   'none');
+('test_root',   '$2b$10$nPKh.YAmQVVEY2MREL/ciOErvGC5ho4Vww0mq.XwoZfumx.oSyqXq', 'root@test.com',   'root',   'none');
