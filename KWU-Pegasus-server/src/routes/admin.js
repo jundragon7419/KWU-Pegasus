@@ -3,7 +3,9 @@ const router = express.Router()
 const {
   getPendingMembers, approveMember, rejectMember,
   getRosterAdmin, addRosterEntry, deleteRosterEntry, updateRosterEntry,
-  getUsers, getMembers, getManagers, getStaffs, setRole, setManager, setStaff,
+  getOrgMembers, demoteMember,
+  getBasicUsers, banUser,
+  getMembers, getManagers, getStaffs, setManager, unsetManager, setStaff, unsetStaff,
   setRosterYear,
 } = require('../controllers/adminController')
 const { authenticate, requireRole } = require('../middlewares/auth')
@@ -21,18 +23,24 @@ router.post('/roster',                   requireRole('manager','staff','root'), 
 router.delete('/roster/:year/:number',   requireRole('manager','staff','root'), deleteRosterEntry)
 router.put('/roster/:year/:number',      requireRole('manager','staff','root'), updateRosterEntry)
 
-// 회원 관리 (staff/root)
-router.get('/users',                     requireRole('staff','root'), getUsers)
-router.put('/users/:id/role',            requireRole('staff','root'), setRole)
+// 멤버 관리 (staff/root)
+router.get('/org-members',               requireRole('staff','root'), getOrgMembers)
+router.put('/users/:id/demote-member',   requireRole('staff','root'), demoteMember)
 
-// 매니저 임명 (staff/root)
+// 일반유저 관리 (staff/root)
+router.get('/basic-users',               requireRole('staff','root'), getBasicUsers)
+router.put('/users/:id/ban',             requireRole('staff','root'), banUser)
+
+// 매니저 관리 (staff/root)
 router.get('/members',                   requireRole('staff','root'), getMembers)
 router.get('/managers',                  requireRole('staff','root'), getManagers)
 router.put('/users/:id/set-manager',     requireRole('staff','root'), setManager)
+router.put('/users/:id/unset-manager',   requireRole('staff','root'), unsetManager)
 
-// 스태프 임명 (root 전용)
+// 스태프 관리 (root 전용)
 router.get('/staffs',                    requireRole('root'), getStaffs)
 router.put('/users/:id/set-staff',       requireRole('root'), setStaff)
+router.put('/users/:id/unset-staff',     requireRole('root'), unsetStaff)
 
 // 로스터 연도
 router.put('/roster-year',               requireRole('manager','staff','root'), setRosterYear)

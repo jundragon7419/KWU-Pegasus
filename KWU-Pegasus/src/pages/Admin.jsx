@@ -31,17 +31,27 @@ export default function Admin() {
         </button>
         {isStaffOrRoot && (
           <button className={`${styles.tab} ${tab === 'promote' ? styles.tabActive : ''}`} onClick={() => setTab('promote')}>
-            매니저 임명
+            매니저 관리
           </button>
         )}
         {isRoot && (
           <button className={`${styles.tab} ${tab === 'staffPromote' ? styles.tabActive : ''}`} onClick={() => setTab('staffPromote')}>
-            스태프 임명
+            스태프 관리
           </button>
         )}
         {isStaffOrRoot && (
-          <button className={`${styles.tab} ${tab === 'users' ? styles.tabActive : ''}`} onClick={() => setTab('users')}>
-            회원 관리
+          <button className={`${styles.tab} ${tab === 'basicUsers' ? styles.tabActive : ''}`} onClick={() => setTab('basicUsers')}>
+            일반유저 관리
+          </button>
+        )}
+        {isStaffOrRoot && (
+          <button className={`${styles.tab} ${tab === 'memberMgmt' ? styles.tabActive : ''}`} onClick={() => setTab('memberMgmt')}>
+            멤버 관리
+          </button>
+        )}
+        {isStaffOrRoot && (
+          <button className={`${styles.tab} ${tab === 'banned' ? styles.tabActive : ''}`} onClick={() => setTab('banned')}>
+            차단 계정
           </button>
         )}
       </div>
@@ -50,7 +60,9 @@ export default function Admin() {
       {tab === 'rosterMgmt'  && <RosterManagementTab token={token} />}
       {tab === 'promote'     && isStaffOrRoot && <PromoteTab token={token} />}
       {tab === 'staffPromote' && isRoot && <StaffPromoteTab token={token} />}
-      {tab === 'users'       && isStaffOrRoot && <UsersTab token={token} currentUser={user} />}
+      {tab === 'basicUsers'  && isStaffOrRoot && <BasicUsersTab token={token} />}
+      {tab === 'memberMgmt'  && isStaffOrRoot && <MemberMgmtTab token={token} />}
+      {tab === 'banned'      && isStaffOrRoot && <BannedTab />}
     </div>
   )
 }
@@ -151,7 +163,7 @@ function RosterManagementTab({ token }) {
         setYears(data)
         if (data.length > 0 && !selectedYear) setSelectedYear(data[0])
       })
-  }, [selectedYear])
+  }, [])
 
   useEffect(() => { loadYears() }, [])
 
@@ -362,6 +374,17 @@ function PromoteTab({ token }) {
     if (res.ok) load()
   }
 
+  async function handleDemote(id) {
+    setMsg('')
+    const res = await fetch(`${API_BASE}/api/admin/users/${id}/unset-manager`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    const data = await res.json()
+    setMsg(data.message)
+    if (res.ok) load()
+  }
+
   if (loading) return <p className={styles.empty}>불러오는 중...</p>
 
   const promoteCols = (
@@ -369,14 +392,14 @@ function PromoteTab({ token }) {
       <col style={{ width: '18%' }} />
       <col style={{ width: '14%' }} />
       <col style={{ width: '8%' }} />
-      <col style={{ width: '12%' }} />
+      <col style={{ width: '14%' }} />
       <col style={{ width: '22%' }} />
       <col />
     </colgroup>
   )
   const promoteHead = (
     <thead>
-      <tr><th>아이디</th><th>이름</th><th>구분</th><th>현재 권한</th><th>회원가입일시</th><th>임명</th></tr>
+      <tr><th>아이디</th><th>이름</th><th>구분</th><th>현재 권한</th><th>회원가입일시</th><th>권한 수정</th></tr>
     </thead>
   )
 
@@ -398,7 +421,9 @@ function PromoteTab({ token }) {
                     <td>{u.ob_yb?.toUpperCase() ?? '—'}</td>
                     <td>{ROLE_LABEL[u.authority]}</td>
                     <td>{formatDatetime(u.created_at)}</td>
-                    <td><span className={styles.noChange}>—</span></td>
+                    <td>
+                      <button className={styles.rejectBtn} onClick={() => handleDemote(u.id)}>권한 해제</button>
+                    </td>
                   </tr>
                 ))
             }
@@ -421,7 +446,7 @@ function PromoteTab({ token }) {
                     <td>{ROLE_LABEL[u.authority]}</td>
                     <td>{formatDatetime(u.created_at)}</td>
                     <td>
-                      <button className={styles.approveBtn} onClick={() => handlePromote(u.id)}>매니저 임명</button>
+                      <button className={styles.approveBtn} onClick={() => handlePromote(u.id)}>권한 부여</button>
                     </td>
                   </tr>
                 ))
@@ -475,22 +500,32 @@ function StaffPromoteTab({ token }) {
     if (res.ok) load()
   }
 
+  async function handleDemote(id) {
+    setMsg('')
+    const res = await fetch(`${API_BASE}/api/admin/users/${id}/unset-staff`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    const data = await res.json()
+    setMsg(data.message)
+    if (res.ok) load()
+  }
+
   if (loading) return <p className={styles.empty}>불러오는 중...</p>
 
   const staffCols = (
     <colgroup>
-      <col style={{ width: '15%' }} />
-      <col style={{ width: '12%' }} />
-      <col style={{ width: '7%' }} />
-      <col style={{ width: '11%' }} />
-      <col style={{ width: '13%' }} />
-      <col style={{ width: '20%' }} />
+      <col style={{ width: '18%' }} />
+      <col style={{ width: '14%' }} />
+      <col style={{ width: '8%' }} />
+      <col style={{ width: '14%' }} />
+      <col style={{ width: '22%' }} />
       <col />
     </colgroup>
   )
   const staffHead = (
     <thead>
-      <tr><th>아이디</th><th>이름</th><th>구분</th><th>현재 권한</th><th>직함</th><th>회원가입일시</th><th>임명</th></tr>
+      <tr><th>아이디</th><th>이름</th><th>구분</th><th>현재 권한</th><th>회원가입일시</th><th>권한 수정</th></tr>
     </thead>
   )
 
@@ -504,16 +539,17 @@ function StaffPromoteTab({ token }) {
           {staffCols}{staffHead}
           <tbody>
             {staffs.length === 0
-              ? <tr><td colSpan={7} className={styles.emptyRow}>임명된 스태프가 없습니다.</td></tr>
+              ? <tr><td colSpan={6} className={styles.emptyRow}>임명된 스태프가 없습니다.</td></tr>
               : staffs.map(u => (
                   <tr key={u.id}>
                     <td>{u.username}</td>
                     <td>{u.name ?? '—'}</td>
                     <td>{u.ob_yb?.toUpperCase() ?? '—'}</td>
-                    <td>{ROLE_LABEL[u.authority]}</td>
-                    <td>{STAFF_TYPE_LABEL[u.staff_type] ?? '—'}</td>
+                    <td>{`스태프(${STAFF_TYPE_LABEL[u.staff_type] ?? u.staff_type})`}</td>
                     <td>{formatDatetime(u.created_at)}</td>
-                    <td><span className={styles.noChange}>—</span></td>
+                    <td>
+                      <button className={styles.rejectBtn} onClick={() => handleDemote(u.id)}>권한 해제</button>
+                    </td>
                   </tr>
                 ))
             }
@@ -527,22 +563,20 @@ function StaffPromoteTab({ token }) {
           {staffCols}{staffHead}
           <tbody>
             {candidates.length === 0
-              ? <tr><td colSpan={7} className={styles.emptyRow}>임명 가능한 멤버 또는 매니저가 없습니다.</td></tr>
+              ? <tr><td colSpan={6} className={styles.emptyRow}>임명 가능한 멤버 또는 매니저가 없습니다.</td></tr>
               : candidates.map(u => (
                   <tr key={u.id}>
                     <td>{u.username}</td>
                     <td>{u.name ?? '—'}</td>
                     <td>{u.ob_yb?.toUpperCase() ?? '—'}</td>
                     <td>{ROLE_LABEL[u.authority]}</td>
-                    <td>
+                    <td>{formatDatetime(u.created_at)}</td>
+                    <td className={styles.actions}>
                       <select className={styles.select} value={getStaffType(u.id)} onChange={e => setStaffType(u.id, e.target.value)}>
                         <option value="president">회장</option>
                         <option value="headcoach">감독</option>
                       </select>
-                    </td>
-                    <td>{formatDatetime(u.created_at)}</td>
-                    <td>
-                      <button className={styles.approveBtn} onClick={() => handlePromote(u.id)}>스태프 임명</button>
+                      <button className={styles.approveBtn} onClick={() => handlePromote(u.id)}>권한 부여</button>
                     </td>
                   </tr>
                 ))
@@ -554,34 +588,15 @@ function StaffPromoteTab({ token }) {
   )
 }
 
-const ROLE_ORDER = { root: 0, staff: 1, manager: 2, member: 3, basic: 4 }
-const STAFF_TYPE_ORDER = { president: 0, headcoach: 1 }
-const MEMBERSHIP_LABEL = { none: '미신청', pending: '대기', approved: '멤버', rejected: '거부' }
-const ROLE_GROUP_LABEL = { root: 'ROOT', staff: '스태프', manager: '매니저', member: '멤버', basic: '일반' }
-
-function sortUsers(list) {
-  return [...list].sort((a, b) => {
-    const ra = ROLE_ORDER[a.role] ?? 99
-    const rb = ROLE_ORDER[b.role] ?? 99
-    if (ra !== rb) return ra - rb
-    if (a.role === 'staff') {
-      const sa = STAFF_TYPE_ORDER[a.staff_type] ?? 99
-      const sb = STAFF_TYPE_ORDER[b.staff_type] ?? 99
-      if (sa !== sb) return sa - sb
-    }
-    return a.username.localeCompare(b.username)
-  })
-}
-
-/* ── 회원 관리 탭 ── */
-function UsersTab({ token, currentUser }) {
+/* ── 일반유저 관리 탭 ── */
+function BasicUsersTab({ token }) {
   const [list, setList] = useState([])
   const [loading, setLoading] = useState(true)
   const [msg, setMsg] = useState('')
 
   const load = useCallback(() => {
     setLoading(true)
-    fetch(`${API_BASE}/api/admin/users`, {
+    fetch(`${API_BASE}/api/admin/basic-users`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(r => r.json())
@@ -590,50 +605,127 @@ function UsersTab({ token, currentUser }) {
 
   useEffect(() => { load() }, [load])
 
+  async function handleBan(id) {
+    setMsg('')
+    const res = await fetch(`${API_BASE}/api/admin/users/${id}/ban`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    const data = await res.json()
+    setMsg(data.message)
+    if (res.ok) load()
+  }
+
   if (loading) return <p className={styles.empty}>불러오는 중...</p>
 
-  const isRoot = currentUser?.role === 'root'
-  const sorted = sortUsers(list)
-  const groups = ['root', 'staff', 'manager', 'member', 'basic']
-    .map(role => ({ role, users: sorted.filter(u => u.role === role) }))
+  return (
+    <div className={styles.promoteWrap}>
+      {msg && <p className={styles.rosterMsg}>{msg}</p>}
+      <div className={styles.tableWrap}>
+        <table className={`${styles.table} ${styles.tableFixed}`}>
+          <colgroup>
+            <col style={{ width: '22%' }} />
+            <col style={{ width: '16%' }} />
+            <col style={{ width: '28%' }} />
+            <col />
+          </colgroup>
+          <thead>
+            <tr><th>아이디</th><th>현재 권한</th><th>회원가입일시</th><th>권한 수정</th></tr>
+          </thead>
+          <tbody>
+            {list.length === 0
+              ? <tr><td colSpan={4} className={styles.emptyRow}>일반 권한 유저가 없습니다.</td></tr>
+              : list.map(u => (
+                  <tr key={u.id}>
+                    <td>{u.username}</td>
+                    <td>{ROLE_LABEL[u.authority] ?? u.authority}</td>
+                    <td>{formatDatetime(u.created_at)}</td>
+                    <td>
+                      <button className={styles.rejectBtn} onClick={() => handleBan(u.id)}>계정 차단</button>
+                    </td>
+                  </tr>
+                ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+/* ── 멤버 관리 탭 ── */
+const MEMBER_ROLE_ORDER = { staff: 0, manager: 1, member: 2 }
+const MEMBER_ROLE_GROUP_LABEL = { staff: '스태프', manager: '매니저', member: '멤버' }
+const MEMBERSHIP_LABEL = { none: '미신청', pending: '대기', approved: '멤버', rejected: '거부', banned: '차단' }
+
+function sortOrgMembers(list) {
+  return [...list].sort((a, b) => {
+    const ra = MEMBER_ROLE_ORDER[a.authority] ?? 99
+    const rb = MEMBER_ROLE_ORDER[b.authority] ?? 99
+    if (ra !== rb) return ra - rb
+    if (a.authority === 'staff') {
+      const sa = a.staff_type === 'president' ? 0 : 1
+      const sb = b.staff_type === 'president' ? 0 : 1
+      if (sa !== sb) return sa - sb
+    }
+    return a.username.localeCompare(b.username)
+  })
+}
+
+function MemberMgmtTab({ token }) {
+  const [list, setList] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [msg, setMsg] = useState('')
+
+  const load = useCallback(() => {
+    setLoading(true)
+    fetch(`${API_BASE}/api/admin/org-members`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.json())
+      .then(data => { setList(data); setLoading(false) })
+  }, [token])
+
+  useEffect(() => { load() }, [load])
+
+  async function handleDemote(id) {
+    setMsg('')
+    const res = await fetch(`${API_BASE}/api/admin/users/${id}/demote-member`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    const data = await res.json()
+    setMsg(data.message)
+    if (res.ok) load()
+  }
+
+  if (loading) return <p className={styles.empty}>불러오는 중...</p>
+
+  const sorted = sortOrgMembers(list)
+  const groups = ['staff', 'manager', 'member']
+    .map(role => ({ role, users: sorted.filter(u => u.authority === role) }))
     .filter(g => g.users.length > 0)
 
-  const usersCols = (
+  const cols = (
     <colgroup>
       <col style={{ width: '15%' }} />
       <col style={{ width: '12%' }} />
       <col style={{ width: '7%' }} />
       <col style={{ width: '10%' }} />
       <col style={{ width: '12%' }} />
-      <col style={{ width: '14%' }} />
+      <col style={{ width: '16%' }} />
       <col />
     </colgroup>
   )
-  const usersHead = (
+  const head = (
     <thead>
-      <tr>
-        <th>아이디</th><th>이름</th><th>구분</th><th>로스터</th><th>멤버 상태</th><th>현재 권한</th><th>권한 수정</th>
-      </tr>
+      <tr><th>아이디</th><th>이름</th><th>구분</th><th>로스터</th><th>멤버 상태</th><th>현재 권한</th><th>권한 수정</th></tr>
     </thead>
   )
 
   function getRoleDisplay(u) {
-    if (u.role === 'staff') return `스태프(${STAFF_TYPE_LABEL[u.staff_type] ?? u.staff_type})`
-    return ROLE_LABEL[u.role] ?? u.role
-  }
-
-  async function handleRoleChange(id, role, staff_type) {
-    setMsg('')
-    const body = { role }
-    if (role === 'staff') body.staff_type = staff_type
-    const res = await fetch(`${API_BASE}/api/admin/users/${id}/role`, {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    })
-    const data = await res.json()
-    setMsg(data.message)
-    if (res.ok) load()
+    if (u.authority === 'staff') return `스태프(${STAFF_TYPE_LABEL[u.staff_type] ?? u.staff_type})`
+    return ROLE_LABEL[u.authority] ?? u.authority
   }
 
   return (
@@ -641,10 +733,10 @@ function UsersTab({ token, currentUser }) {
       {msg && <p className={styles.rosterMsg}>{msg}</p>}
       {groups.map(({ role, users }) => (
         <div key={role} className={styles.userGroup}>
-          <h3 className={styles.subTitle}>{ROLE_GROUP_LABEL[role]}</h3>
+          <h3 className={styles.subTitle}>{MEMBER_ROLE_GROUP_LABEL[role]}</h3>
           <div className={styles.tableWrap}>
             <table className={`${styles.table} ${styles.tableFixed}`}>
-              {usersCols}{usersHead}
+              {cols}{head}
               <tbody>
                 {users.map(u => (
                   <tr key={u.id}>
@@ -663,8 +755,8 @@ function UsersTab({ token, currentUser }) {
                     </td>
                     <td>{getRoleDisplay(u)}</td>
                     <td>
-                      {u.role === 'member'
-                        ? <RoleChangeCell u={u} isRoot={isRoot} onSave={handleRoleChange} />
+                      {u.authority === 'member'
+                        ? <button className={styles.rejectBtn} onClick={() => handleDemote(u.id)}>회원 강등</button>
                         : <span className={styles.noChange}>—</span>}
                     </td>
                   </tr>
@@ -678,28 +770,9 @@ function UsersTab({ token, currentUser }) {
   )
 }
 
-function RoleChangeCell({ u, isRoot, onSave }) {
-  const roleOptions = isRoot
-    ? ['basic', 'member', 'manager', 'staff', 'root']
-    : ['basic', 'member', 'manager']
-
-  const [role, setRole] = useState(u.role)
-  const [staffType, setStaffType] = useState('president')
-
-  return (
-    <div className={styles.roleForm}>
-      <select className={styles.select} value={role} onChange={e => setRole(e.target.value)}>
-        {roleOptions.map(r => (
-          <option key={r} value={r}>{ROLE_LABEL[r]}</option>
-        ))}
-      </select>
-      {role === 'staff' && (
-        <select className={styles.select} value={staffType} onChange={e => setStaffType(e.target.value)}>
-          <option value="president">회장</option>
-          <option value="headcoach">감독</option>
-        </select>
-      )}
-      <button className={styles.saveBtn} onClick={() => onSave(u.id, role, staffType)}>저장</button>
-    </div>
-  )
+/* ── 차단 계정 탭 ── */
+function BannedTab() {
+  return <p className={styles.empty}>준비 중입니다.</p>
 }
+
+

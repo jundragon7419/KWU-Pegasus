@@ -118,15 +118,17 @@ exports.updateRosterEntry = async (req, res, next) => {
   }
 }
 
-// ── 전체 유저 목록 (로스터 연동: student_id 기준)
-exports.getUsers = async (req, res, next) => {
+
+// ── 멤버/매니저/스태프 목록 (로스터 연동)
+exports.getOrgMembers = async (_req, res, next) => {
   try {
     const [rows] = await pool.query(
-      `SELECT u.id, u.username, u.name, u.email, u.ob_yb, u.authority AS role, u.staff_type, u.membership_status, u.created_at,
+      `SELECT u.id, u.username, u.name, u.ob_yb, u.authority, u.staff_type, u.membership_status, u.created_at,
               r.year AS roster_year, r.number AS roster_number
        FROM users u
        LEFT JOIN roster r ON r.student_id = u.student_id
          AND r.year = (SELECT MAX(r2.year) FROM roster r2 WHERE r2.student_id = u.student_id)
+       WHERE u.authority IN ('staff', 'manager', 'member')
        ORDER BY u.created_at ASC`
     )
     res.json(rows)
@@ -135,34 +137,43 @@ exports.getUsers = async (req, res, next) => {
   }
 }
 
-// ── 권한 변경 (root: 전체, staff: member→basic/member/manager만 가능)
-exports.setRole = async (req, res, next) => {
+// ── 멤버 강등 (authority='member' → 'basic', membership_status='none')
+exports.demoteMember = async (req, res, next) => {
   try {
-    const { role, staff_type } = req.body
-    const callerRole = req.user.role
-
-    if (!USER_ROLES.includes(role)) {
-      return res.status(400).json({ message: '유효하지 않은 권한입니다.' })
-    }
-    if (callerRole === 'staff' && ['staff', 'root'].includes(role)) {
-      return res.status(403).json({ message: '스태프는 해당 권한을 부여할 수 없습니다.' })
-    }
-    if (role === 'staff' && !STAFF_TYPES.includes(staff_type)) {
-      return res.status(400).json({ message: '스태프 직함을 선택해주세요.' })
-    }
-
     const [rows] = await pool.query('SELECT authority FROM users WHERE id = ?', [req.params.id])
     if (rows.length === 0) return res.status(404).json({ message: '유저를 찾을 수 없습니다.' })
-    if (callerRole === 'staff' && rows[0].authority !== 'member') {
-      return res.status(403).json({ message: '스태프는 멤버의 권한만 변경할 수 있습니다.' })
+    if (rows[0].authority !== 'member') {
+      return res.status(400).json({ message: '멤버만 강등할 수 있습니다.' })
     }
-
-    const newStaffType = role === 'staff' ? staff_type : null
     await pool.query(
-      'UPDATE users SET authority = ?, staff_type = ? WHERE id = ?',
-      [role, newStaffType, req.params.id]
+      "UPDATE users SET authority = 'basic', membership_status = 'none', name = NULL, student_id = NULL, ob_yb = NULL WHERE id = ?",
+      [req.params.id]
     )
-    res.json({ message: '권한 변경 완료' })
+    res.json({ message: '회원 강등 완료' })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// ── 일반 유저 목록 (authority='basic', 차단 제외)
+exports.getBasicUsers = async (_req, res, next) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT id, username, authority, created_at FROM users WHERE authority = 'basic' AND membership_status != 'banned' ORDER BY created_at ASC`
+    )
+    res.json(rows)
+  } catch (err) {
+    next(err)
+  }
+}
+
+// ── 계정 차단 (membership_status = 'banned')
+exports.banUser = async (req, res, next) => {
+  try {
+    const [rows] = await pool.query('SELECT authority FROM users WHERE id = ?', [req.params.id])
+    if (rows.length === 0) return res.status(404).json({ message: '유저를 찾을 수 없습니다.' })
+    await pool.query("UPDATE users SET membership_status = 'banned' WHERE id = ?", [req.params.id])
+    res.json({ message: '계정이 차단되었습니다.' })
   } catch (err) {
     next(err)
   }
@@ -225,6 +236,36 @@ exports.setStaff = async (req, res, next) => {
       [staff_type, req.params.id]
     )
     res.json({ message: '스태프 임명 완료' })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// ── 매니저 해제 (staff/root가 manager → member로 강등)
+exports.unsetManager = async (req, res, next) => {
+  try {
+    const [rows] = await pool.query('SELECT authority FROM users WHERE id = ?', [req.params.id])
+    if (rows.length === 0) return res.status(404).json({ message: '유저를 찾을 수 없습니다.' })
+    if (rows[0].authority !== 'manager') {
+      return res.status(400).json({ message: '매니저만 해제할 수 있습니다.' })
+    }
+    await pool.query("UPDATE users SET authority = 'member' WHERE id = ?", [req.params.id])
+    res.json({ message: '매니저 해제 완료' })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// ── 스태프 해제 (root가 staff → member로 강등)
+exports.unsetStaff = async (req, res, next) => {
+  try {
+    const [rows] = await pool.query('SELECT authority FROM users WHERE id = ?', [req.params.id])
+    if (rows.length === 0) return res.status(404).json({ message: '유저를 찾을 수 없습니다.' })
+    if (rows[0].authority !== 'staff') {
+      return res.status(400).json({ message: '스태프만 해제할 수 있습니다.' })
+    }
+    await pool.query("UPDATE users SET authority = 'member', staff_type = NULL WHERE id = ?", [req.params.id])
+    res.json({ message: '스태프 해제 완료' })
   } catch (err) {
     next(err)
   }
