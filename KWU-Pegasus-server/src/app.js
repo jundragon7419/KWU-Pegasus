@@ -4,8 +4,11 @@ const cors = require('cors')
 const app = express()
 
 // ── 미들웨어 ──────────────────────────────────────
+const _corsOrigin = process.env.CORS_ORIGIN
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  origin: _corsOrigin === '*'
+    ? (origin, cb) => cb(null, true)
+    : (_corsOrigin || 'http://localhost:5173'),
   credentials: true,
 }))
 app.use(express.json())
