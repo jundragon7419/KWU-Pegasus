@@ -18,8 +18,6 @@ import Admin from './pages/Admin'
 import MyPage from './pages/MyPage'
 import NotFound from './pages/NotFound'
 
-const ROLE_RANK = { basic: 1, member: 2, manager: 3, staff: 4, root: 5 }
-
 function ProtectedRoute({ children, requiredRoles }) {
   const { user, loading } = useAuth()
   if (loading) return null

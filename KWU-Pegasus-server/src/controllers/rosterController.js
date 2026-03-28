@@ -1,7 +1,7 @@
 const pool = require('../db')
 
 // 활성 로스터 연도 조회
-async function getActiveYear() {
+async function fetchActiveYear() {
   const [rows] = await pool.query(
     "SELECT `value` FROM settings WHERE `key` = 'active_roster_year'"
   )
@@ -12,7 +12,7 @@ async function getActiveYear() {
 // 영구결번은 연도 무관하게 항상 포함
 exports.getRoster = async (req, res, next) => {
   try {
-    const year = req.query.year ? parseInt(req.query.year) : await getActiveYear()
+    const year = req.query.year ? parseInt(req.query.year) : await fetchActiveYear()
     const [rows] = await pool.query(
       `SELECT year, number, name, role, user_id FROM roster WHERE year = ? ORDER BY number ASC`,
       [year]
@@ -38,7 +38,7 @@ exports.getRosterYears = async (req, res, next) => {
 // GET /api/roster/active-year — 현재 활성 연도
 exports.getActiveYear = async (req, res, next) => {
   try {
-    const year = await getActiveYear()
+    const year = await fetchActiveYear()
     res.json({ year })
   } catch (err) {
     next(err)

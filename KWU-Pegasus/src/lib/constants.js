@@ -1,3 +1,5 @@
+export const DAYS = ['일', '월', '화', '수', '목', '금', '토']
+
 export const ROLE_LABEL = {
   basic: '일반', member: '멤버', manager: '매니저', staff: '스태프', root: 'ROOT',
 }

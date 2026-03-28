@@ -1,10 +1,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { API_BASE } from '../lib/api'
-import { EVENT_TYPES, CATEGORY_LABEL } from '../lib/constants'
+import { EVENT_TYPES, CATEGORY_LABEL, DAYS } from '../lib/constants'
 import styles from './Home.module.css'
-
-const DAYS = ['일', '월', '화', '수', '목', '금', '토']
 
 const CATEGORY_STYLE = { notice: styles.tagNotice, event: styles.tagEvent, game: styles.tagGame }
 

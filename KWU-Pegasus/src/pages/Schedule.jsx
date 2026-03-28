@@ -1,9 +1,8 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { API_BASE } from '../lib/api'
-import { EVENT_TYPES } from '../lib/constants'
+import { EVENT_TYPES, DAYS } from '../lib/constants'
 import styles from './Schedule.module.css'
 
-const DAYS = ['일', '월', '화', '수', '목', '금', '토']
 const MONTHS = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월']
 const MIN_YEAR = 2000
 
