@@ -62,7 +62,7 @@ export default function Admin() {
       {tab === 'staffPromote' && isRoot && <StaffPromoteTab token={token} />}
       {tab === 'basicUsers'  && isStaffOrRoot && <BasicUsersTab token={token} />}
       {tab === 'memberMgmt'  && isStaffOrRoot && <MemberMgmtTab token={token} />}
-      {tab === 'banned'      && isStaffOrRoot && <BannedTab />}
+      {tab === 'banned'      && isStaffOrRoot && <BannedTab token={token} />}
     </div>
   )
 }
@@ -78,7 +78,7 @@ function PendingTab({ token }) {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(r => r.json())
-      .then(data => { setList(data); setLoading(false) })
+      .then(data => { setList(Array.isArray(data) ? data : []); setLoading(false) })
   }, [token])
 
   useEffect(() => { load() }, [load])
@@ -160,8 +160,9 @@ function RosterManagementTab({ token }) {
     fetch(`${API_BASE}/api/roster/years`)
       .then(r => r.json())
       .then(data => {
-        setYears(data)
-        if (data.length > 0 && !selectedYear) setSelectedYear(data[0])
+        const years = Array.isArray(data) ? data : []
+        setYears(years)
+        setSelectedYear(prev => prev ?? (years.length > 0 ? years[0] : null))
       })
   }, [])
 
@@ -174,7 +175,7 @@ function RosterManagementTab({ token }) {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(r => r.json())
-      .then(data => { setRoster(data); setLoading(false) })
+      .then(data => { setRoster(Array.isArray(data) ? data : []); setLoading(false) })
   }, [selectedYear, token])
 
   useEffect(() => { loadRoster() }, [loadRoster])
@@ -600,7 +601,7 @@ function BasicUsersTab({ token }) {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(r => r.json())
-      .then(data => { setList(data); setLoading(false) })
+      .then(data => { setList(Array.isArray(data) ? data : []); setLoading(false) })
   }, [token])
 
   useEffect(() => { load() }, [load])
@@ -621,23 +622,26 @@ function BasicUsersTab({ token }) {
   return (
     <div className={styles.promoteWrap}>
       {msg && <p className={styles.rosterMsg}>{msg}</p>}
+      <h3 className={styles.subTitle}>일반</h3>
       <div className={styles.tableWrap}>
         <table className={`${styles.table} ${styles.tableFixed}`}>
           <colgroup>
-            <col style={{ width: '22%' }} />
-            <col style={{ width: '16%' }} />
+            <col style={{ width: '18%' }} />
             <col style={{ width: '28%' }} />
+            <col style={{ width: '12%' }} />
+            <col style={{ width: '22%' }} />
             <col />
           </colgroup>
           <thead>
-            <tr><th>아이디</th><th>현재 권한</th><th>회원가입일시</th><th>권한 수정</th></tr>
+            <tr><th>아이디</th><th>이메일</th><th>현재 권한</th><th>회원가입일시</th><th>권한 수정</th></tr>
           </thead>
           <tbody>
             {list.length === 0
-              ? <tr><td colSpan={4} className={styles.emptyRow}>일반 권한 유저가 없습니다.</td></tr>
+              ? <tr><td colSpan={5} className={styles.emptyRow}>일반 권한 유저가 없습니다.</td></tr>
               : list.map(u => (
                   <tr key={u.id}>
                     <td>{u.username}</td>
+                    <td>{u.email}</td>
                     <td>{ROLE_LABEL[u.authority] ?? u.authority}</td>
                     <td>{formatDatetime(u.created_at)}</td>
                     <td>
@@ -683,7 +687,7 @@ function MemberMgmtTab({ token }) {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(r => r.json())
-      .then(data => { setList(data); setLoading(false) })
+      .then(data => { setList(Array.isArray(data) ? data : []); setLoading(false) })
   }, [token])
 
   useEffect(() => { load() }, [load])
@@ -708,18 +712,19 @@ function MemberMgmtTab({ token }) {
 
   const cols = (
     <colgroup>
-      <col style={{ width: '15%' }} />
       <col style={{ width: '12%' }} />
-      <col style={{ width: '7%' }} />
       <col style={{ width: '10%' }} />
-      <col style={{ width: '12%' }} />
-      <col style={{ width: '16%' }} />
+      <col style={{ width: '22%' }} />
+      <col style={{ width: '6%' }} />
+      <col style={{ width: '8%' }} />
+      <col style={{ width: '10%' }} />
+      <col style={{ width: '13%' }} />
       <col />
     </colgroup>
   )
   const head = (
     <thead>
-      <tr><th>아이디</th><th>이름</th><th>구분</th><th>로스터</th><th>멤버 상태</th><th>현재 권한</th><th>권한 수정</th></tr>
+      <tr><th>아이디</th><th>이름</th><th>이메일</th><th>구분</th><th>로스터</th><th>멤버 상태</th><th>현재 권한</th><th>권한 수정</th></tr>
     </thead>
   )
 
@@ -742,6 +747,7 @@ function MemberMgmtTab({ token }) {
                   <tr key={u.id}>
                     <td>{u.username}</td>
                     <td>{u.name ?? '—'}</td>
+                    <td>{u.email}</td>
                     <td>{u.ob_yb?.toUpperCase() ?? '—'}</td>
                     <td>
                       {u.roster_year != null
@@ -771,8 +777,69 @@ function MemberMgmtTab({ token }) {
 }
 
 /* ── 차단 계정 탭 ── */
-function BannedTab() {
-  return <p className={styles.empty}>준비 중입니다.</p>
+function BannedTab({ token }) {
+  const [list, setList] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [msg, setMsg] = useState('')
+
+  const load = useCallback(() => {
+    setLoading(true)
+    fetch(`${API_BASE}/api/admin/banned-users`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.json())
+      .then(data => { setList(Array.isArray(data) ? data : []); setLoading(false) })
+  }, [token])
+
+  useEffect(() => { load() }, [load])
+
+  async function handleUnban(id) {
+    if (!confirm('차단을 해제하시겠습니까?')) return
+    setMsg('')
+    const res = await fetch(`${API_BASE}/api/admin/users/${id}/unban`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    const data = await res.json()
+    setMsg(data.message)
+    if (res.ok) load()
+  }
+
+  if (loading) return <p className={styles.empty}>불러오는 중...</p>
+
+  return (
+    <div className={styles.promoteWrap}>
+      {msg && <p className={styles.rosterMsg}>{msg}</p>}
+      <div className={styles.tableWrap}>
+        <table className={`${styles.table} ${styles.tableFixed}`}>
+          <colgroup>
+            <col style={{ width: '20%' }} />
+            <col style={{ width: '30%' }} />
+            <col style={{ width: '24%' }} />
+            <col />
+          </colgroup>
+          <thead>
+            <tr><th>아이디</th><th>이메일</th><th>차단일시</th><th>관리</th></tr>
+          </thead>
+          <tbody>
+            {list.length === 0
+              ? <tr><td colSpan={4} className={styles.emptyRow}>차단된 계정이 없습니다.</td></tr>
+              : list.map(u => (
+                  <tr key={u.id}>
+                    <td>{u.username}</td>
+                    <td>{u.email}</td>
+                    <td>{formatDatetime(u.banned_at)}</td>
+                    <td>
+                      <button className={styles.approveBtn} onClick={() => handleUnban(u.id)}>차단 해제</button>
+                    </td>
+                  </tr>
+                ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
 }
 
 

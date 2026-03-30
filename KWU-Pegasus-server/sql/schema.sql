@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS users (
   ob_yb             ENUM('ob','yb') NULL DEFAULT NULL,
   authority         ENUM('basic','member','manager','staff','root') NOT NULL DEFAULT 'basic',
   staff_type        ENUM('president','headcoach') NULL DEFAULT NULL,
-  membership_status ENUM('none','pending','approved','rejected') NOT NULL DEFAULT 'none',
+  membership_status ENUM('none','pending','approved','rejected','banned') NOT NULL DEFAULT 'none',
   created_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -160,6 +160,15 @@ CREATE TABLE IF NOT EXISTS holidays (
   type     VARCHAR(20)  NOT NULL DEFAULT 'holiday',
   name     VARCHAR(100) NOT NULL,
   is_fixed TINYINT(1)   NOT NULL DEFAULT 0
+);
+
+-- ── 차단 이메일 ─────────────────────────────────────────────────
+-- 계정 차단 시 해당 이메일을 등록하여 재가입을 방지
+-- email     : 차단된 이메일 주소. PK
+-- banned_at : 차단된 일시 (자동 기록)
+CREATE TABLE IF NOT EXISTS banned_emails (
+  email     VARCHAR(100) NOT NULL PRIMARY KEY,
+  banned_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ── 인덱스 ──────────────────────────────────────────────────────

@@ -8,7 +8,7 @@
 USE kwu_pegasus;
 
 -- ── 설정 ────────────────────────────────────────────────────────
-INSERT IGNORE INTO settings (`key`, `value`) VALUES ('active_roster_year', '2026');
+INSERT IGNORE INTO settings (`setting_key`, `setting_val`) VALUES ('active_roster_year', '2026');
 
 -- ── 로스터 2025 ──────────────────────────────────────────────────
 INSERT IGNORE INTO roster (year, number, name, student_id, role) VALUES

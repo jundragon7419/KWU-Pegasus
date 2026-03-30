@@ -123,7 +123,7 @@ exports.updateRosterEntry = async (req, res, next) => {
 exports.getOrgMembers = async (_req, res, next) => {
   try {
     const [rows] = await pool.query(
-      `SELECT u.id, u.username, u.name, u.ob_yb, u.authority, u.staff_type, u.membership_status, u.created_at,
+      `SELECT u.id, u.username, u.email, u.name, u.ob_yb, u.authority, u.staff_type, u.membership_status, u.created_at,
               r.year AS roster_year, r.number AS roster_number
        FROM users u
        LEFT JOIN roster r ON r.student_id = u.student_id
@@ -159,7 +159,7 @@ exports.demoteMember = async (req, res, next) => {
 exports.getBasicUsers = async (_req, res, next) => {
   try {
     const [rows] = await pool.query(
-      `SELECT id, username, authority, created_at FROM users WHERE authority = 'basic' AND membership_status != 'banned' ORDER BY created_at ASC`
+      `SELECT id, username, email, authority, created_at FROM users WHERE authority = 'basic' AND membership_status != 'banned' ORDER BY created_at ASC`
     )
     res.json(rows)
   } catch (err) {
@@ -167,13 +167,46 @@ exports.getBasicUsers = async (_req, res, next) => {
   }
 }
 
-// ── 계정 차단 (membership_status = 'banned')
+// ── 계정 차단 (membership_status = 'banned', 이메일도 banned_emails에 등록)
 exports.banUser = async (req, res, next) => {
   try {
-    const [rows] = await pool.query('SELECT authority FROM users WHERE id = ?', [req.params.id])
+    const [rows] = await pool.query('SELECT email FROM users WHERE id = ?', [req.params.id])
     if (rows.length === 0) return res.status(404).json({ message: '유저를 찾을 수 없습니다.' })
+    const { email } = rows[0]
     await pool.query("UPDATE users SET membership_status = 'banned' WHERE id = ?", [req.params.id])
+    await pool.query('INSERT IGNORE INTO banned_emails (email) VALUES (?)', [email])
     res.json({ message: '계정이 차단되었습니다.' })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// ── 차단 계정 목록
+exports.getBannedUsers = async (_req, res, next) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT id, username, email, created_at,
+              (SELECT be.banned_at FROM banned_emails be WHERE be.email = users.email) AS banned_at
+       FROM users WHERE membership_status = 'banned' ORDER BY banned_at DESC`
+    )
+    res.json(rows)
+  } catch (err) {
+    next(err)
+  }
+}
+
+// ── 계정 차단 해제 (membership_status = 'none', banned_emails에서 제거)
+exports.unbanUser = async (req, res, next) => {
+  try {
+    const [rows] = await pool.query('SELECT email, membership_status FROM users WHERE id = ?', [req.params.id])
+    if (rows.length === 0) return res.status(404).json({ message: '유저를 찾을 수 없습니다.' })
+    if (rows[0].membership_status !== 'banned') {
+      return res.status(400).json({ message: '차단된 계정이 아닙니다.' })
+    }
+    const { email } = rows[0]
+    await pool.query("UPDATE users SET membership_status = 'none' WHERE id = ?", [req.params.id])
+    await pool.query('DELETE FROM banned_emails WHERE email = ?', [email])
+    res.json({ message: '차단이 해제되었습니다.' })
   } catch (err) {
     next(err)
   }

@@ -11,6 +11,14 @@ exports.signup = async (req, res, next) => {
       return res.status(400).json({ message: '아이디, 비밀번호, 이메일을 모두 입력해주세요.' })
     }
 
+    const [banned] = await pool.query(
+      'SELECT 1 FROM banned_emails WHERE email = ? LIMIT 1',
+      [email]
+    )
+    if (banned.length > 0) {
+      return res.status(403).json({ message: '사용할 수 없는 이메일입니다.' })
+    }
+
     const [existing] = await pool.query(
       'SELECT 1 FROM users WHERE username = ? OR email = ? LIMIT 1',
       [username, email]
