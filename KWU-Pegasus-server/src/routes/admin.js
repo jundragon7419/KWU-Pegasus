@@ -4,7 +4,7 @@ const {
   getPendingMembers, approveMember, rejectMember,
   getRosterAdmin, addRosterEntry, deleteRosterEntry, updateRosterEntry,
   getOrgMembers, demoteMember,
-  getBasicUsers, banUser,
+  getBasicUsers, banUser, getBannedUsers, getBannableUsers, unbanUser,
   getMembers, getManagers, getStaffs, setManager, unsetManager, setStaff, unsetStaff,
   setRosterYear,
 } = require('../controllers/adminController')
@@ -20,8 +20,8 @@ router.post('/reject-member/:id',        requireRole('manager','staff','root'), 
 // 로스터 관리 (admin CRUD)
 router.get('/roster',                    requireRole('manager','staff','root'), getRosterAdmin)
 router.post('/roster',                   requireRole('manager','staff','root'), addRosterEntry)
-router.delete('/roster/:year/:number',   requireRole('manager','staff','root'), deleteRosterEntry)
-router.put('/roster/:year/:number',      requireRole('manager','staff','root'), updateRosterEntry)
+router.delete('/roster/:id',             requireRole('manager','staff','root'), deleteRosterEntry)
+router.put('/roster/:id',               requireRole('manager','staff','root'), updateRosterEntry)
 
 // 멤버 관리 (staff/root)
 router.get('/org-members',               requireRole('staff','root'), getOrgMembers)
@@ -30,6 +30,11 @@ router.put('/users/:id/demote-member',   requireRole('staff','root'), demoteMemb
 // 일반유저 관리 (staff/root)
 router.get('/basic-users',               requireRole('staff','root'), getBasicUsers)
 router.put('/users/:id/ban',             requireRole('staff','root'), banUser)
+
+// 차단 관리 (staff/root)
+router.get('/banned-users',              requireRole('staff','root'), getBannedUsers)
+router.get('/bannable-users',            requireRole('staff','root'), getBannableUsers)
+router.put('/users/:id/unban',           requireRole('staff','root'), unbanUser)
 
 // 매니저 관리 (staff/root)
 router.get('/members',                   requireRole('staff','root'), getMembers)

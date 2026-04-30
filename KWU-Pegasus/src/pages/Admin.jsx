@@ -5,10 +5,11 @@ import { ROLE_LABEL, STAFF_TYPE_LABEL, ROSTER_ROLE_LABEL } from '../lib/constant
 import styles from './Admin.module.css'
 
 const ROSTER_ROLE_OPTIONS = [
-  { value: 'player',    label: '선수' },
-  { value: 'headcoach', label: '감독' },
-  { value: 'president', label: '회장' },
-  { value: 'retired',   label: '영구결번' },
+  { value: 'roster_player',    label: '선수' },
+  { value: 'roster_headcoach', label: '감독' },
+  { value: 'roster_president', label: '회장' },
+  { value: 'roster_manager',   label: '매니저' },
+  { value: 'roster_retired',   label: '영구결번' },
 ]
 
 export default function Admin() {
@@ -62,7 +63,7 @@ export default function Admin() {
       {tab === 'staffPromote' && isRoot && <StaffPromoteTab token={token} />}
       {tab === 'basicUsers'  && isStaffOrRoot && <BasicUsersTab token={token} />}
       {tab === 'memberMgmt'  && isStaffOrRoot && <MemberMgmtTab token={token} />}
-      {tab === 'banned'      && isStaffOrRoot && <BannedTab />}
+      {tab === 'banned'      && isStaffOrRoot && <BannedTab token={token} user={user} />}
     </div>
   )
 }
@@ -153,6 +154,7 @@ function RosterManagementTab({ token }) {
   const [addNumber, setAddNumber] = useState('')
   const [addName, setAddName] = useState('')
   const [addStudentId, setAddStudentId] = useState('')
+  const [addGeneration, setAddGeneration] = useState('')
   const [addRole, setAddRole] = useState('player')
   const [addMsg, setAddMsg] = useState('')
 
@@ -187,25 +189,26 @@ function RosterManagementTab({ token }) {
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         year: parseInt(addYear),
-        number: parseInt(addNumber),
+        number: addNumber.trim(),
         name: addName,
         student_id: addStudentId,
+        generation: parseInt(addGeneration),
         role: addRole,
       }),
     })
     const data = await res.json()
     setAddMsg(data.message)
     if (res.ok) {
-      setAddNumber(''); setAddName(''); setAddStudentId(''); setAddRole('player')
+      setAddNumber(''); setAddName(''); setAddStudentId(''); setAddGeneration(''); setAddRole('player')
       loadYears()
       if (parseInt(addYear) === selectedYear) loadRoster()
       else setSelectedYear(parseInt(addYear))
     }
   }
 
-  async function handleDelete(year, number) {
-    if (!confirm(`${year}년 ${number}번을 삭제하시겠습니까?`)) return
-    await fetch(`${API_BASE}/api/admin/roster/${year}/${number}`, {
+  async function handleDelete(id, label) {
+    if (!confirm(`${label}을(를) 삭제하시겠습니까?`)) return
+    await fetch(`${API_BASE}/api/admin/roster/${id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -216,9 +219,10 @@ function RosterManagementTab({ token }) {
     <div className={styles.rosterMgmtWrap}>
       <form className={styles.rosterAddForm} onSubmit={handleAdd}>
         <input className={styles.numberInput} style={{ width: '64px' }} type="number" placeholder="연도" value={addYear} onChange={e => setAddYear(e.target.value)} required />
-        <input className={styles.numberInput} style={{ width: '56px' }} type="number" min="0" max="99" placeholder="번호" value={addNumber} onChange={e => setAddNumber(e.target.value)} required />
+        <input className={styles.numberInput} style={{ width: '56px' }} type="text" placeholder="번호/M" value={addNumber} onChange={e => setAddNumber(e.target.value.toUpperCase())} required />
         <input className={styles.memberInput} type="text" placeholder="이름" value={addName} onChange={e => setAddName(e.target.value)} required />
         <input className={styles.memberInput} type="text" inputMode="numeric" maxLength={10} placeholder="학번 10자리" value={addStudentId} onChange={e => setAddStudentId(e.target.value.replace(/\D/g, ''))} required />
+        <input className={styles.numberInput} style={{ width: '56px' }} type="number" placeholder="기수" value={addGeneration} onChange={e => setAddGeneration(e.target.value)} required />
         <select className={styles.select} value={addRole} onChange={e => setAddRole(e.target.value)}>
           {ROSTER_ROLE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
@@ -248,6 +252,7 @@ function RosterManagementTab({ token }) {
                 <th>번호</th>
                 <th>이름</th>
                 <th>학번</th>
+                <th>기수</th>
                 <th>멤버 ID</th>
                 <th>역할</th>
                 <th>관리</th>
@@ -256,7 +261,7 @@ function RosterManagementTab({ token }) {
             <tbody>
               {roster.map(entry => (
                 <RosterEntryRow
-                  key={`${entry.year}-${entry.number}`}
+                  key={entry.id}
                   entry={entry}
                   token={token}
                   onDelete={handleDelete}
@@ -273,18 +278,19 @@ function RosterManagementTab({ token }) {
 
 function RosterEntryRow({ entry, token, onDelete, onDone }) {
   const [editing, setEditing] = useState(false)
-  const [newNumber, setNewNumber] = useState(String(entry.number))
+  const [number, setNumber] = useState(String(entry.number))
   const [name, setName] = useState(entry.name)
   const [studentId, setStudentId] = useState(entry.student_id)
+  const [generation, setGeneration] = useState(String(entry.generation))
   const [role, setRole] = useState(entry.role)
   const [msg, setMsg] = useState('')
 
   async function handleSave() {
     setMsg('')
-    const res = await fetch(`${API_BASE}/api/admin/roster/${entry.year}/${entry.number}`, {
+    const res = await fetch(`${API_BASE}/api/admin/roster/${entry.id}`, {
       method: 'PUT',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ newNumber: parseInt(newNumber), name, student_id: studentId, role }),
+      body: JSON.stringify({ number: number.trim().toUpperCase(), name, student_id: studentId, generation: parseInt(generation), role }),
     })
     const data = await res.json()
     if (res.ok) { setEditing(false); onDone() } else { setMsg(data.message) }
@@ -294,7 +300,7 @@ function RosterEntryRow({ entry, token, onDelete, onDone }) {
     <tr>
       <td>
         {editing
-          ? <input className={styles.numberInput} type="number" min="0" max="99" value={newNumber} onChange={e => setNewNumber(e.target.value)} />
+          ? <input className={styles.numberInput} style={{ width: '56px' }} type="text" placeholder="번호/M" value={number} onChange={e => setNumber(e.target.value.toUpperCase())} />
           : entry.number}
       </td>
       <td>
@@ -306,6 +312,11 @@ function RosterEntryRow({ entry, token, onDelete, onDone }) {
         {editing
           ? <input className={styles.numberInput} style={{ width: '100px' }} type="text" inputMode="numeric" maxLength={10} value={studentId} onChange={e => setStudentId(e.target.value.replace(/\D/g, ''))} />
           : entry.student_id}
+      </td>
+      <td>
+        {editing
+          ? <input className={styles.numberInput} style={{ width: '56px' }} type="number" value={generation} onChange={e => setGeneration(e.target.value)} />
+          : `${entry.generation}기`}
       </td>
       <td>
         {entry.username
@@ -329,7 +340,7 @@ function RosterEntryRow({ entry, token, onDelete, onDone }) {
         ) : (
           <>
             <button className={styles.saveBtn} onClick={() => setEditing(true)}>수정</button>
-            <button className={styles.rejectBtn} onClick={() => onDelete(entry.year, entry.number)}>삭제</button>
+            <button className={styles.rejectBtn} onClick={() => onDelete(entry.id, `${entry.year}년 ${entry.number}번 ${entry.name}`)}>삭제</button>
           </>
         )}
       </td>
@@ -771,8 +782,120 @@ function MemberMgmtTab({ token }) {
 }
 
 /* ── 차단 계정 탭 ── */
-function BannedTab() {
-  return <p className={styles.empty}>준비 중입니다.</p>
+function BannedTab({ token, user }) {
+  const [banned, setBanned] = useState([])
+  const [bannable, setBannable] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [msg, setMsg] = useState('')
+
+  const staffBannable = ['basic', 'member', 'manager']
+  const rootBannable  = ['basic', 'member', 'manager', 'staff']
+
+  const load = useCallback(() => {
+    setLoading(true)
+    Promise.all([
+      fetch(`${API_BASE}/api/admin/banned-users`,   { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()),
+      fetch(`${API_BASE}/api/admin/bannable-users`,  { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()),
+    ]).then(([bannedData, bannableData]) => {
+      setBanned(Array.isArray(bannedData) ? bannedData : [])
+      const allowed = user?.role === 'root' ? rootBannable : staffBannable
+      setBannable(Array.isArray(bannableData) ? bannableData.filter(u => allowed.includes(u.authority)) : [])
+      setLoading(false)
+    })
+  }, [token, user])
+
+  useEffect(() => { load() }, [load])
+
+  async function handleBan(id) {
+    setMsg('')
+    const res = await fetch(`${API_BASE}/api/admin/users/${id}/ban`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    const data = await res.json()
+    setMsg(data.message)
+    if (res.ok) load()
+  }
+
+  async function handleUnban(id) {
+    setMsg('')
+    const res = await fetch(`${API_BASE}/api/admin/users/${id}/unban`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    const data = await res.json()
+    setMsg(data.message)
+    if (res.ok) load()
+  }
+
+  if (loading) return <p className={styles.empty}>불러오는 중...</p>
+
+  const cols = (
+    <colgroup>
+      <col style={{ width: '22%' }} />
+      <col style={{ width: '16%' }} />
+      <col style={{ width: '16%' }} />
+      <col style={{ width: '26%' }} />
+      <col />
+    </colgroup>
+  )
+  const head = (
+    <thead>
+      <tr><th>아이디</th><th>이름</th><th>권한</th><th>가입일시</th><th>관리</th></tr>
+    </thead>
+  )
+
+  return (
+    <div className={styles.promoteWrap}>
+      {msg && <p className={styles.rosterMsg}>{msg}</p>}
+
+      <h3 className={styles.subTitle}>현재 차단된 계정</h3>
+      <div className={styles.tableWrap}>
+        <table className={`${styles.table} ${styles.tableFixed}`}>
+          {cols}{head}
+          <tbody>
+            {banned.length === 0
+              ? <tr><td colSpan={5} className={styles.emptyRow}>차단된 계정이 없습니다.</td></tr>
+              : banned.map(u => (
+                  <tr key={u.id}>
+                    <td>{u.username}</td>
+                    <td>{u.name ?? '—'}</td>
+                    <td>{ROLE_LABEL[u.authority] ?? u.authority}</td>
+                    <td>{formatDatetime(u.created_at)}</td>
+                    <td>
+                      <button className={styles.approveBtn} onClick={() => handleUnban(u.id)}>차단 해제</button>
+                    </td>
+                  </tr>
+                ))
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <h3 className={styles.subTitle}>차단 가능한 계정</h3>
+      <div className={styles.tableWrap}>
+        <table className={`${styles.table} ${styles.tableFixed}`}>
+          {cols}{head}
+          <tbody>
+            {bannable.length === 0
+              ? <tr><td colSpan={5} className={styles.emptyRow}>차단 가능한 유저가 없습니다.</td></tr>
+              : bannable.map(u => (
+                  <tr key={u.id}>
+                    <td>{u.username}</td>
+                    <td>{u.name ?? '—'}</td>
+                    <td>{ROLE_LABEL[u.authority] ?? u.authority}</td>
+                    <td>{formatDatetime(u.created_at)}</td>
+                    <td>
+                      <button className={styles.rejectBtn} onClick={() => handleBan(u.id)}>차단</button>
+                    </td>
+                  </tr>
+                ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
 }
 
 

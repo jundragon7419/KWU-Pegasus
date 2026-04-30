@@ -11,7 +11,7 @@ export const STAFF_TYPE_LABEL = {
 export const CATEGORY_LABEL = { notice: '공지', event: '행사', game: '경기' }
 
 export const ROSTER_ROLE_LABEL = {
-  player: '선수', headcoach: '감독', president: '회장', retired: '영구결번',
+  roster_player: '선수', roster_headcoach: '감독', roster_president: '회장', roster_manager: '매니저', roster_retired: '영구결번',
 }
 
 export const EVENT_TYPES = {

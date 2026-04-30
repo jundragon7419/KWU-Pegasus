@@ -14,7 +14,13 @@ exports.getRoster = async (req, res, next) => {
   try {
     const year = req.query.year ? parseInt(req.query.year) : await fetchActiveYear()
     const [rows] = await pool.query(
-      `SELECT year, number, name, role, user_id FROM roster WHERE year = ? ORDER BY number ASC`,
+      `SELECT id, year, number, name, student_id, generation, role, user_id
+       FROM roster
+       WHERE year = ?
+       ORDER BY
+         CASE WHEN number = 'M' THEN 1 ELSE 0 END ASC,
+         CASE WHEN number != 'M' THEN CAST(number AS UNSIGNED) END ASC,
+         generation ASC`,
       [year]
     )
     res.json(rows)

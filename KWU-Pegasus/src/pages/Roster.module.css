@@ -147,6 +147,12 @@
 
 .dotStaff   { background: var(--color-blue); }
 .dotRetired { background: #c9a227; }
+.dotManager { background: #c87adc; }
+
+.legendBadge {
+  position: static;
+  font-size: 0.55rem;
+}
 
 /* ── 그리드 ── */
 .grid {
@@ -184,6 +190,7 @@
   letter-spacing: -1px;
 }
 
+
 .name {
   font-size: 0.85rem;
   font-weight: 500;
@@ -200,18 +207,28 @@
   color: var(--color-blue);
 }
 
-.card_retired {
+.card_roster_retired {
   border-color: rgba(201, 162, 39, 0.4);
   background: rgba(201, 162, 39, 0.08);
 }
 
-.card_retired .number {
+.card_roster_retired .number {
   color: #c9a227;
+}
+
+.card_roster_manager {
+  border-color: rgba(200, 122, 220, 0.35);
+  background: rgba(200, 122, 220, 0.07);
+}
+
+.card_roster_manager .number {
+  color: #c87adc;
 }
 
 /* ── 배지 ── */
 .staffBadge,
-.retiredBadge {
+.retiredBadge,
+.managerBadge {
   position: absolute;
   top: 6px;
   right: 7px;
@@ -230,6 +247,11 @@
 .retiredBadge {
   background: rgba(201, 162, 39, 0.2);
   color: #c9a227;
+}
+
+.managerBadge {
+  background: rgba(200, 122, 220, 0.2);
+  color: #c87adc;
 }
 
 /* ── 검색 없음 ── */

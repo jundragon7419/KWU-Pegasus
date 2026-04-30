@@ -36,33 +36,37 @@ CREATE TABLE IF NOT EXISTS users (
   ob_yb             ENUM('ob','yb') NULL DEFAULT NULL,
   authority         ENUM('basic','member','manager','staff','root') NOT NULL DEFAULT 'basic',
   staff_type        ENUM('president','headcoach') NULL DEFAULT NULL,
-  membership_status ENUM('none','pending','approved','rejected') NOT NULL DEFAULT 'none',
+  membership_status ENUM('none','pending','approved','rejected','banned') NOT NULL DEFAULT 'none',
   created_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ── 로스터 ──────────────────────────────────────────────────────
+-- id         : 로스터 고유 식별자. PK (자동 증가)
 -- year       : 해당 로스터의 연도. 연도마다 로스터가 독립적으로 관리됨
--- number     : 해당 연도 로스터에 등록된 등번호. (year, number) 복합 PK
+-- number     : 해당 연도 로스터에 등록된 등번호. 등번호 없는 매니저는 'M'으로 저장
 -- name       : 선수 실명
 -- student_id : 학번 (10자리). 로스터 등록 시 관리자가 직접 입력.
 --              같은 연도 내 중복 불가 (UNIQUE per year).
 --              유저 테이블의 student_id와 일치하는 멤버가 있으면 user_id를 연동
+-- generation : 기수 (예: 40기, 41기, ...)
 -- user_id    : users 테이블의 id. 기본 NULL이며,
 --              roster.student_id와 users.student_id가 일치할 때 자동으로 연동됨.
 --              연동 후 해당 유저의 멤버십 정보와 연결하여 차후 활용
 -- role       : 로스터 내 역할. 유저 권한(authority)과는 별개로 관리됨
 --               president  - 회장
 --               headcoach  - 감독
+--               manager    - 매니저 (등번호 없는 경우 'M'으로 표시)
 --               retired    - 영구결번 등 명예 등록 선수
 --               player     - 일반 선수
 CREATE TABLE IF NOT EXISTS roster (
+  id          INT          NOT NULL AUTO_INCREMENT PRIMARY KEY,
   year        INT          NOT NULL,
-  number      INT          NOT NULL,
+  number      VARCHAR(10)  NOT NULL,
   name        VARCHAR(50)  NOT NULL,
   student_id  CHAR(10)     NOT NULL,
+  generation  INT          NOT NULL,
   user_id     INT          NULL DEFAULT NULL,
-  role        ENUM('president','headcoach','retired','player') NOT NULL DEFAULT 'player',
-  PRIMARY KEY (year, number),
+  role        ENUM('roster_president','roster_headcoach','roster_retired','roster_player','roster_manager') NOT NULL DEFAULT 'roster_player',
   UNIQUE KEY uq_roster_student (year, student_id),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE
 );

@@ -41,6 +41,13 @@ exports.createPost = async (req, res, next) => {
 
 exports.updatePost = async (req, res, next) => {
   try {
+    const [rows] = await pool.query('SELECT author FROM posts WHERE id = ?', [req.params.id])
+    if (rows.length === 0) return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' })
+
+    const isOwner = rows[0].author === req.user.username
+    const canOverride = ['manager', 'staff', 'root'].includes(req.user.role)
+    if (!isOwner && !canOverride) return res.status(403).json({ message: '본인 게시글만 수정할 수 있습니다.' })
+
     const { title, content } = req.body
     await pool.query(
       'UPDATE posts SET title = ?, content = ? WHERE id = ?',
@@ -54,6 +61,13 @@ exports.updatePost = async (req, res, next) => {
 
 exports.deletePost = async (req, res, next) => {
   try {
+    const [rows] = await pool.query('SELECT author FROM posts WHERE id = ?', [req.params.id])
+    if (rows.length === 0) return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' })
+
+    const isOwner = rows[0].author === req.user.username
+    const canOverride = ['manager', 'staff', 'root'].includes(req.user.role)
+    if (!isOwner && !canOverride) return res.status(403).json({ message: '본인 게시글만 삭제할 수 있습니다.' })
+
     await pool.query('DELETE FROM posts WHERE id = ?', [req.params.id])
     res.json({ message: '삭제 완료' })
   } catch (err) {

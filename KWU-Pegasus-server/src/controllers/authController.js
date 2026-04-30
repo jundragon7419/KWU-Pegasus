@@ -12,10 +12,14 @@ exports.signup = async (req, res, next) => {
     }
 
     const [existing] = await pool.query(
-      'SELECT 1 FROM users WHERE username = ? OR email = ? LIMIT 1',
+      'SELECT username, email, membership_status FROM users WHERE username = ? OR email = ? LIMIT 1',
       [username, email]
     )
     if (existing.length > 0) {
+      const dup = existing[0]
+      if (dup.email === email && dup.membership_status === 'banned') {
+        return res.status(403).json({ message: '사용할 수 없는 이메일입니다.' })
+      }
       return res.status(409).json({ message: '이미 사용 중인 아이디 또는 이메일입니다.' })
     }
 
@@ -46,6 +50,10 @@ exports.login = async (req, res, next) => {
 
     const match = await bcrypt.compare(password, user.password)
     if (!match) return res.status(401).json({ message: '아이디 또는 비밀번호가 올바르지 않습니다.' })
+
+    if (user.membership_status === 'banned') {
+      return res.status(403).json({ message: '차단된 계정입니다. 관리자에게 문의하세요.' })
+    }
 
     const token = jwt.sign(
       { id: user.id, username: user.username, role: user.role, staff_type: user.staff_type, ob_yb: user.ob_yb },

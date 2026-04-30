@@ -7,6 +7,7 @@ const FILTERS = [
   { key: 'all',     label: '전체' },
   { key: 'player',  label: '선수' },
   { key: 'staff',   label: '감독 / 회장' },  // coach + president 통합 필터
+  { key: 'manager', label: '매니저' },
   { key: 'retired', label: '영구결번' },
 ]
 
@@ -39,7 +40,10 @@ export default function Roster() {
   const filtered = useMemo(() => roster.filter(p => {
     const matchRole =
       filter === 'all' ||
-      (filter === 'staff' ? (p.role === 'headcoach' || p.role === 'president') : p.role === filter)
+      (filter === 'staff'   ? (p.role === 'roster_headcoach' || p.role === 'roster_president') :
+       filter === 'player'  ? p.role === 'roster_player' :
+       filter === 'manager' ? p.role === 'roster_manager' :
+       filter === 'retired' ? p.role === 'roster_retired' : false)
     const matchSearch = search === '' ||
       p.name.includes(search) ||
       String(p.number).includes(search)
@@ -96,6 +100,10 @@ export default function Roster() {
             <span className={`${styles.legendDot} ${styles.dotRetired}`} />
             영구결번
           </span>
+          <span className={styles.legendItem}>
+            <span className={`${styles.legendDot} ${styles.dotManager}`} />
+            매니저
+          </span>
         </div>
       </div>
 
@@ -103,18 +111,38 @@ export default function Roster() {
         <p className={styles.empty}>검색 결과가 없습니다.</p>
       ) : (
         <div className={styles.grid}>
-          {filtered.map(p => (
-            <div
-              key={p.number}
-              className={`${styles.card} ${styles[p.role === 'headcoach' || p.role === 'president' ? 'card_staff' : `card_${p.role}`]}`}
-            >
-              <span className={styles.number}>{p.number}</span>
-              <span className={styles.name}>{p.name}</span>
-              {(p.role === 'headcoach' || p.role === 'president' || p.role === 'retired') && (
-                <span className={styles.staffBadge}>{ROSTER_ROLE_LABEL[p.role]}</span>
-              )}
-            </div>
-          ))}
+          {filtered.map(p => {
+            const badgeLabel =
+              p.role === 'roster_headcoach' ? 'HC' :
+              p.role === 'roster_president' ? 'PD' :
+              (p.role === 'roster_manager' && p.number !== 'M') ? 'M' :
+              p.role === 'roster_retired' ? ROSTER_ROLE_LABEL['roster_retired'] : null
+
+            return (
+              <div
+                key={p.student_id}
+                className={[
+                  styles.card,
+                  (p.role === 'roster_headcoach' || p.role === 'roster_president') ? styles.card_staff :
+                  p.role === 'roster_manager' ? styles.card_roster_manager :
+                  p.role === 'roster_retired' ? styles.card_roster_retired :
+                  '',
+                ].join(' ')}
+              >
+                <span className={styles.number}>{p.number}</span>
+                <span className={styles.name}>{p.name}</span>
+                {badgeLabel && (
+                  <span className={
+                    p.role === 'roster_retired' ? styles.retiredBadge :
+                    p.role === 'roster_manager' ? styles.managerBadge :
+                    styles.staffBadge
+                  }>
+                    {badgeLabel}
+                  </span>
+                )}
+              </div>
+            )
+          })}
         </div>
       )}
     </div>

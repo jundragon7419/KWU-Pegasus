@@ -20,7 +20,7 @@ exports.updateProfile = async (req, res, next) => {
       'SELECT membership_status FROM users WHERE id = ?',
       [req.user.id]
     )
-    if (rows[0].membership_status !== 'none') {
+    if (!['none', 'rejected'].includes(rows[0].membership_status)) {
       return res.status(400).json({ message: '멤버 신청 이후에는 프로필을 수정할 수 없습니다.' })
     }
 
@@ -66,14 +66,17 @@ exports.getRosterHistory = async (req, res, next) => {
 exports.requestMembership = async (req, res, next) => {
   try {
     const [rows] = await pool.query(
-      'SELECT membership_status, name FROM users WHERE id = ?',
+      'SELECT membership_status, name, ob_yb FROM users WHERE id = ?',
       [req.user.id]
     )
     const user = rows[0]
-    if (user.membership_status !== 'none') {
-      return res.status(400).json({ message: '이미 신청했거나 처리된 상태입니다.' })
+    if (user.membership_status === 'pending') {
+      return res.status(400).json({ message: '이미 신청 중입니다. 관리자 승인을 기다려주세요.' })
     }
-    if (!user.name) {
+    if (user.membership_status === 'approved') {
+      return res.status(400).json({ message: '이미 멤버입니다.' })
+    }
+    if (!user.name || !user.ob_yb) {
       return res.status(400).json({ message: '먼저 프로필(실명, OB/YB)을 입력해주세요.' })
     }
 
