@@ -55,6 +55,11 @@ export default function Admin() {
             차단 계정
           </button>
         )}
+        {isStaffOrRoot && (
+          <button className={`${styles.tab} ${tab === 'rosterYear' ? styles.tabActive : ''}`} onClick={() => setTab('rosterYear')}>
+            연도 설정
+          </button>
+        )}
       </div>
 
       {tab === 'pending'      && <PendingTab token={token} />}
@@ -64,6 +69,7 @@ export default function Admin() {
       {tab === 'basicUsers'  && isStaffOrRoot && <BasicUsersTab token={token} />}
       {tab === 'memberMgmt'  && isStaffOrRoot && <MemberMgmtTab token={token} />}
       {tab === 'banned'      && isStaffOrRoot && <BannedTab token={token} user={user} />}
+      {tab === 'rosterYear'  && isStaffOrRoot && <RosterYearTab token={token} />}
     </div>
   )
 }
@@ -89,7 +95,15 @@ function PendingTab({ token }) {
 
   return (
     <div className={styles.tableWrap}>
-      <table className={styles.table}>
+      <table className={`${styles.table} ${styles.tableFixed} ${styles.pendingTable}`}>
+        <colgroup>
+          <col style={{ width: '20%' }} />
+          <col style={{ width: '14%' }} />
+          <col style={{ width: '15%' }} />
+          <col style={{ width: '8%' }} />
+          <col style={{ width: '15%' }} />
+          <col />
+        </colgroup>
         <thead>
           <tr>
             <th>아이디</th>
@@ -150,13 +164,25 @@ function RosterManagementTab({ token }) {
   const [roster, setRoster] = useState([])
   const [loading, setLoading] = useState(false)
 
+  const [activeYear, setActiveYear] = useState(null)
   const [addYear, setAddYear] = useState('')
   const [addNumber, setAddNumber] = useState('')
   const [addName, setAddName] = useState('')
   const [addStudentId, setAddStudentId] = useState('')
   const [addGeneration, setAddGeneration] = useState('')
-  const [addRole, setAddRole] = useState('player')
+  const [addRole, setAddRole] = useState('roster_player')
   const [addMsg, setAddMsg] = useState('')
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/roster/active-year`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.year) {
+          setActiveYear(data.year)
+          setAddYear(String(data.year))
+        }
+      })
+  }, [])
 
   const loadYears = useCallback(() => {
     fetch(`${API_BASE}/api/roster/years`)
@@ -199,7 +225,7 @@ function RosterManagementTab({ token }) {
     const data = await res.json()
     setAddMsg(data.message)
     if (res.ok) {
-      setAddNumber(''); setAddName(''); setAddStudentId(''); setAddGeneration(''); setAddRole('player')
+      setAddNumber(''); setAddName(''); setAddStudentId(''); setAddGeneration(''); setAddRole('roster_player')
       loadYears()
       if (parseInt(addYear) === selectedYear) loadRoster()
       else setSelectedYear(parseInt(addYear))
@@ -218,15 +244,35 @@ function RosterManagementTab({ token }) {
   return (
     <div className={styles.rosterMgmtWrap}>
       <form className={styles.rosterAddForm} onSubmit={handleAdd}>
-        <input className={styles.numberInput} style={{ width: '64px' }} type="number" placeholder="연도" value={addYear} onChange={e => setAddYear(e.target.value)} required />
-        <input className={styles.numberInput} style={{ width: '56px' }} type="text" placeholder="번호/M" value={addNumber} onChange={e => setAddNumber(e.target.value.toUpperCase())} required />
-        <input className={styles.memberInput} type="text" placeholder="이름" value={addName} onChange={e => setAddName(e.target.value)} required />
-        <input className={styles.memberInput} type="text" inputMode="numeric" maxLength={10} placeholder="학번 10자리" value={addStudentId} onChange={e => setAddStudentId(e.target.value.replace(/\D/g, ''))} required />
-        <input className={styles.numberInput} style={{ width: '56px' }} type="number" placeholder="기수" value={addGeneration} onChange={e => setAddGeneration(e.target.value)} required />
-        <select className={styles.select} value={addRole} onChange={e => setAddRole(e.target.value)}>
-          {ROSTER_ROLE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-        </select>
-        <button className={styles.approveBtn} type="submit">추가</button>
+        <div className={styles.addField}>
+          <label className={styles.addLabel}>연도</label>
+          <input className={`${styles.addInput} ${styles.addInputNarrow}`} type="number" value={addYear} onChange={e => setAddYear(e.target.value)} required />
+        </div>
+        <div className={styles.addField}>
+          <label className={styles.addLabel}>번호</label>
+          <input className={`${styles.addInput} ${styles.addInputNarrow}`} type="text" placeholder="번호 / M" value={addNumber} onChange={e => setAddNumber(e.target.value.toUpperCase())} required />
+        </div>
+        <div className={styles.addField}>
+          <label className={styles.addLabel}>이름</label>
+          <input className={styles.addInput} type="text" value={addName} onChange={e => setAddName(e.target.value)} required />
+        </div>
+        <div className={styles.addField}>
+          <label className={styles.addLabel}>학번</label>
+          <input className={`${styles.addInput} ${styles.addInputStudentId}`} type="text" inputMode="numeric" maxLength={10} placeholder="10자리" value={addStudentId} onChange={e => setAddStudentId(e.target.value.replace(/\D/g, ''))} required />
+        </div>
+        <div className={styles.addField}>
+          <label className={styles.addLabel}>기수</label>
+          <input className={`${styles.addInput} ${styles.addInputNarrow}`} type="number" placeholder="기수" value={addGeneration} onChange={e => setAddGeneration(e.target.value)} required />
+        </div>
+        <div className={styles.addField}>
+          <label className={styles.addLabel}>역할</label>
+          <select className={`${styles.addInput} ${styles.addInputRole}`} value={addRole} onChange={e => setAddRole(e.target.value)}>
+            {ROSTER_ROLE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+        </div>
+        <div className={styles.addFieldSubmit}>
+          <button className={styles.approveBtn} type="submit">추가</button>
+        </div>
       </form>
       {addMsg && <p className={styles.rowMsg}>{addMsg}</p>}
 
@@ -246,7 +292,16 @@ function RosterManagementTab({ token }) {
       {!loading && selectedYear && roster.length === 0 && <p className={styles.empty}>등록된 선수가 없습니다.</p>}
       {!loading && roster.length > 0 && (
         <div className={styles.tableWrap}>
-          <table className={styles.table}>
+          <table className={`${styles.table} ${styles.tableFixed} ${styles.rosterTable}`}>
+            <colgroup>
+              <col style={{ width: '7%' }} />
+              <col style={{ width: '15%' }} />
+              <col style={{ width: '18%' }} />
+              <col style={{ width: '7%' }} />
+              <col style={{ width: '15%' }} />
+              <col style={{ width: '15%' }} />
+              <col style={{ width: '23%' }} />
+            </colgroup>
             <thead>
               <tr>
                 <th>번호</th>
@@ -300,22 +355,22 @@ function RosterEntryRow({ entry, token, onDelete, onDone }) {
     <tr>
       <td>
         {editing
-          ? <input className={styles.numberInput} style={{ width: '56px' }} type="text" placeholder="번호/M" value={number} onChange={e => setNumber(e.target.value.toUpperCase())} />
+          ? <input className={`${styles.addInput} ${styles.addInputFill} ${styles.addInputCenter}`} type="text" value={number} onChange={e => setNumber(e.target.value.toUpperCase())} />
           : entry.number}
       </td>
       <td>
         {editing
-          ? <input className={styles.memberInput} type="text" value={name} onChange={e => setName(e.target.value)} />
+          ? <input className={`${styles.addInput} ${styles.addInputFill}`} type="text" value={name} onChange={e => setName(e.target.value)} />
           : entry.name}
       </td>
       <td>
         {editing
-          ? <input className={styles.numberInput} style={{ width: '100px' }} type="text" inputMode="numeric" maxLength={10} value={studentId} onChange={e => setStudentId(e.target.value.replace(/\D/g, ''))} />
+          ? <input className={`${styles.addInput} ${styles.addInputFill}`} type="text" inputMode="numeric" maxLength={10} value={studentId} onChange={e => setStudentId(e.target.value.replace(/\D/g, ''))} />
           : entry.student_id}
       </td>
       <td>
         {editing
-          ? <input className={styles.numberInput} style={{ width: '56px' }} type="number" value={generation} onChange={e => setGeneration(e.target.value)} />
+          ? <input className={`${styles.addInput} ${styles.addInputFill} ${styles.addInputCenter}`} type="text" inputMode="numeric" value={generation} onChange={e => setGeneration(e.target.value.replace(/\D/g, ''))} />
           : `${entry.generation}기`}
       </td>
       <td>
@@ -325,7 +380,7 @@ function RosterEntryRow({ entry, token, onDelete, onDone }) {
       </td>
       <td>
         {editing
-          ? <select className={styles.select} value={role} onChange={e => setRole(e.target.value)}>
+          ? <select className={`${styles.addInput} ${styles.addInputFill}`} value={role} onChange={e => setRole(e.target.value)}>
               {ROSTER_ROLE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
           : ROSTER_ROLE_LABEL[entry.role] ?? entry.role}
@@ -420,7 +475,7 @@ function PromoteTab({ token }) {
 
       <h3 className={styles.subTitle}>현재 매니저</h3>
       <div className={styles.tableWrap}>
-        <table className={`${styles.table} ${styles.tableFixed}`}>
+        <table className={`${styles.table} ${styles.tableFixed} ${styles.promoteTable}`}>
           {promoteCols}{promoteHead}
           <tbody>
             {managers.length === 0
@@ -432,7 +487,7 @@ function PromoteTab({ token }) {
                     <td>{u.ob_yb?.toUpperCase() ?? '—'}</td>
                     <td>{ROLE_LABEL[u.authority]}</td>
                     <td>{formatDatetime(u.created_at)}</td>
-                    <td>
+                    <td className={styles.actions}>
                       <button className={styles.rejectBtn} onClick={() => handleDemote(u.id)}>권한 해제</button>
                     </td>
                   </tr>
@@ -444,7 +499,7 @@ function PromoteTab({ token }) {
 
       <h3 className={styles.subTitle}>매니저 임명 가능</h3>
       <div className={styles.tableWrap}>
-        <table className={`${styles.table} ${styles.tableFixed}`}>
+        <table className={`${styles.table} ${styles.tableFixed} ${styles.promoteTable}`}>
           {promoteCols}{promoteHead}
           <tbody>
             {members.length === 0
@@ -456,7 +511,7 @@ function PromoteTab({ token }) {
                     <td>{u.ob_yb?.toUpperCase() ?? '—'}</td>
                     <td>{ROLE_LABEL[u.authority]}</td>
                     <td>{formatDatetime(u.created_at)}</td>
-                    <td>
+                    <td className={styles.actions}>
                       <button className={styles.approveBtn} onClick={() => handlePromote(u.id)}>권한 부여</button>
                     </td>
                   </tr>
@@ -546,7 +601,7 @@ function StaffPromoteTab({ token }) {
 
       <h3 className={styles.subTitle}>현재 스태프</h3>
       <div className={styles.tableWrap}>
-        <table className={`${styles.table} ${styles.tableFixed}`}>
+        <table className={`${styles.table} ${styles.tableFixed} ${styles.promoteTable}`}>
           {staffCols}{staffHead}
           <tbody>
             {staffs.length === 0
@@ -558,7 +613,7 @@ function StaffPromoteTab({ token }) {
                     <td>{u.ob_yb?.toUpperCase() ?? '—'}</td>
                     <td>{`스태프(${STAFF_TYPE_LABEL[u.staff_type] ?? u.staff_type})`}</td>
                     <td>{formatDatetime(u.created_at)}</td>
-                    <td>
+                    <td className={styles.actions}>
                       <button className={styles.rejectBtn} onClick={() => handleDemote(u.id)}>권한 해제</button>
                     </td>
                   </tr>
@@ -570,7 +625,7 @@ function StaffPromoteTab({ token }) {
 
       <h3 className={styles.subTitle}>스태프 임명 가능</h3>
       <div className={styles.tableWrap}>
-        <table className={`${styles.table} ${styles.tableFixed}`}>
+        <table className={`${styles.table} ${styles.tableFixed} ${styles.promoteTable}`}>
           {staffCols}{staffHead}
           <tbody>
             {candidates.length === 0
@@ -633,7 +688,7 @@ function BasicUsersTab({ token }) {
     <div className={styles.promoteWrap}>
       {msg && <p className={styles.rosterMsg}>{msg}</p>}
       <div className={styles.tableWrap}>
-        <table className={`${styles.table} ${styles.tableFixed}`}>
+        <table className={`${styles.table} ${styles.tableFixed} ${styles.basicTable}`}>
           <colgroup>
             <col style={{ width: '22%' }} />
             <col style={{ width: '16%' }} />
@@ -651,7 +706,7 @@ function BasicUsersTab({ token }) {
                     <td>{u.username}</td>
                     <td>{ROLE_LABEL[u.authority] ?? u.authority}</td>
                     <td>{formatDatetime(u.created_at)}</td>
-                    <td>
+                    <td className={styles.actions}>
                       <button className={styles.rejectBtn} onClick={() => handleBan(u.id)}>계정 차단</button>
                     </td>
                   </tr>
@@ -746,7 +801,7 @@ function MemberMgmtTab({ token }) {
         <div key={role} className={styles.userGroup}>
           <h3 className={styles.subTitle}>{MEMBER_ROLE_GROUP_LABEL[role]}</h3>
           <div className={styles.tableWrap}>
-            <table className={`${styles.table} ${styles.tableFixed}`}>
+            <table className={`${styles.table} ${styles.tableFixed} ${styles.memberTable}`}>
               {cols}{head}
               <tbody>
                 {users.map(u => (
@@ -765,7 +820,7 @@ function MemberMgmtTab({ token }) {
                       </span>
                     </td>
                     <td>{getRoleDisplay(u)}</td>
-                    <td>
+                    <td className={styles.actions}>
                       {u.authority === 'member'
                         ? <button className={styles.rejectBtn} onClick={() => handleDemote(u.id)}>회원 강등</button>
                         : <span className={styles.noChange}>—</span>}
@@ -851,7 +906,7 @@ function BannedTab({ token, user }) {
 
       <h3 className={styles.subTitle}>현재 차단된 계정</h3>
       <div className={styles.tableWrap}>
-        <table className={`${styles.table} ${styles.tableFixed}`}>
+        <table className={`${styles.table} ${styles.tableFixed} ${styles.bannedTable}`}>
           {cols}{head}
           <tbody>
             {banned.length === 0
@@ -862,7 +917,7 @@ function BannedTab({ token, user }) {
                     <td>{u.name ?? '—'}</td>
                     <td>{ROLE_LABEL[u.authority] ?? u.authority}</td>
                     <td>{formatDatetime(u.created_at)}</td>
-                    <td>
+                    <td className={styles.actions}>
                       <button className={styles.approveBtn} onClick={() => handleUnban(u.id)}>차단 해제</button>
                     </td>
                   </tr>
@@ -874,7 +929,7 @@ function BannedTab({ token, user }) {
 
       <h3 className={styles.subTitle}>차단 가능한 계정</h3>
       <div className={styles.tableWrap}>
-        <table className={`${styles.table} ${styles.tableFixed}`}>
+        <table className={`${styles.table} ${styles.tableFixed} ${styles.bannedTable}`}>
           {cols}{head}
           <tbody>
             {bannable.length === 0
@@ -885,7 +940,7 @@ function BannedTab({ token, user }) {
                     <td>{u.name ?? '—'}</td>
                     <td>{ROLE_LABEL[u.authority] ?? u.authority}</td>
                     <td>{formatDatetime(u.created_at)}</td>
-                    <td>
+                    <td className={styles.actions}>
                       <button className={styles.rejectBtn} onClick={() => handleBan(u.id)}>차단</button>
                     </td>
                   </tr>
@@ -898,4 +953,74 @@ function BannedTab({ token, user }) {
   )
 }
 
+/* ── 활성 로스터 연도 설정 탭 (staff+) ── */
+function RosterYearTab({ token }) {
+  const [activeYear, setActiveYear] = useState(null)
+  const [years, setYears] = useState([])
+  const [selected, setSelected] = useState('')
+  const [msg, setMsg] = useState('')
+  const [loading, setLoading] = useState(true)
 
+  const load = useCallback(() => {
+    setLoading(true)
+    Promise.all([
+      fetch(`${API_BASE}/api/roster/active-year`).then(r => r.json()),
+      fetch(`${API_BASE}/api/roster/years`).then(r => r.json()),
+    ]).then(([activeData, yearsData]) => {
+      const current = activeData.year ?? null
+      setActiveYear(current)
+      setYears(Array.isArray(yearsData) ? yearsData : [])
+      setSelected(current ? String(current) : '')
+      setLoading(false)
+    })
+  }, [])
+
+  useEffect(() => { load() }, [load])
+
+  async function handleSave() {
+    setMsg('')
+    if (!selected) return
+    const res = await fetch(`${API_BASE}/api/admin/roster-year`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ year: parseInt(selected) }),
+    })
+    const data = await res.json()
+    setMsg(data.message)
+    if (res.ok) setActiveYear(parseInt(selected))
+  }
+
+  if (loading) return <p className={styles.empty}>불러오는 중...</p>
+
+  return (
+    <div className={styles.promoteWrap}>
+      <div className={styles.rosterYearRow}>
+        <span className={styles.rosterYearLabel}>현재 활성 연도</span>
+        <span className={styles.rosterYearCurrent}>{activeYear ?? '—'}</span>
+      </div>
+
+      <div className={styles.rosterYearRow} style={{ marginTop: '1rem' }}>
+        <span className={styles.rosterYearLabel}>변경할 연도</span>
+        <select
+          className={styles.select}
+          value={selected}
+          onChange={e => setSelected(e.target.value)}
+        >
+          <option value="">연도 선택</option>
+          {years.map(y => (
+            <option key={y} value={String(y)}>{y}년</option>
+          ))}
+        </select>
+        <button
+          className={styles.approveBtn}
+          onClick={handleSave}
+          disabled={!selected || selected === String(activeYear)}
+        >
+          저장
+        </button>
+      </div>
+
+      {msg && <p className={styles.rosterMsg}>{msg}</p>}
+    </div>
+  )
+}
