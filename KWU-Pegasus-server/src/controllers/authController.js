@@ -10,6 +10,9 @@ exports.signup = async (req, res, next) => {
     if (!username || !password || !email) {
       return res.status(400).json({ message: '아이디, 비밀번호, 이메일을 모두 입력해주세요.' })
     }
+    if (!/^[a-zA-Z0-9_]{1,15}$/.test(username)) {
+      return res.status(400).json({ message: '아이디는 영문 대/소문자, 숫자, _ 만 사용 가능하며 15자 이하여야 합니다.' })
+    }
 
     const [existing] = await pool.query(
       'SELECT username, email, membership_status FROM users WHERE username = ? OR email = ? LIMIT 1',

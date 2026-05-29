@@ -38,6 +38,58 @@
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--main-300);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── 툴팁 ── */
+.tooltipWrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.tooltipIcon {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.65rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.tooltipBox {
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(5, 15, 28, 0.97);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.75);
+  white-space: nowrap;
+  z-index: 100;
+  line-height: 1.7;
+  pointer-events: none;
+  transition: opacity 0.15s;
+}
+
+.tooltipWrap:hover .tooltipBox {
+  visibility: visible;
+  opacity: 1;
 }
 
 .input {

@@ -34,6 +34,8 @@ CREATE TABLE IF NOT EXISTS users (
   name              VARCHAR(50)   NULL DEFAULT NULL,
   student_id        CHAR(10)      NULL DEFAULT NULL UNIQUE,
   ob_yb             ENUM('ob','yb') NULL DEFAULT NULL,
+  phone             VARCHAR(20)   NULL DEFAULT NULL,
+  phone_country     VARCHAR(10)   NULL DEFAULT '82',
   authority         ENUM('basic','member','manager','staff','root') NOT NULL DEFAULT 'basic',
   staff_type        ENUM('president','headcoach') NULL DEFAULT NULL,
   membership_status ENUM('none','pending','approved','rejected','banned') NOT NULL DEFAULT 'none',

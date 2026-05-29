@@ -62,6 +62,64 @@ exports.getRosterHistory = async (req, res, next) => {
   }
 }
 
+// 아이디 중복 확인
+exports.checkUsername = async (req, res, next) => {
+  try {
+    const { username } = req.query
+    if (!username) return res.status(400).json({ message: '아이디를 입력해주세요.' })
+    const [rows] = await pool.query(
+      'SELECT id FROM users WHERE username = ? AND id != ?',
+      [username, req.user.id]
+    )
+    res.json({ available: rows.length === 0 })
+  } catch (err) { next(err) }
+}
+
+// 이메일 중복 확인
+exports.checkEmail = async (req, res, next) => {
+  try {
+    const { email } = req.query
+    if (!email) return res.status(400).json({ message: '이메일을 입력해주세요.' })
+    const [rows] = await pool.query(
+      'SELECT id FROM users WHERE email = ? AND id != ?',
+      [email, req.user.id]
+    )
+    res.json({ available: rows.length === 0 })
+  } catch (err) { next(err) }
+}
+
+// 계정 정보 수정 (username, email, phone)
+exports.updateAccount = async (req, res, next) => {
+  try {
+    const { username, email, phone, phone_country } = req.body
+    if (!username || !email) {
+      return res.status(400).json({ message: '아이디와 이메일은 필수입니다.' })
+    }
+    if (!/^[a-zA-Z0-9_]{1,15}$/.test(username)) {
+      return res.status(400).json({ message: '아이디는 영문 대/소문자, 숫자, _ 만 사용 가능하며 15자 이하여야 합니다.' })
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: '이메일 형식이 올바르지 않습니다.' })
+    }
+    const digitsOnly = phone ? phone.replace(/\D/g, '') : ''
+    if (digitsOnly && !/^\d{7,15}$/.test(digitsOnly)) {
+      return res.status(400).json({ message: '전화번호 형식이 올바르지 않습니다.' })
+    }
+    await pool.query(
+      'UPDATE users SET username = ?, email = ?, phone = ?, phone_country = ? WHERE id = ?',
+      [username, email, digitsOnly || null, phone_country || '82', req.user.id]
+    )
+    res.json({ message: '계정 정보가 수정됐습니다.' })
+  } catch (err) {
+    if (err.code === 'ER_DUP_ENTRY') {
+      const msg = err.message.includes('username') ? '이미 사용 중인 아이디입니다.' : '이미 사용 중인 이메일입니다.'
+      return res.status(409).json({ message: msg })
+    }
+    next(err)
+  }
+}
+
 // 멤버 신청 — membership_status=none이고 name이 입력된 경우만 가능
 exports.requestMembership = async (req, res, next) => {
   try {

@@ -12,10 +12,26 @@ export default function Signup() {
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
 
+  const usernameValid = /^[a-zA-Z0-9_]{1,15}$/.test(username)
+  const usernameError = username && !usernameValid
+    ? '영문 대/소문자, 숫자, _ 만 · 최대 15자'
+    : ''
+
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  const emailError = email && !emailValid ? '올바른 이메일 형식이 아닙니다.' : ''
+
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
 
+    if (!usernameValid) {
+      setError('아이디 형식을 확인해주세요.')
+      return
+    }
+    if (!emailValid) {
+      setError('이메일 형식을 확인해주세요.')
+      return
+    }
     if (password !== passwordConfirm) {
       setError('비밀번호가 일치하지 않습니다.')
       return
@@ -65,26 +81,36 @@ export default function Signup() {
       <div className={styles.card}>
         <h1 className={styles.title}>회원가입</h1>
 
-        <form className={styles.form} onSubmit={handleSubmit}>
+        <form className={styles.form} onSubmit={handleSubmit} noValidate>
           <div className={styles.field}>
-            <label className={styles.label} htmlFor="username">아이디</label>
+            <label className={styles.label} htmlFor="username">
+              아이디
+              <span className={styles.tooltipWrap}>
+                <span className={styles.tooltipIcon}>?</span>
+                <span className={styles.tooltipBox}>
+                  영문 대/소문자, 숫자, 언더 바(_)로 구성될 수 있으며<br />
+                  15자 이하로 구성되어야 합니다.
+                </span>
+              </span>
+            </label>
             <input
               id="username"
-              className={styles.input}
+              className={`${styles.input} ${usernameError ? styles.inputError : ''}`}
               type="text"
               placeholder="아이디를 입력하세요"
               value={username}
-              onChange={e => setUsername(e.target.value)}
+              onChange={e => setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, '').slice(0, 15))}
               autoComplete="username"
               required
             />
+            {usernameError && <span className={styles.errorText}>{usernameError}</span>}
           </div>
 
           <div className={styles.field}>
             <label className={styles.label} htmlFor="email">이메일</label>
             <input
               id="email"
-              className={styles.input}
+              className={`${styles.input} ${emailError ? styles.inputError : ''}`}
               type="email"
               placeholder="이메일을 입력하세요"
               value={email}
@@ -92,6 +118,7 @@ export default function Signup() {
               autoComplete="email"
               required
             />
+            {emailError && <span className={styles.errorText}>{emailError}</span>}
           </div>
 
           <div className={styles.field}>
