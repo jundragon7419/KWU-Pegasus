@@ -6,7 +6,7 @@ const { getUserById } = require('../lib/userQuery')
 // 회원가입 — 즉시 활성화 (아이디 + 비밀번호 + 이메일만)
 exports.signup = async (req, res, next) => {
   try {
-    const { username, password, email } = req.body
+    const { username, password, email, marketingAgreed, marketingChannels } = req.body
     if (!username || !password || !email) {
       return res.status(400).json({ message: '아이디, 비밀번호, 이메일을 모두 입력해주세요.' })
     }
@@ -27,9 +27,19 @@ exports.signup = async (req, res, next) => {
     }
 
     const hashed = await bcrypt.hash(password, 10)
+    const agreed = marketingAgreed === true
     await pool.query(
-      'INSERT INTO users (username, password, email) VALUES (?, ?, ?)',
-      [username, hashed, email]
+      `INSERT INTO users
+        (username, password, email, marketing_agreed, marketing_email, marketing_sms, marketing_kakao, marketing_agreed_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        username, hashed, email,
+        agreed ? 1 : 0,
+        agreed && marketingChannels?.email  ? 1 : 0,
+        agreed && marketingChannels?.sms    ? 1 : 0,
+        agreed && marketingChannels?.kakao  ? 1 : 0,
+        agreed ? new Date() : null,
+      ]
     )
 
     res.status(201).json({ message: '회원가입이 완료됐습니다. 바로 로그인할 수 있습니다.' })

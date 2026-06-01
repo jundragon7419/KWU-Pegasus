@@ -28,10 +28,9 @@ exports.getNotice = async (req, res, next) => {
 exports.createNotice = async (req, res, next) => {
   try {
     const { category, isPinned, title, content } = req.body
-    const author = req.user.username
     const [result] = await pool.query(
-      'INSERT INTO notices (category, is_pinned, title, author, date, views, content) VALUES (?, ?, ?, ?, CURDATE(), 0, ?)',
-      [category, isPinned ? 1 : 0, title, author, content]
+      'INSERT INTO notices (user_id, category, is_pinned, title, author, date, views, content) VALUES (?, ?, ?, ?, ?, CURDATE(), 0, ?)',
+      [req.user.id, category, isPinned ? 1 : 0, title, req.user.username, content]
     )
     res.status(201).json({ id: result.insertId })
   } catch (err) {

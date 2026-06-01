@@ -1,5 +1,6 @@
 const pool = require('../db')
 const { STUDENT_ID_REGEX, ROSTER_ROLES, STAFF_TYPES } = require('../lib/constants')
+const { syncHolidaysFromAPI } = require('../services/holidayService')
 
 // ── 멤버 신청 대기 목록 (membership_status=pending)
 exports.getPendingMembers = async (_req, res, next) => {
@@ -353,6 +354,20 @@ exports.unbanUser = async (req, res, next) => {
     const newStatus = ['member', 'manager', 'staff'].includes(authority) ? 'approved' : 'none'
     await pool.query('UPDATE users SET membership_status = ? WHERE id = ?', [newStatus, req.params.id])
     res.json({ message: '차단이 해제되었습니다.' })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// ── 공휴일 동기화 (공공 API)
+exports.syncHolidays = async (req, res, next) => {
+  try {
+    const year = parseInt(req.body.year)
+    if (!year || isNaN(year)) {
+      return res.status(400).json({ message: '유효한 연도를 입력해주세요.' })
+    }
+    const count = await syncHolidaysFromAPI(year)
+    res.json({ message: `${year}년 공휴일 ${count}건 동기화 완료`, count })
   } catch (err) {
     next(err)
   }

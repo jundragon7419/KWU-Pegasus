@@ -202,6 +202,152 @@
   text-decoration: underline;
 }
 
+.privacySection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.privacyTitle {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--main-300);
+}
+
+.required {
+  color: #e05c5c;
+  font-weight: 400;
+}
+
+.privacyBox {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 14px 16px;
+  max-height: 160px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.6;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.privacyBox::-webkit-scrollbar {
+  width: 4px;
+}
+
+.privacyBox::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+}
+
+.privacyHeading {
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+  margin-top: 4px;
+}
+
+.privacyHeading:first-child {
+  margin-top: 0;
+}
+
+.consentGroup {
+  display: flex;
+  gap: 8px;
+}
+
+.consentOption {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  user-select: none;
+}
+
+.consentOption:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.consentInput {
+  display: none;
+}
+
+.consentSelected {
+  border-color: var(--main-500);
+  background: rgba(166, 146, 109, 0.15);
+  color: var(--main-300);
+}
+
+.consentRefused {
+  border-color: #e05c5c;
+  background: rgba(224, 92, 92, 0.1);
+  color: #e05c5c;
+}
+
+.optional {
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 400;
+}
+
+.channelGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.channelLabel {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.channelList {
+  display: flex;
+  gap: 8px;
+}
+
+.channelOption {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  user-select: none;
+}
+
+.channelOption:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.channelSelected {
+  border-color: var(--main-500);
+  background: rgba(166, 146, 109, 0.15);
+  color: var(--main-300);
+}
+
 .checkLabel {
   display: flex;
   align-items: center;

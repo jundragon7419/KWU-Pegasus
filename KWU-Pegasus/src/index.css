@@ -14,6 +14,23 @@
   --color-red:  #f07070;
   --color-blue: #6fa3f5;
 
+  /* 일정 타입 색상 */
+  --event-training:        #6dc87a;
+  --event-training-bg:     rgba(109, 200, 122, 0.16);
+  --event-training-border: rgba(109, 200, 122, 0.38);
+
+  --event-meeting:         #6fa3f5;
+  --event-meeting-bg:      rgba(111, 163, 245, 0.16);
+  --event-meeting-border:  rgba(111, 163, 245, 0.38);
+
+  --event-events:          #f5c842;
+  --event-events-bg:       rgba(245, 200, 66, 0.16);
+  --event-events-border:   rgba(245, 200, 66, 0.38);
+
+  --event-etc:             #c87adc;
+  --event-etc-bg:          rgba(200, 122, 220, 0.16);
+  --event-etc-border:      rgba(200, 122, 220, 0.38);
+
   /* 폰트 */
   --font-sans: 'Noto Sans KR', 'Roboto', system-ui, sans-serif;
 

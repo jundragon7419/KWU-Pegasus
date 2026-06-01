@@ -124,7 +124,7 @@ exports.updateAccount = async (req, res, next) => {
 exports.requestMembership = async (req, res, next) => {
   try {
     const [rows] = await pool.query(
-      'SELECT membership_status, name, ob_yb FROM users WHERE id = ?',
+      'SELECT membership_status, name, student_id, ob_yb FROM users WHERE id = ?',
       [req.user.id]
     )
     const user = rows[0]
@@ -136,6 +136,9 @@ exports.requestMembership = async (req, res, next) => {
     }
     if (!user.name || !user.ob_yb) {
       return res.status(400).json({ message: '먼저 프로필(실명, OB/YB)을 입력해주세요.' })
+    }
+    if (!user.student_id) {
+      return res.status(400).json({ message: '먼저 프로필에서 학번을 입력해주세요.' })
     }
 
     await pool.query(
