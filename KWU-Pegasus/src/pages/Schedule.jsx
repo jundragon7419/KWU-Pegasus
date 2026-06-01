@@ -1,12 +1,18 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { API_BASE } from '../lib/api'
 import { EVENT_TYPES, DAYS } from '../lib/constants'
+import { useAuth } from '../context/AuthContext'
 import styles from './Schedule.module.css'
 
 const MONTHS = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월']
 const MIN_YEAR = 2000
 
 export default function Schedule() {
+  const navigate = useNavigate()
+  const { user } = useAuth()
+  const canManage = user && ['manager', 'staff', 'root'].includes(user.role)
+
   const today = new Date()
   const [current, setCurrent] = useState({ year: today.getFullYear(), month: today.getMonth() })
   const [showPicker, setShowPicker] = useState(false)
@@ -15,6 +21,14 @@ export default function Schedule() {
 
   const [holidays, setHolidays] = useState([])
   const [events, setEvents] = useState([])
+  const [tooltip, setTooltip] = useState(null)
+
+  function showTooltip(e, text) {
+    setTooltip({ text, x: e.clientX, y: e.clientY })
+  }
+  function hideTooltip() {
+    setTooltip(null)
+  }
 
   useEffect(() => {
     fetch(`${API_BASE}/api/holidays?year=${current.year}`)
@@ -31,19 +45,19 @@ export default function Schedule() {
   const holidayMap = useMemo(() => {
     const map = new Map()
     for (const h of holidays) {
-      if (h.year !== current.year && !h.isFixed) continue
       const key = `${String(h.month).padStart(2, '0')}-${String(h.day).padStart(2, '0')}`
       if (!map.has(key)) map.set(key, [])
       map.get(key).push(h.name)
     }
     return map
-  }, [holidays, current.year])
+  }, [holidays])
 
   const eventMap = useMemo(() => {
     const map = new Map()
     for (const e of events) {
-      if (e.month !== current.month + 1) continue
-      const day = String(e.day).padStart(2, '0')
+      const [, eMonth, eDay] = e.date.split('-').map(Number)
+      if (eMonth !== current.month + 1) continue
+      const day = String(eDay).padStart(2, '0')
       if (!map.has(day)) map.set(day, [])
       map.get(day).push(e)
     }
@@ -95,8 +109,6 @@ export default function Schedule() {
     Array.from({ length: daysInMonth }, (_, i) => i + 1)
   )
   while (days.length % 7 !== 0) days.push(null)
-  const cells = days
-
   const isToday = (day) =>
     day === today.getDate() && month === today.getMonth() && year === today.getFullYear()
 
@@ -111,7 +123,7 @@ export default function Schedule() {
   }
 
   return (
-    <div className={styles.page}>
+    <div className={styles.page} onMouseLeave={hideTooltip}>
       <div className={styles.calendarWrapper}>
         <div className={styles.header}>
           <button
@@ -164,11 +176,31 @@ export default function Schedule() {
           </div>
 
           <div className={styles.headerRight}>
+            {canManage && (
+              <>
+                <button className={`${styles.adminBtn} ${styles.adminBtnPrimary}`} onClick={() => navigate('/schedule/write')}>일정 추가</button>
+                <button className={styles.adminBtn} onClick={() => navigate('/schedule/write?tab=edit')}>일정 수정</button>
+              </>
+            )}
             {!isCurrentMonth && (
               <button className={styles.todayButton} onClick={goToday}>오늘</button>
             )}
             <button className={styles.navButton} onClick={nextMonth}>&#8250;</button>
           </div>
+        </div>
+
+        <div className={styles.legend}>
+          {[
+            { type: 'training', label: '훈련' },
+            { type: 'meeting',  label: '미팅' },
+            { type: 'events',   label: '이벤트' },
+            { type: 'etc',      label: '기타' },
+          ].map(({ type, label }) => (
+            <span key={type} className={styles.legendItem}>
+              <span className={styles.legendDot} style={{ background: EVENT_TYPES[type].color }} />
+              {label}
+            </span>
+          ))}
         </div>
 
         <div className={styles.grid}>
@@ -181,7 +213,7 @@ export default function Schedule() {
             </div>
           ))}
 
-          {cells.map((day, idx) => {
+          {days.map((day, idx) => {
             const col = idx % 7
             const dayHolidays = day ? getHolidays(day) : []
             const isHoliday = dayHolidays.length > 0
@@ -200,13 +232,20 @@ export default function Schedule() {
                   <>
                     <span className={styles.dayNumber}>{day}</span>
                     {dayHolidays.map((name, i) => (
-                      <span key={i} className={styles.holidayName}>{name}</span>
+                      <span
+                        key={i}
+                        className={styles.holidayName}
+                        onMouseEnter={e => showTooltip(e, name)}
+                        onMouseLeave={hideTooltip}
+                      >{name}</span>
                     ))}
                     {dayEvents.map(ev => (
                       <span
-                        key={ev.name + ev.day}
+                        key={ev.id}
                         className={styles.eventChip}
-                        style={{ background: EVENT_TYPES[ev.type].color + '2a', color: EVENT_TYPES[ev.type].color, borderColor: EVENT_TYPES[ev.type].color + '60' }}
+                        style={{ background: EVENT_TYPES[ev.type].bg, color: EVENT_TYPES[ev.type].color, borderColor: EVENT_TYPES[ev.type].border }}
+                        onMouseEnter={e => showTooltip(e, ev.name)}
+                        onMouseLeave={hideTooltip}
                       >
                         {ev.name}
                       </span>
@@ -218,6 +257,15 @@ export default function Schedule() {
           })}
         </div>
       </div>
+
+      {tooltip && (
+        <div
+          className={styles.tooltip}
+          style={{ left: tooltip.x + 14, top: tooltip.y - 10 }}
+        >
+          {tooltip.text}
+        </div>
+      )}
     </div>
   )
 }

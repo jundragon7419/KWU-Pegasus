@@ -14,6 +14,7 @@ import Board from './pages/board/Board'
 import BoardDetail from './pages/board/BoardDetail'
 import NoticeWrite from './pages/notice/NoticeWrite'
 import BoardWrite from './pages/board/BoardWrite'
+import EventWrite from './pages/schedule/EventWrite'
 import Admin from './pages/Admin'
 import MyPage from './pages/MyPage'
 import NotFound from './pages/NotFound'
@@ -44,6 +45,11 @@ function App() {
             <Route path="/notice/:id" element={<NoticeDetail />} />
             <Route path="/board" element={<Board />} />
             <Route path="/board/:id" element={<BoardDetail />} />
+            <Route path="/schedule/write" element={
+              <ProtectedRoute requiredRoles={['manager', 'staff', 'root']}>
+                <EventWrite />
+              </ProtectedRoute>
+            } />
             <Route path="/notice/write" element={
               <ProtectedRoute requiredRoles={['manager', 'staff', 'root']}>
                 <NoticeWrite />
