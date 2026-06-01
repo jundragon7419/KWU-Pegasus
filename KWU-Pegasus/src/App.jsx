@@ -8,11 +8,8 @@ import Signup from './pages/auth/Signup'
 import Unauthorized from './pages/Unauthorized'
 import Schedule from './pages/Schedule'
 import Roster from './pages/Roster'
-import Notice from './pages/notice/Notice'
-import NoticeDetail from './pages/notice/NoticeDetail'
 import Board from './pages/board/Board'
 import BoardDetail from './pages/board/BoardDetail'
-import NoticeWrite from './pages/notice/NoticeWrite'
 import BoardWrite from './pages/board/BoardWrite'
 import EventWrite from './pages/schedule/EventWrite'
 import Admin from './pages/Admin'
@@ -41,18 +38,21 @@ function App() {
             <Route path="/unauthorized" element={<Unauthorized />} />
             <Route path="/schedule" element={<Schedule />} />
             <Route path="/roster" element={<Roster />} />
-            <Route path="/notice" element={<Notice />} />
-            <Route path="/notice/:id" element={<NoticeDetail />} />
-            <Route path="/board" element={<Board />} />
-            <Route path="/board/:id" element={<BoardDetail />} />
+            <Route path="/notice" element={<Navigate to="/board" replace />} />
+            <Route path="/notice/:id" element={<Navigate to="/board" replace />} />
+            <Route path="/board" element={
+              <ProtectedRoute requiredRoles={['basic', 'member', 'manager', 'staff', 'root']}>
+                <Board />
+              </ProtectedRoute>
+            } />
+            <Route path="/board/:id" element={
+              <ProtectedRoute requiredRoles={['member', 'manager', 'staff', 'root']}>
+                <BoardDetail />
+              </ProtectedRoute>
+            } />
             <Route path="/schedule/write" element={
               <ProtectedRoute requiredRoles={['manager', 'staff', 'root']}>
                 <EventWrite />
-              </ProtectedRoute>
-            } />
-            <Route path="/notice/write" element={
-              <ProtectedRoute requiredRoles={['manager', 'staff', 'root']}>
-                <NoticeWrite />
               </ProtectedRoute>
             } />
             <Route path="/board/write" element={

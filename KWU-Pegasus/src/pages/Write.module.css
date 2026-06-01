@@ -37,6 +37,11 @@
   font-weight: 600;
   color: rgba(255, 255, 255, 0.5);
   letter-spacing: 0.3px;
+  transition: color 0.15s ease;
+}
+
+.labelError {
+  color: rgba(220, 80, 80, 0.9);
 }
 
 .input,
@@ -65,6 +70,11 @@
 .input::placeholder,
 .textarea::placeholder {
   color: rgba(255, 255, 255, 0.2);
+}
+
+.inputError,
+.textareaError {
+  border-color: rgba(220, 80, 80, 0.7);
 }
 
 .textarea {
@@ -115,6 +125,73 @@
   border-color: var(--main-400);
   color: var(--main-300);
   background: rgba(166, 146, 109, 0.1);
+}
+
+/* ── 상단 고정 ── */
+.pinRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.pinCheck {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.5);
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+  user-select: none;
+}
+
+.pinCheck:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  color: var(--text-100);
+}
+
+.pinCheck input[type='checkbox'] {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--main-400);
+  cursor: pointer;
+}
+
+.pinCheckActive {
+  border-color: var(--main-400);
+  color: var(--main-300);
+  background: rgba(166, 146, 109, 0.1);
+}
+
+.pinDateInput {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  color: var(--text-100);
+  font-size: 0.85rem;
+  font-family: var(--font-sans);
+  padding: 6px 12px;
+  outline: none;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.pinDateInput:focus {
+  border-color: var(--main-400);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.pinDateInput:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.pinDateInput::-webkit-calendar-picker-indicator {
+  filter: invert(0.5);
+  cursor: pointer;
 }
 
 /* ── 하단 버튼 ── */

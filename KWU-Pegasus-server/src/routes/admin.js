@@ -6,7 +6,7 @@ const {
   getOrgMembers, demoteMember,
   getBasicUsers, banUser, getBannedUsers, getBannableUsers, unbanUser,
   getMembers, getManagers, getStaffs, setManager, unsetManager, setStaff, unsetStaff,
-  setRosterYear,
+  setRosterYear, syncHolidays,
 } = require('../controllers/adminController')
 const { authenticate, requireRole } = require('../middlewares/auth')
 
@@ -48,6 +48,9 @@ router.put('/users/:id/set-staff',       requireRole('root'), setStaff)
 router.put('/users/:id/unset-staff',     requireRole('root'), unsetStaff)
 
 // 로스터 연도
-router.put('/roster-year',               requireRole('manager','staff','root'), setRosterYear)
+router.put('/roster-year',               requireRole('staff','root'), setRosterYear)
+
+// 공휴일 동기화
+router.post('/sync-holidays',            requireRole('staff','root'), syncHolidays)
 
 module.exports = router

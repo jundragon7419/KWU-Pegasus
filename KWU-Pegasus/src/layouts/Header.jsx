@@ -27,8 +27,9 @@ export default function Header() {
         <Link className={styles.navItem} to="/">홈</Link>
         <Link className={styles.navItem} to="/schedule">일정</Link>
         <Link className={styles.navItem} to="/roster">선수단</Link>
-        <Link className={styles.navItem} to="/notice">공지사항</Link>
-        <Link className={styles.navItem} to="/board">게시판</Link>
+        {user && (
+          <Link className={styles.navItem} to="/board">게시판</Link>
+        )}
 
         {user && (
           <Link className={styles.navItem} to="/mypage">마이페이지</Link>

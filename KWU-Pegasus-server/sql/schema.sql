@@ -38,8 +38,13 @@ CREATE TABLE IF NOT EXISTS users (
   phone_country     VARCHAR(10)   NULL DEFAULT '82',
   authority         ENUM('basic','member','manager','staff','root') NOT NULL DEFAULT 'basic',
   staff_type        ENUM('president','headcoach') NULL DEFAULT NULL,
-  membership_status ENUM('none','pending','approved','rejected','banned') NOT NULL DEFAULT 'none',
-  created_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP
+  membership_status    ENUM('none','pending','approved','rejected','banned') NOT NULL DEFAULT 'none',
+  marketing_agreed     TINYINT(1)    NOT NULL DEFAULT 0,
+  marketing_email      TINYINT(1)    NOT NULL DEFAULT 0,
+  marketing_sms        TINYINT(1)    NOT NULL DEFAULT 0,
+  marketing_kakao      TINYINT(1)    NOT NULL DEFAULT 0,
+  marketing_agreed_at  DATETIME      NULL DEFAULT NULL,
+  created_at           DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ── 로스터 ──────────────────────────────────────────────────────
@@ -87,44 +92,35 @@ CREATE TABLE IF NOT EXISTS settings (
 );
 
 -- ── 게시판 ──────────────────────────────────────────────────────
--- 팀 멤버들이 자유롭게 글을 올리는 게시판 (차후 member 권한 이상 작성 가능)
--- id      : 게시글 고유 식별자. PK (자동 증가)
--- title   : 게시글 제목
--- author  : 작성자 이름
--- date    : 작성 날짜
--- views   : 조회수. 기본 0
--- content : 게시글 본문
-CREATE TABLE IF NOT EXISTS posts (
-  id         INT          NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  title      VARCHAR(200) NOT NULL,
-  author     VARCHAR(50)  NOT NULL,
-  date       DATE         NOT NULL,
-  views      INT          NOT NULL DEFAULT 0,
-  content    TEXT         NOT NULL
-);
-
--- ── 공지사항 ────────────────────────────────────────────────────
--- 관리자(manager 이상)가 작성하는 공지사항 테이블 (차후 작성 권한 제한 예정)
--- id        : 공지 고유 식별자. PK (자동 증가)
--- category  : 공지 분류
---              notice - 일반 공지
---              event  - 팀 행사 관련
---              game   - 경기 관련
--- is_pinned : 상단 고정 여부. 1이면 고정, 0이면 일반
--- title     : 공지 제목
+-- 공지사항과 일반 게시글을 통합 관리하는 테이블
+-- id        : 게시글 고유 식별자. PK (자동 증가)
+-- user_id   : 작성자 users.id. 탈퇴 시 NULL
+-- type      : 게시글 유형
+--              notice         - 공지사항        (manager 이상)
+--              event          - 행사 공지        (manager 이상)
+--              game           - 경기 공지        (manager 이상)
+--              family_occasion - 경조사          (member 이상 작성, pin은 manager 이상)
+--              normal         - 일반 게시글      (member 이상, pin 불가)
+-- pin_until : 상단 고정 만료일 (manager 이상만 설정 가능, normal 타입은 항상 NULL)
+--              NULL       - 고정 안 함
+--              DATE       - 해당 날짜까지만 고정
+--              9999-12-31 - 무한 고정 (수동으로 내릴 때까지)
+-- title     : 제목
 -- author    : 작성자 이름
 -- date      : 작성 날짜
 -- views     : 조회수. 기본 0
--- content   : 공지 본문
-CREATE TABLE IF NOT EXISTS notices (
+-- content   : 본문
+CREATE TABLE IF NOT EXISTS posts (
   id         INT          NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  category   ENUM('notice','event','game') NOT NULL DEFAULT 'notice',
-  is_pinned  TINYINT(1)   NOT NULL DEFAULT 0,
+  user_id    INT          NULL DEFAULT NULL,
+  type       ENUM('notice','event','game','family_occasion','normal') NOT NULL DEFAULT 'normal',
+  pin_until  DATE         NULL DEFAULT NULL,
   title      VARCHAR(200) NOT NULL,
   author     VARCHAR(50)  NOT NULL,
   date       DATE         NOT NULL,
   views      INT          NOT NULL DEFAULT 0,
-  content    TEXT         NOT NULL
+  content    TEXT         NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 -- ── 팀 일정 ─────────────────────────────────────────────────────
@@ -140,13 +136,11 @@ CREATE TABLE IF NOT EXISTS notices (
 --          anniversary - 기념일
 -- name  : 일정 이름
 CREATE TABLE IF NOT EXISTS events (
-  id     INT          NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  year   INT          NOT NULL,
-  month  INT          NOT NULL,
-  day    INT          NOT NULL,
-  type   ENUM('game','training','meeting','anniversary') NOT NULL,
-  name   VARCHAR(100) NOT NULL,
-  UNIQUE KEY uq_event (year, month, day, name)
+  id    INT          NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  date  DATE         NOT NULL,
+  type  ENUM('training','meeting','events','etc') NOT NULL,
+  name  VARCHAR(100) NOT NULL,
+  UNIQUE KEY uq_event (date, name)
 );
 
 -- ── 공휴일 ──────────────────────────────────────────────────────
@@ -157,15 +151,13 @@ CREATE TABLE IF NOT EXISTS events (
 -- day      : 공휴일 일
 -- type     : 공휴일 유형 (기본 'holiday')
 -- name     : 공휴일 이름
--- is_fixed : 매년 고정 여부. 1이면 매년 같은 날짜(삼일절 등), 0이면 해마다 날짜가 바뀌는 공휴일(설날·추석 등)
 CREATE TABLE IF NOT EXISTS holidays (
-  id       INT          NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  year     INT          NOT NULL,
-  month    INT          NOT NULL,
-  day      INT          NOT NULL,
-  type     VARCHAR(20)  NOT NULL DEFAULT 'holiday',
-  name     VARCHAR(100) NOT NULL,
-  is_fixed TINYINT(1)   NOT NULL DEFAULT 0
+  id    INT          NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  year  INT          NOT NULL,
+  month INT          NOT NULL,
+  day   INT          NOT NULL,
+  type  VARCHAR(20)  NOT NULL DEFAULT 'holiday',
+  name  VARCHAR(100) NOT NULL
 );
 
 -- ── 인덱스 ──────────────────────────────────────────────────────
@@ -174,5 +166,5 @@ CREATE TABLE IF NOT EXISTS holidays (
 -- events.year        : 연도별 일정 조회에 사용
 -- holidays.year      : 연도별 공휴일 조회에 사용
 CREATE INDEX idx_roster_student_id ON roster(student_id);
-CREATE INDEX idx_events_year       ON events(year);
+CREATE INDEX idx_events_date       ON events(date);
 CREATE INDEX idx_holidays_year     ON holidays(year);

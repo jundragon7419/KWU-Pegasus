@@ -1,8 +1,16 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { API_BASE } from '../../lib/api'
+import { POST_TYPE_LABEL } from '../../lib/constants'
 import ContentRenderer from '../../components/ContentRenderer'
 import styles from './BoardDetail.module.css'
+
+const TYPE_CLASS = {
+  notice:          styles.tagNotice,
+  event:           styles.tagEvent,
+  game:            styles.tagGame,
+  family_occasion: styles.tagFamily,
+}
 
 export default function BoardDetail() {
   const { id } = useParams()
@@ -38,6 +46,11 @@ export default function BoardDetail() {
 
       <article className={styles.article}>
         <div className={styles.articleHeader}>
+          {post.type && post.type !== 'normal' && (
+            <span className={`${styles.typeTag} ${TYPE_CLASS[post.type] ?? ''}`}>
+              {POST_TYPE_LABEL[post.type]}
+            </span>
+          )}
           <h1 className={styles.title}>{post.title}</h1>
           <div className={styles.meta}>
             <span>{post.author}</span>

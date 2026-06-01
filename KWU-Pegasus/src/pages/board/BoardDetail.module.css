@@ -6,6 +6,36 @@
   gap: 24px;
 }
 
+.typeTag {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  letter-spacing: 0.3px;
+}
+
+.tagNotice {
+  background: rgba(166, 146, 109, 0.18);
+  color: var(--main-300);
+}
+
+.tagEvent {
+  background: color-mix(in srgb, var(--color-blue) 15%, transparent);
+  color: var(--color-blue);
+}
+
+.tagGame {
+  background: rgba(100, 200, 120, 0.15);
+  color: #6dc87a;
+}
+
+.tagFamily {
+  background: rgba(200, 122, 220, 0.15);
+  color: #c87adc;
+}
+
 .backButton {
   align-self: flex-start;
   background: none;

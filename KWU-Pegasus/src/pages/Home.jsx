@@ -1,10 +1,16 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { API_BASE } from '../lib/api'
-import { EVENT_TYPES, CATEGORY_LABEL, DAYS } from '../lib/constants'
+import { EVENT_TYPES, POST_TYPE_LABEL, DAYS } from '../lib/constants'
 import styles from './Home.module.css'
 
-const CATEGORY_STYLE = { notice: styles.tagNotice, event: styles.tagEvent, game: styles.tagGame }
+const TYPE_STYLE = {
+  notice:          styles.tagNotice,
+  event:           styles.tagEvent,
+  game:            styles.tagGame,
+  family_occasion: styles.tagFamily,
+  normal:          styles.tagNormal,
+}
 
 function MiniCalendar() {
   const navigate = useNavigate()
@@ -37,8 +43,9 @@ function MiniCalendar() {
   const eventMap = useMemo(() => {
     const map = new Map()
     for (const e of events) {
-      if (e.month !== month + 1) continue
-      const day = String(e.day).padStart(2, '0')
+      const [, eMonth, eDay] = e.date.split('-').map(Number)
+      if (eMonth !== month + 1) continue
+      const day = String(eDay).padStart(2, '0')
       if (!map.has(day)) map.set(day, [])
       map.get(day).push(e)
     }
@@ -93,19 +100,19 @@ function MiniCalendar() {
 }
 
 export default function Home() {
-  const [notices, setNotices] = useState([])
+  const [posts, setPosts] = useState([])
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/notices`)
+    fetch(`${API_BASE}/api/posts`)
       .then(r => r.json())
-      .then(data => setNotices(data))
+      .then(data => setPosts(Array.isArray(data) ? data : []))
   }, [])
 
   const { pinned, recent } = useMemo(() => {
-    const p = notices.filter(n => n.isPinned)
-    const r = notices.filter(n => !n.isPinned).slice(0, 8 - p.length)
+    const p = posts.filter(n => n.isPinned)
+    const r = posts.filter(n => !n.isPinned).slice(0, 8 - p.length)
     return { pinned: p, recent: r }
-  }, [notices])
+  }, [posts])
 
   return (
     <section className={styles.home}>
@@ -116,22 +123,22 @@ export default function Home() {
       <div className={styles.widgets}>
         <div className={styles.widget}>
           <div className={styles.widgetHeader}>
-            <span className={styles.widgetTitle}>공지사항</span>
-            <Link to="/notice" className={styles.widgetMore}>더보기 →</Link>
+            <span className={styles.widgetTitle}>게시판</span>
+            <Link to="/board" className={styles.widgetMore}>더보기 →</Link>
           </div>
           <div className={styles.noticeList}>
             {pinned.map(n => (
-              <Link key={n.id} to={`/notice/${n.id}`} className={`${styles.noticeRow} ${styles.noticePinned}`}>
+              <Link key={n.id} to={`/board/${n.id}`} className={`${styles.noticeRow} ${styles.noticePinned}`}>
                 <span className={styles.pinIcon}>📌</span>
-                <span className={`${styles.tag} ${CATEGORY_STYLE[n.category]}`}>{CATEGORY_LABEL[n.category]}</span>
+                <span className={`${styles.tag} ${TYPE_STYLE[n.type]}`}>{POST_TYPE_LABEL[n.type]}</span>
                 <span className={styles.noticeTitle}>{n.title}</span>
                 <span className={styles.noticeDate}>{n.date}</span>
               </Link>
             ))}
             {pinned.length > 0 && <div className={styles.noticeDivider} />}
             {recent.map(n => (
-              <Link key={n.id} to={`/notice/${n.id}`} className={styles.noticeRow}>
-                <span className={`${styles.tag} ${CATEGORY_STYLE[n.category]}`}>{CATEGORY_LABEL[n.category]}</span>
+              <Link key={n.id} to={`/board/${n.id}`} className={styles.noticeRow}>
+                <span className={`${styles.tag} ${TYPE_STYLE[n.type]}`}>{POST_TYPE_LABEL[n.type]}</span>
                 <span className={styles.noticeTitle}>{n.title}</span>
                 <span className={styles.noticeDate}>{n.date}</span>
               </Link>
