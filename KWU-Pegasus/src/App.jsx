@@ -11,6 +11,9 @@ import Roster from './pages/Roster'
 import Board from './pages/board/Board'
 import BoardDetail from './pages/board/BoardDetail'
 import BoardWrite from './pages/board/BoardWrite'
+import BoardEdit from './pages/board/BoardEdit'
+import UserActivity from './pages/board/UserActivity'
+import LogDetail from './pages/board/LogDetail'
 import EventWrite from './pages/schedule/EventWrite'
 import Admin from './pages/Admin'
 import MyPage from './pages/MyPage'
@@ -55,9 +58,24 @@ function App() {
                 <EventWrite />
               </ProtectedRoute>
             } />
+            <Route path="/user/:username" element={
+              <ProtectedRoute requiredRoles={['member', 'manager', 'staff', 'root']}>
+                <UserActivity />
+              </ProtectedRoute>
+            } />
+            <Route path="/user/:username/log/:logId" element={
+              <ProtectedRoute requiredRoles={['manager', 'staff', 'root']}>
+                <LogDetail />
+              </ProtectedRoute>
+            } />
             <Route path="/board/write" element={
               <ProtectedRoute requiredRoles={['member', 'manager', 'staff', 'root']}>
                 <BoardWrite />
+              </ProtectedRoute>
+            } />
+            <Route path="/board/:id/edit" element={
+              <ProtectedRoute requiredRoles={['member', 'manager', 'staff', 'root']}>
+                <BoardEdit />
               </ProtectedRoute>
             } />
             <Route path="/mypage" element={

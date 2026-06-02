@@ -35,7 +35,7 @@
   --font-sans: 'Noto Sans KR', 'Roboto', system-ui, sans-serif;
 
   /* 레이아웃 */
-  --content-width: 70vw;
+  --content-width: 65vw;
   --content-max-width: 1200px;
   --content-min-width: 320px;
 }

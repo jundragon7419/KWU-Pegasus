@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { API_BASE } from '../lib/api'
 
 const AuthContext = createContext(null)
 
@@ -49,8 +50,27 @@ export function AuthProvider({ children }) {
     setUser(null)
   }
 
+  const refreshUser = useCallback(async (currentToken) => {
+    const t = currentToken ?? token
+    if (!t) return
+    try {
+      const res = await fetch(`${API_BASE}/api/mypage/me`, {
+        headers: { Authorization: `Bearer ${t}` },
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setUser(prev => prev
+          ? { ...prev, role: data.role, staff_type: data.staff_type, ob_yb: data.ob_yb }
+          : null
+        )
+      } else {
+        logout()
+      }
+    } catch {}
+  }, [token])
+
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, token, loading, login, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   )

@@ -120,6 +120,64 @@ exports.updateAccount = async (req, res, next) => {
   }
 }
 
+// 내가 쓴 글 (최신 5개 - 활동 내역 카드용)
+exports.getMyPosts = async (req, res, next) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT id, type, title, views, DATE_FORMAT(date, '%Y-%m-%d') AS date
+       FROM posts WHERE user_id = ? ORDER BY id DESC LIMIT 5`,
+      [req.user.id]
+    )
+    res.json(rows)
+  } catch (err) { next(err) }
+}
+
+// 내가 쓴 글 전체 (탭 전용)
+exports.getMyPostsAll = async (req, res, next) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT id, type, title, views, DATE_FORMAT(date, '%Y-%m-%d') AS date
+       FROM posts WHERE user_id = ? ORDER BY id DESC`,
+      [req.user.id]
+    )
+    res.json(rows)
+  } catch (err) { next(err) }
+}
+
+// 내가 쓴 댓글 (최신 5개 - 활동 내역 카드용)
+exports.getMyComments = async (req, res, next) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT c.id, c.post_id, c.content,
+              p.title AS post_title, p.type AS post_type,
+              DATE_FORMAT(c.created_at, '%Y-%m-%d') AS created_at
+       FROM comments c
+       JOIN posts p ON c.post_id = p.id
+       WHERE c.user_id = ?
+       ORDER BY c.created_at DESC LIMIT 5`,
+      [req.user.id]
+    )
+    res.json(rows)
+  } catch (err) { next(err) }
+}
+
+// 내가 쓴 댓글 전체 (탭 전용)
+exports.getMyCommentsAll = async (req, res, next) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT c.id, c.post_id, c.content,
+              p.title AS post_title, p.type AS post_type,
+              DATE_FORMAT(c.created_at, '%Y-%m-%d %H:%i') AS created_at
+       FROM comments c
+       JOIN posts p ON c.post_id = p.id
+       WHERE c.user_id = ?
+       ORDER BY c.created_at DESC`,
+      [req.user.id]
+    )
+    res.json(rows)
+  } catch (err) { next(err) }
+}
+
 // 멤버 신청 — membership_status=none이고 name이 입력된 경우만 가능
 exports.requestMembership = async (req, res, next) => {
   try {

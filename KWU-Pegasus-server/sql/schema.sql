@@ -123,6 +123,50 @@ CREATE TABLE IF NOT EXISTS posts (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE
 );
 
+-- ── 댓글 ────────────────────────────────────────────────────────
+-- 게시글에 달리는 댓글 테이블. member 이상만 작성 가능
+-- id         : 댓글 고유 식별자. PK (자동 증가)
+-- post_id    : 소속 게시글. posts.id 참조. 게시글 삭제 시 댓글도 함께 삭제
+-- user_id    : 작성자. users.id 참조. 회원 탈퇴 시 댓글도 함께 삭제
+-- content    : 댓글 내용
+-- created_at : 작성 일시 (자동 기록)
+CREATE TABLE IF NOT EXISTS comments (
+  id         INT      NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  post_id    INT      NOT NULL,
+  user_id    INT      NOT NULL,
+  content    TEXT        NOT NULL,
+  is_edited  TINYINT(1)  NOT NULL DEFAULT 0,
+  created_at DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (post_id) REFERENCES posts(id)  ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id)  ON DELETE CASCADE
+);
+
+-- ── 활동 로그 ───────────────────────────────────────────────────
+-- 유저의 모든 행동을 기록하는 테이블. 삭제된 데이터도 snapshot JSON으로 보존
+-- target_id : FK 없이 INT — 삭제 후에도 기록 유지
+-- snapshot  : 당시 내용 스냅샷 (JSON)
+CREATE TABLE IF NOT EXISTS activity_logs (
+  id          INT      NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  user_id     INT      NOT NULL,
+  action      ENUM(
+    'post_create','post_update','post_delete',
+    'comment_create','comment_update','comment_delete',
+    'event_create','event_update','event_delete',
+    'member_approve','member_reject','member_demote',
+    'role_set_manager','role_unset_manager','role_set_staff','role_unset_staff',
+    'user_ban','user_unban',
+    'roster_add','roster_update','roster_delete',
+    'roster_year_set'
+  ) NOT NULL,
+  target_type ENUM('post','comment','event','user','roster','setting') NOT NULL,
+  target_id   INT      NULL,
+  snapshot    JSON     NULL,
+  created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_logs_user_id ON activity_logs(user_id);
+
 -- ── 팀 일정 ─────────────────────────────────────────────────────
 -- 캘린더에 표시되는 팀 일정 테이블. 같은 날 동일한 이름의 일정은 중복 불가
 -- id    : 일정 고유 식별자. PK (자동 증가)
@@ -167,4 +211,5 @@ CREATE TABLE IF NOT EXISTS holidays (
 -- holidays.year      : 연도별 공휴일 조회에 사용
 CREATE INDEX idx_roster_student_id ON roster(student_id);
 CREATE INDEX idx_events_date       ON events(date);
+CREATE INDEX idx_comments_post_id  ON comments(post_id);
 CREATE INDEX idx_holidays_year     ON holidays(year);

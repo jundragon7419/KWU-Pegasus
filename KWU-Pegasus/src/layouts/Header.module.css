@@ -34,6 +34,18 @@
   gap: 18px;
   justify-content: center;
   flex: 1;
+  position: relative;
+}
+
+.indicator {
+  position: absolute;
+  bottom: -6px;
+  height: 2px;
+  background: var(--main-300);
+  border-radius: 2px;
+  opacity: 0;
+  pointer-events: none;
+  transition: left 0.25s ease, width 0.25s ease, opacity 0.15s ease;
 }
 
 .right {
@@ -52,6 +64,10 @@
   color: var(--main-300);
 }
 
+.navItemActive {
+  color: var(--main-300);
+}
+
 .navItemAdmin {
   color: var(--main-300);
   text-decoration: none;
@@ -61,6 +77,10 @@
 
 .navItemAdmin:hover {
   color: var(--main-500);
+}
+
+.navItemAdminActive {
+  /* 인디케이터로 처리 */
 }
 
 .logoLink {

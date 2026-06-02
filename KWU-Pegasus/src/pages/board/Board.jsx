@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
+
+function extractUsername(author) {
+  return /^([^(]+)/.exec(author)?.[1]?.trim() ?? author
+}
 import { API_BASE } from '../../lib/api'
 import { POST_TYPE_LABEL } from '../../lib/constants'
 import { useAuth } from '../../context/AuthContext'
@@ -19,7 +23,7 @@ const TYPE_STYLE = {
 const MEMBER_ROLES = ['member', 'manager', 'staff', 'root']
 
 export default function Board() {
-  const navigate = useNavigate()
+  const navigate  = useNavigate()
   const { user } = useAuth()
   const canWrite  = user && MEMBER_ROLES.includes(user.role)
   const canRead   = user && MEMBER_ROLES.includes(user.role)
@@ -66,7 +70,10 @@ export default function Board() {
               <span className={styles.rowTitle}>{p.title}</span>
             </div>
             <div className={styles.rowMeta}>
-              <span>{p.author}</span>
+              <span
+                className={styles.authorLink}
+                onClick={e => { e.preventDefault(); const un = extractUsername(p.author); navigate(un === user?.username ? '/mypage' : `/user/${un}`) }}
+              >{p.author}</span>
               <span>{p.date}</span>
               <span>조회 {p.views}</span>
             </div>
@@ -84,7 +91,10 @@ export default function Board() {
               <span className={styles.rowTitle}>{p.title}</span>
             </div>
             <div className={styles.rowMeta}>
-              <span>{p.author}</span>
+              <span
+                className={styles.authorLink}
+                onClick={e => { e.preventDefault(); const un = extractUsername(p.author); navigate(un === user?.username ? '/mypage' : `/user/${un}`) }}
+              >{p.author}</span>
               <span>{p.date}</span>
               <span>조회 {p.views}</span>
             </div>

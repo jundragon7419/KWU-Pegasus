@@ -1,0 +1,292 @@
+.page {
+  width: 100%;
+  padding: 40px 0 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.backButton {
+  align-self: flex-start;
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.85rem;
+  font-family: var(--font-sans);
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.backButton:hover {
+  color: var(--text-100);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text-100);
+  margin: 0;
+}
+
+.username {
+  color: var(--main-300);
+}
+
+/* ── 탭 ── */
+.tabs {
+  display: flex;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  position: relative;
+  margin-bottom: 4px;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  margin-bottom: -1px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.tab:hover { color: var(--text-100); }
+
+.tabActive { color: var(--main-300); }
+
+.tabCount {
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(166, 146, 109, 0.15);
+  color: var(--main-300);
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+
+.tabLog {
+  color: rgba(220, 80, 80, 0.7);
+}
+
+.tabLog:hover {
+  color: rgba(220, 80, 80, 0.9) !important;
+}
+
+.logPlaceholder {
+  padding: 40px 0;
+}
+
+.tabIndicator {
+  position: absolute;
+  bottom: 0;
+  height: 2px;
+  background: var(--main-300);
+  border-radius: 2px;
+  opacity: 0;
+  pointer-events: none;
+  transition: left 0.25s ease, width 0.25s ease, opacity 0.15s ease;
+}
+
+/* ── 목록 ── */
+.list {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.empty {
+  text-align: center;
+  padding: 40px 0;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 0.9rem;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 13px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  text-decoration: none;
+  border-radius: 4px;
+  transition: background 0.12s ease;
+}
+
+.row:hover { background: rgba(255, 255, 255, 0.05); }
+
+.rowLeft {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.tag {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(166, 146, 109, 0.18);
+  color: var(--main-300);
+  margin-top: 1px;
+}
+
+.rowContent {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.rowTitle {
+  font-size: 0.92rem;
+  color: var(--text-100);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rowSub {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.35);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rowMeta {
+  display: flex;
+  gap: 12px;
+  flex-shrink: 0;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.rowDate {
+  flex-shrink: 0;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+/* ── 로그 행 ── */
+.logRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 13px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 4px;
+  transition: background 0.12s ease;
+}
+
+.logRowClickable {
+  cursor: pointer;
+}
+
+.logRowClickable:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.logBadge {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  margin-top: 1px;
+  white-space: nowrap;
+}
+
+.logBadge[data-action$="_create"],
+.logBadge[data-action$="_add"],
+.logBadge[data-action="member_approve"],
+.logBadge[data-action="user_unban"] {
+  background: rgba(80, 200, 120, 0.15);
+  color: #6dc87a;
+}
+
+.logBadge[data-action$="_update"],
+.logBadge[data-action$="_set"],
+.logBadge[data-action="roster_year_set"] {
+  background: rgba(100, 160, 240, 0.15);
+  color: var(--color-blue);
+}
+
+.logBadge[data-action$="_delete"],
+.logBadge[data-action="member_reject"],
+.logBadge[data-action="member_demote"],
+.logBadge[data-action$="_unset"],
+.logBadge[data-action="user_ban"] {
+  background: rgba(220, 80, 80, 0.15);
+  color: #e57373;
+}
+
+.logContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.logTitle {
+  font-size: 0.9rem;
+  color: var(--text-100);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.logSub {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.35);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.logDate {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.3);
+  white-space: nowrap;
+}
+
+/* ── 유저 없음 ── */
+.notFound {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 80px 0;
+}
+
+.notFoundTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-100);
+  margin: 0;
+}
+
+.notFoundDesc {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.35);
+  margin: 0;
+}
+
+/* ── 페이지네이션 ── */
+.pagination {
+  display: flex;
+  justify-content: center;
+}

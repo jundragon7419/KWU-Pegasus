@@ -1,0 +1,127 @@
+.page {
+  width: 100%;
+  padding: 40px 0 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.backButton {
+  align-self: flex-start;
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.85rem;
+  font-family: var(--font-sans);
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.backButton:hover {
+  color: var(--text-100);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.article {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.articleHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.badges {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* action 뱃지 색상 */
+.actionBadge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 4px;
+  letter-spacing: 0.3px;
+}
+
+.actionBadge[data-action$="_create"] {
+  background: rgba(80, 200, 120, 0.15);
+  color: #6dc87a;
+}
+
+.actionBadge[data-action$="_update"] {
+  background: rgba(100, 160, 240, 0.15);
+  color: var(--color-blue);
+}
+
+.actionBadge[data-action$="_delete"] {
+  background: rgba(220, 80, 80, 0.15);
+  color: #e57373;
+}
+
+.typeBadge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 4px;
+  background: rgba(166, 146, 109, 0.18);
+  color: var(--main-300);
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-100);
+  line-height: 1.4;
+}
+
+.titleLink {
+  color: var(--text-100);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.titleLink:hover {
+  color: var(--main-300);
+  text-decoration: underline;
+}
+
+.titleSuffix {
+  font-size: 1rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.meta {
+  display: flex;
+  gap: 16px;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.body {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.82);
+  line-height: 1.85;
+  min-height: 30vh;
+}
+
+.body p { margin: 0; }
+
+.empty {
+  text-align: center;
+  padding: 60px 0;
+  color: rgba(255, 255, 255, 0.3);
+}

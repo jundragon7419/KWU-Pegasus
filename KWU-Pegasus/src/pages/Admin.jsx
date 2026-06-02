@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
+import { Link } from 'react-router-dom'
 import { API_BASE } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import { ROLE_LABEL, STAFF_TYPE_LABEL, ROSTER_ROLE_LABEL } from '../lib/constants'
+import { useTabIndicator } from '../hooks/useTabIndicator'
 import styles from './Admin.module.css'
 
 const ROSTER_ROLE_OPTIONS = [
@@ -13,8 +15,11 @@ const ROSTER_ROLE_OPTIONS = [
 ]
 
 export default function Admin() {
-  const { user, token } = useAuth()
+  const { user, token, refreshUser } = useAuth()
   const [tab, setTab] = useState('pending')
+  const { containerRef, indicatorRef } = useTabIndicator(tab)
+
+  useEffect(() => { refreshUser() }, [])
 
   const isRoot = user?.role === 'root'
   const isStaffOrRoot = user && ['staff', 'root'].includes(user.role)
@@ -23,43 +28,44 @@ export default function Admin() {
     <div className={styles.page}>
       <h1 className={styles.title}>관리자</h1>
 
-      <div className={styles.tabs}>
-        <button className={`${styles.tab} ${tab === 'pending' ? styles.tabActive : ''}`} onClick={() => setTab('pending')}>
+      <div ref={containerRef} className={styles.tabs}>
+        <button data-active={tab === 'pending'} className={`${styles.tab} ${tab === 'pending' ? styles.tabActive : ''}`} onClick={() => setTab('pending')}>
           멤버 승인
         </button>
-        <button className={`${styles.tab} ${tab === 'rosterMgmt' ? styles.tabActive : ''}`} onClick={() => setTab('rosterMgmt')}>
+        <button data-active={tab === 'rosterMgmt'} className={`${styles.tab} ${tab === 'rosterMgmt' ? styles.tabActive : ''}`} onClick={() => setTab('rosterMgmt')}>
           로스터 관리
         </button>
         {isStaffOrRoot && (
-          <button className={`${styles.tab} ${tab === 'promote' ? styles.tabActive : ''}`} onClick={() => setTab('promote')}>
+          <button data-active={tab === 'promote'} className={`${styles.tab} ${tab === 'promote' ? styles.tabActive : ''}`} onClick={() => setTab('promote')}>
             매니저 관리
           </button>
         )}
         {isRoot && (
-          <button className={`${styles.tab} ${tab === 'staffPromote' ? styles.tabActive : ''}`} onClick={() => setTab('staffPromote')}>
+          <button data-active={tab === 'staffPromote'} className={`${styles.tab} ${tab === 'staffPromote' ? styles.tabActive : ''}`} onClick={() => setTab('staffPromote')}>
             스태프 관리
           </button>
         )}
         {isStaffOrRoot && (
-          <button className={`${styles.tab} ${tab === 'basicUsers' ? styles.tabActive : ''}`} onClick={() => setTab('basicUsers')}>
+          <button data-active={tab === 'basicUsers'} className={`${styles.tab} ${tab === 'basicUsers' ? styles.tabActive : ''}`} onClick={() => setTab('basicUsers')}>
             일반유저 관리
           </button>
         )}
         {isStaffOrRoot && (
-          <button className={`${styles.tab} ${tab === 'memberMgmt' ? styles.tabActive : ''}`} onClick={() => setTab('memberMgmt')}>
+          <button data-active={tab === 'memberMgmt'} className={`${styles.tab} ${tab === 'memberMgmt' ? styles.tabActive : ''}`} onClick={() => setTab('memberMgmt')}>
             멤버 관리
           </button>
         )}
         {isStaffOrRoot && (
-          <button className={`${styles.tab} ${tab === 'banned' ? styles.tabActive : ''}`} onClick={() => setTab('banned')}>
+          <button data-active={tab === 'banned'} className={`${styles.tab} ${tab === 'banned' ? styles.tabActive : ''}`} onClick={() => setTab('banned')}>
             차단 계정
           </button>
         )}
         {isStaffOrRoot && (
-          <button className={`${styles.tab} ${tab === 'rosterYear' ? styles.tabActive : ''}`} onClick={() => setTab('rosterYear')}>
+          <button data-active={tab === 'rosterYear'} className={`${styles.tab} ${tab === 'rosterYear' ? styles.tabActive : ''}`} onClick={() => setTab('rosterYear')}>
             연도 설정
           </button>
         )}
+        <div ref={indicatorRef} className={styles.tabIndicator} />
       </div>
 
       {tab === 'pending'      && <PendingTab token={token} />}
@@ -144,7 +150,7 @@ function PendingRow({ u, token, onDone }) {
 
   return (
     <tr>
-      <td>{u.username}</td>
+      <td><Link to={`/user/${u.username}`} className={styles.usernameLink}>{u.username}</Link></td>
       <td>{u.name ?? '—'}</td>
       <td>{u.student_id ?? '—'}</td>
       <td>{u.ob_yb?.toUpperCase() ?? '—'}</td>
@@ -375,7 +381,7 @@ function RosterEntryRow({ entry, token, onDelete, onDone }) {
       </td>
       <td>
         {entry.username
-          ? <span className={styles.rosterInfo}>{entry.username}</span>
+          ? <Link to={`/user/${entry.username}`} className={`${styles.rosterInfo} ${styles.usernameLink}`}>{entry.username}</Link>
           : <span className={styles.noChange}>미가입</span>}
       </td>
       <td>
@@ -482,7 +488,7 @@ function PromoteTab({ token }) {
               ? <tr><td colSpan={6} className={styles.emptyRow}>임명된 매니저가 없습니다.</td></tr>
               : managers.map(u => (
                   <tr key={u.id}>
-                    <td>{u.username}</td>
+                    <td><Link to={`/user/${u.username}`} className={styles.usernameLink}>{u.username}</Link></td>
                     <td>{u.name ?? '—'}</td>
                     <td>{u.ob_yb?.toUpperCase() ?? '—'}</td>
                     <td>{ROLE_LABEL[u.authority]}</td>
@@ -506,7 +512,7 @@ function PromoteTab({ token }) {
               ? <tr><td colSpan={6} className={styles.emptyRow}>임명 가능한 멤버가 없습니다.</td></tr>
               : members.map(u => (
                   <tr key={u.id}>
-                    <td>{u.username}</td>
+                    <td><Link to={`/user/${u.username}`} className={styles.usernameLink}>{u.username}</Link></td>
                     <td>{u.name ?? '—'}</td>
                     <td>{u.ob_yb?.toUpperCase() ?? '—'}</td>
                     <td>{ROLE_LABEL[u.authority]}</td>
@@ -608,7 +614,7 @@ function StaffPromoteTab({ token }) {
               ? <tr><td colSpan={6} className={styles.emptyRow}>임명된 스태프가 없습니다.</td></tr>
               : staffs.map(u => (
                   <tr key={u.id}>
-                    <td>{u.username}</td>
+                    <td><Link to={`/user/${u.username}`} className={styles.usernameLink}>{u.username}</Link></td>
                     <td>{u.name ?? '—'}</td>
                     <td>{u.ob_yb?.toUpperCase() ?? '—'}</td>
                     <td>{`스태프(${STAFF_TYPE_LABEL[u.staff_type] ?? u.staff_type})`}</td>
@@ -632,7 +638,7 @@ function StaffPromoteTab({ token }) {
               ? <tr><td colSpan={6} className={styles.emptyRow}>임명 가능한 멤버 또는 매니저가 없습니다.</td></tr>
               : candidates.map(u => (
                   <tr key={u.id}>
-                    <td>{u.username}</td>
+                    <td><Link to={`/user/${u.username}`} className={styles.usernameLink}>{u.username}</Link></td>
                     <td>{u.name ?? '—'}</td>
                     <td>{u.ob_yb?.toUpperCase() ?? '—'}</td>
                     <td>{ROLE_LABEL[u.authority]}</td>
@@ -703,7 +709,7 @@ function BasicUsersTab({ token }) {
               ? <tr><td colSpan={4} className={styles.emptyRow}>일반 권한 유저가 없습니다.</td></tr>
               : list.map(u => (
                   <tr key={u.id}>
-                    <td>{u.username}</td>
+                    <td><Link to={`/user/${u.username}`} className={styles.usernameLink}>{u.username}</Link></td>
                     <td>{ROLE_LABEL[u.authority] ?? u.authority}</td>
                     <td>{formatDatetime(u.created_at)}</td>
                     <td className={styles.actions}>
@@ -806,7 +812,7 @@ function MemberMgmtTab({ token }) {
               <tbody>
                 {users.map(u => (
                   <tr key={u.id}>
-                    <td>{u.username}</td>
+                    <td><Link to={`/user/${u.username}`} className={styles.usernameLink}>{u.username}</Link></td>
                     <td>{u.name ?? '—'}</td>
                     <td>{u.ob_yb?.toUpperCase() ?? '—'}</td>
                     <td>
@@ -913,7 +919,7 @@ function BannedTab({ token, user }) {
               ? <tr><td colSpan={5} className={styles.emptyRow}>차단된 계정이 없습니다.</td></tr>
               : banned.map(u => (
                   <tr key={u.id}>
-                    <td>{u.username}</td>
+                    <td><Link to={`/user/${u.username}`} className={styles.usernameLink}>{u.username}</Link></td>
                     <td>{u.name ?? '—'}</td>
                     <td>{ROLE_LABEL[u.authority] ?? u.authority}</td>
                     <td>{formatDatetime(u.created_at)}</td>
@@ -936,7 +942,7 @@ function BannedTab({ token, user }) {
               ? <tr><td colSpan={5} className={styles.emptyRow}>차단 가능한 유저가 없습니다.</td></tr>
               : bannable.map(u => (
                   <tr key={u.id}>
-                    <td>{u.username}</td>
+                    <td><Link to={`/user/${u.username}`} className={styles.usernameLink}>{u.username}</Link></td>
                     <td>{u.name ?? '—'}</td>
                     <td>{ROLE_LABEL[u.authority] ?? u.authority}</td>
                     <td>{formatDatetime(u.created_at)}</td>

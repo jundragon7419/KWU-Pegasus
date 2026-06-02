@@ -3,8 +3,10 @@ import { useAuth } from '../context/AuthContext'
 import styles from './Unauthorized.module.css'
 
 export default function Unauthorized() {
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
   const navigate = useNavigate()
+
+  if (loading) return null
 
   if (!user) {
     return (

@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const { getMe, checkUsername, checkEmail, updateAccount, updateProfile, requestMembership, getRosterHistory } = require('../controllers/mypageController')
+const { getMe, checkUsername, checkEmail, updateAccount, updateProfile, requestMembership, getRosterHistory, getMyPosts, getMyPostsAll, getMyComments, getMyCommentsAll } = require('../controllers/mypageController')
 const { authenticate } = require('../middlewares/auth')
 
 router.use(authenticate)
@@ -12,5 +12,9 @@ router.put('/account',            updateAccount)
 router.put('/profile',            updateProfile)
 router.post('/membership-request', requestMembership)
 router.get('/roster-history',     getRosterHistory)
+router.get('/posts',              getMyPosts)
+router.get('/posts/all',          getMyPostsAll)
+router.get('/comments',           getMyComments)
+router.get('/comments/all',       getMyCommentsAll)
 
 module.exports = router

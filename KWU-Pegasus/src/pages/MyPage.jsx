@@ -1,11 +1,15 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useTabIndicator } from '../hooks/useTabIndicator'
+import { useNavigate, Link } from 'react-router-dom'
 import { API_BASE } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
-import { ROSTER_ROLE_LABEL } from '../lib/constants'
+import { ROSTER_ROLE_LABEL, POST_TYPE_LABEL } from '../lib/constants'
 import { COUNTRY_CODES } from '../lib/countryCodes'
 import ReactCountryFlag from 'react-country-flag'
+import Pagination from '../components/Pagination'
 import styles from './MyPage.module.css'
+
+const PAGE_SIZE = 15
 
 const MEMBER_ROLES = ['member', 'manager', 'staff', 'root']
 
@@ -22,9 +26,10 @@ function formatDisplayPhone(phone, countryCode) {
   return `+${countryCode} ${phone}`
 }
 const TABS = [
-  { key: 'account', label: '계정 정보' },
-  { key: 'club',    label: '동아리 활동' },
-  { key: 'posts',   label: '내 게시글' },
+  { key: 'account',     label: '계정 정보' },
+  { key: 'club',        label: '활동 내역' },
+  { key: 'posts',       label: '내 게시글' },
+  { key: 'mycomments',  label: '내 댓글' },
 ]
 
 const AUTHORITY_LABEL = {
@@ -47,6 +52,16 @@ export default function MyPage() {
   const { user, token, loading } = useAuth()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('account')
+  const { containerRef: tabContainerRef, indicatorRef: tabIndicatorRef } = useTabIndicator(activeTab)
+
+  const [myPosts, setMyPosts]               = useState([])
+  const [myComments, setMyComments]         = useState([])
+  const [myPostsAll, setMyPostsAll]               = useState([])
+  const [postsAllLoaded, setPostsAllLoaded]       = useState(false)
+  const [postsPage, setPostsPage]                 = useState(1)
+  const [myCommentsAll, setMyCommentsAll]         = useState([])
+  const [commentsAllLoaded, setCommentsAllLoaded] = useState(false)
+  const [commentsPage, setCommentsPage]           = useState(1)
   const [me, setMe] = useState(null)
   const [rosterHistory, setRosterHistory] = useState([])
 
@@ -105,6 +120,28 @@ export default function MyPage() {
       .then(r => r.json())
       .then(data => setRosterHistory(Array.isArray(data) ? data : []))
   }, [token, me])
+
+  useEffect(() => {
+    if (!token || !me || !MEMBER_ROLES.includes(me.role)) return
+    fetch(`${API_BASE}/api/mypage/posts`,    { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json()).then(data => setMyPosts(Array.isArray(data) ? data : []))
+    fetch(`${API_BASE}/api/mypage/comments`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json()).then(data => setMyComments(Array.isArray(data) ? data : []))
+  }, [token, me])
+
+  useEffect(() => {
+    if (activeTab !== 'posts' || postsAllLoaded || !token) return
+    fetch(`${API_BASE}/api/mypage/posts/all`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json())
+      .then(data => { setMyPostsAll(Array.isArray(data) ? data : []); setPostsAllLoaded(true) })
+  }, [activeTab, postsAllLoaded, token])
+
+  useEffect(() => {
+    if (activeTab !== 'mycomments' || commentsAllLoaded || !token) return
+    fetch(`${API_BASE}/api/mypage/comments/all`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json())
+      .then(data => { setMyCommentsAll(Array.isArray(data) ? data : []); setCommentsAllLoaded(true) })
+  }, [activeTab, commentsAllLoaded, token])
 
   // ── 계정 편집 열기 ──
   function handleEditOpen() {
@@ -284,16 +321,18 @@ export default function MyPage() {
       <h1 className={styles.title}>마이페이지</h1>
 
       {/* 탭 네비게이션 */}
-      <nav className={styles.tabNav}>
-        {TABS.map(tab => (
+      <nav ref={tabContainerRef} className={styles.tabNav}>
+        {TABS.map(t => (
           <button
-            key={tab.key}
-            className={`${styles.tabBtn} ${activeTab === tab.key ? styles.tabBtnActive : ''}`}
-            onClick={() => setActiveTab(tab.key)}
+            key={t.key}
+            data-active={activeTab === t.key}
+            className={`${styles.tabBtn} ${activeTab === t.key ? styles.tabBtnActive : ''}`}
+            onClick={() => { setActiveTab(t.key); setPostsPage(1); setCommentsPage(1) }}
           >
-            {tab.label}
+            {t.label}
           </button>
         ))}
+        <div ref={tabIndicatorRef} className={styles.tabIndicator} />
       </nav>
 
       {/* ─── 계정 정보 탭 ─── */}
@@ -624,55 +663,128 @@ export default function MyPage() {
         </div>
       )}
 
-      {/* ─── 동아리 활동 탭 ─── */}
+      {/* ─── 활동 내역 탭 ─── */}
       {activeTab === 'club' && (
         <div className={styles.tabContent}>
+
+          {/* 내 게시글 */}
           <section className={styles.section}>
-            <h2 className={styles.sectionTitle}>로스터 이력</h2>
-            {!showRosterHistory ? (
-              <p className={styles.emptyDesc}>멤버 승인 후 로스터 이력을 확인할 수 있습니다.</p>
-            ) : rosterHistory.length === 0 ? (
-              <p className={styles.emptyDesc}>등록된 로스터 이력이 없습니다.</p>
-            ) : (
-              <div className={styles.rosterHistory}>
-                {rosterHistory.map(r => (
-                  <span key={r.year} className={styles.rosterChip}>
-                    <span className={styles.rosterChipYear}>{r.year}</span>
-                    <span className={styles.rosterChipNumber}>#{r.number}</span>
-                    <span className={styles.rosterChipRole}>{ROSTER_ROLE_LABEL[r.roster_role] ?? r.roster_role}</span>
-                  </span>
-                ))}
-              </div>
-            )}
+            <div className={styles.sectionHeader}>
+              <h2 className={styles.sectionTitle}>내 게시글</h2>
+              <button className={styles.moreBtn} onClick={() => setActiveTab('posts')} title="더보기">+</button>
+            </div>
+            <div className={styles.activityList}>
+              {myPosts.length === 0 ? (
+                <p className={styles.emptyDesc}>작성한 글이 없습니다.</p>
+              ) : myPosts.slice(0, 5).map(p => (
+                <Link key={p.id} to={`/board/${p.id}`} className={styles.activityItem}>
+                  <div className={styles.activityItemLeft}>
+                    <div className={styles.activityItemRow}>
+                      <span className={styles.activityTag}>{POST_TYPE_LABEL[p.type]}</span>
+                      <span className={styles.activityItemTitle}>{p.title}</span>
+                    </div>
+                  </div>
+                  <div className={styles.activityItemMeta}>
+                    <span className={styles.activityItemViews}>조회 {p.views}</span>
+                    <span className={styles.activityItemDate}>{p.date}</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </section>
+
+          {/* 내 댓글 */}
+          <section className={styles.section}>
+            <div className={styles.sectionHeader}>
+              <h2 className={styles.sectionTitle}>내 댓글</h2>
+              <button className={styles.moreBtn} onClick={() => setActiveTab('mycomments')} title="더보기">+</button>
+            </div>
+            <div className={styles.activityList}>
+              {myComments.length === 0 ? (
+                <p className={styles.emptyDesc}>작성한 댓글이 없습니다.</p>
+              ) : myComments.slice(0, 5).map(c => (
+                <Link key={c.id} to={`/board/${c.post_id}`} className={styles.activityItem}>
+                  <div className={styles.activityItemLeft}>
+                    <div className={styles.activityItemRow}>
+                      <span className={styles.activityTag}>{POST_TYPE_LABEL[c.post_type]}</span>
+                      <span className={styles.activityItemTitle}>{c.content}</span>
+                    </div>
+                    <span className={styles.activityItemSub}>└ {c.post_title}</span>
+                  </div>
+                  <span className={styles.activityItemDate}>{c.created_at}</span>
+                </Link>
+              ))}
+            </div>
+          </section>
+
         </div>
       )}
 
-      {/* ─── 내 게시글 탭 (예시) ─── */}
-      {activeTab === 'posts' && (
-        <div className={styles.tabContent}>
-          <section className={styles.section}>
-            <h2 className={styles.sectionTitle}>
-              내가 쓴 글
-              <span className={styles.exampleBadge}>(예시)</span>
-            </h2>
-            <div className={styles.postList}>
-              {[
-                { id: 1, category: '공지', title: '예시 게시글 제목입니다', date: '2026-05-20' },
-                { id: 2, category: '행사', title: '또 다른 예시 게시글 제목', date: '2026-05-15' },
-                { id: 3, category: '경기', title: '세 번째 예시 게시글', date: '2026-05-10' },
-              ].map(post => (
-                <div key={post.id} className={styles.postItem}>
-                  <span className={styles.postCategory}>{post.category}</span>
-                  <span className={styles.postTitle}>{post.title}</span>
-                  <span className={styles.postDate}>{post.date}</span>
-                </div>
-              ))}
+      {/* ─── 내 게시글 탭 ─── */}
+      {activeTab === 'posts' && (() => {
+        const totalPostPages = Math.max(1, Math.ceil(myPostsAll.length / PAGE_SIZE))
+        const pagedPosts = myPostsAll.slice((postsPage - 1) * PAGE_SIZE, postsPage * PAGE_SIZE)
+        return (
+          <div className={styles.tabContent}>
+            <section className={styles.section}>
+              <h2 className={styles.sectionTitle}>내 게시글</h2>
+              <div className={styles.activityList}>
+                {myPostsAll.length === 0 ? (
+                  <p className={styles.emptyDesc}>작성한 글이 없습니다.</p>
+                ) : pagedPosts.map(p => (
+                  <Link key={p.id} to={`/board/${p.id}`} className={styles.activityItem}>
+                    <div className={styles.activityItemLeft}>
+                      <div className={styles.activityItemRow}>
+                        <span className={styles.activityTag}>{POST_TYPE_LABEL[p.type]}</span>
+                        <span className={styles.activityItemTitle}>{p.title}</span>
+                      </div>
+                    </div>
+                    <div className={styles.activityItemMeta}>
+                      <span className={styles.activityItemViews}>조회 {p.views}</span>
+                      <span className={styles.activityItemDate}>{p.date}</span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </section>
+            <div className={styles.paginationRow}>
+              <Pagination page={postsPage} totalPages={totalPostPages} onPageChange={setPostsPage} />
             </div>
-            <p className={styles.exampleNotice}>※ 위 목록은 예시입니다. 실제 기능은 준비 중입니다.</p>
-          </section>
-        </div>
-      )}
+          </div>
+        )
+      })()}
+
+      {/* ─── 내 댓글 탭 ─── */}
+      {activeTab === 'mycomments' && (() => {
+        const totalCommentPages = Math.max(1, Math.ceil(myCommentsAll.length / PAGE_SIZE))
+        const pagedComments = myCommentsAll.slice((commentsPage - 1) * PAGE_SIZE, commentsPage * PAGE_SIZE)
+        return (
+          <div className={styles.tabContent}>
+            <section className={styles.section}>
+              <h2 className={styles.sectionTitle}>내 댓글</h2>
+              <div className={styles.activityList}>
+                {myCommentsAll.length === 0 ? (
+                  <p className={styles.emptyDesc}>작성한 댓글이 없습니다.</p>
+                ) : pagedComments.map(c => (
+                  <Link key={c.id} to={`/board/${c.post_id}`} className={styles.activityItem}>
+                    <div className={styles.activityItemLeft}>
+                      <div className={styles.activityItemRow}>
+                        <span className={styles.activityTag}>{POST_TYPE_LABEL[c.post_type]}</span>
+                        <span className={`${styles.activityItemTitle} ${styles.activityItemClamp}`}>{c.content}</span>
+                      </div>
+                      <span className={styles.activityItemSub}>└ {c.post_title}</span>
+                    </div>
+                    <span className={styles.activityItemDate}>{c.created_at}</span>
+                  </Link>
+                ))}
+              </div>
+            </section>
+            <div className={styles.paginationRow}>
+              <Pagination page={commentsPage} totalPages={totalCommentPages} onPageChange={setCommentsPage} />
+            </div>
+          </div>
+        )
+      })()}
 
     </div>
   )
