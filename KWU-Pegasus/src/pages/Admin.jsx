@@ -776,7 +776,6 @@ function MemberMgmtTab({ token }) {
   const sorted = sortOrgMembers(list)
   const groups = ['staff', 'manager', 'member']
     .map(role => ({ role, users: sorted.filter(u => u.authority === role) }))
-    .filter(g => g.users.length > 0)
 
   const cols = (
     <colgroup>
@@ -810,7 +809,9 @@ function MemberMgmtTab({ token }) {
             <table className={`${styles.table} ${styles.tableFixed} ${styles.memberTable}`}>
               {cols}{head}
               <tbody>
-                {users.map(u => (
+                {users.length === 0
+                  ? <tr><td colSpan={7} className={styles.emptyRow}>등록된 {MEMBER_ROLE_GROUP_LABEL[role]}가 없습니다.</td></tr>
+                  : users.map(u => (
                   <tr key={u.id}>
                     <td><Link to={`/user/${u.username}`} className={styles.usernameLink}>{u.username}</Link></td>
                     <td>{u.name ?? '—'}</td>
@@ -838,6 +839,7 @@ function MemberMgmtTab({ token }) {
           </div>
         </div>
       ))}
+      {groups.every(g => g.users.length === 0) && !msg && null}
     </div>
   )
 }
