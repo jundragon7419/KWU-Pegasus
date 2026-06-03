@@ -1,0 +1,280 @@
+.page {
+  width: 100%;
+  padding: 40px 0 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.pageHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.season {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--main-300);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-100);
+  margin: 0;
+}
+
+/* ── 탭 ── */
+.tabs {
+  display: flex;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  position: relative;
+}
+
+.tab {
+  padding: 10px 20px;
+  margin-bottom: -1px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.tab:hover { color: var(--text-100); }
+
+.tabActive { color: var(--main-300); }
+
+.tabIndicator {
+  position: absolute;
+  bottom: 0;
+  height: 2px;
+  background: var(--main-300);
+  border-radius: 2px;
+  opacity: 0;
+  pointer-events: none;
+  transition: left 0.25s ease, width 0.25s ease, opacity 0.15s ease;
+}
+
+/* ── 메타 바 ── */
+.metaBar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+}
+
+.regCheck {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+  user-select: none;
+}
+
+.regCheck:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.regCheck input[type='checkbox'] {
+  width: 13px;
+  height: 13px;
+  accent-color: var(--main-400);
+  cursor: pointer;
+}
+
+.regCheckActive {
+  border-color: rgba(166, 146, 109, 0.5);
+  color: var(--main-300);
+  background: rgba(166, 146, 109, 0.08);
+}
+
+.metaInfo {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.4);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.metaInfo strong {
+  color: var(--main-300);
+  font-weight: 700;
+}
+
+.metaDivider {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.tooltip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.tooltipTrigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.35);
+  cursor: help;
+  transition: border-color 0.12s ease, color 0.12s ease;
+}
+
+.tooltipTrigger:hover {
+  border-color: var(--main-300);
+  color: var(--main-300);
+}
+
+.tooltipBox {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  background: #0d1f35;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.8;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  z-index: 100;
+}
+
+.tooltip:hover .tooltipBox {
+  display: block;
+}
+
+/* ── 테이블 ── */
+.tableWrap {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tableWrap::-webkit-scrollbar {
+  height: 6px;
+}
+
+.tableWrap::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 3px;
+}
+
+.tableWrap::-webkit-scrollbar-thumb {
+  background: rgba(166, 146, 109, 0.45);
+  border-radius: 3px;
+}
+
+.tableWrap::-webkit-scrollbar-thumb:hover {
+  background: var(--main-300);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  white-space: nowrap;
+}
+
+.table th {
+  padding: 10px 14px;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.3px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.table th:first-child,
+.table td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  text-align: left;
+}
+
+.table th:first-child {
+  background: #0e1f33;
+}
+
+.table td:first-child {
+  background: #0a1929;
+}
+
+.table tr:hover td:first-child {
+  background: #112236;
+}
+
+.colActive {
+  color: var(--text-100) !important;
+  background: rgba(166, 146, 109, 0.07) !important;
+}
+
+.table th.colActive {
+  color: var(--main-300) !important;
+  background: rgba(166, 146, 109, 0.12) !important;
+}
+
+.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.12s ease;
+}
+
+.sortable:hover {
+  color: var(--main-300);
+}
+
+.sortIcon {
+  font-size: 0.65rem;
+  opacity: 0.5;
+}
+
+.table td {
+  padding: 12px 14px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.8);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  transition: background 0.1s ease;
+}
+
+.table td:first-child {
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-100);
+}
+
+.table tr:hover td {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.empty {
+  text-align: center !important;
+  padding: 48px 0 !important;
+  color: rgba(255, 255, 255, 0.3) !important;
+  font-weight: 400 !important;
+}

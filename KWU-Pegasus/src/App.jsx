@@ -8,6 +8,7 @@ import Signup from './pages/auth/Signup'
 import Unauthorized from './pages/Unauthorized'
 import Schedule from './pages/Schedule'
 import Roster from './pages/Roster'
+import Records from './pages/Records'
 import Board from './pages/board/Board'
 import BoardDetail from './pages/board/BoardDetail'
 import BoardWrite from './pages/board/BoardWrite'
@@ -41,6 +42,7 @@ function App() {
             <Route path="/unauthorized" element={<Unauthorized />} />
             <Route path="/schedule" element={<Schedule />} />
             <Route path="/roster" element={<Roster />} />
+            <Route path="/records" element={<Records />} />
             <Route path="/notice" element={<Navigate to="/board" replace />} />
             <Route path="/notice/:id" element={<Navigate to="/board" replace />} />
             <Route path="/board" element={

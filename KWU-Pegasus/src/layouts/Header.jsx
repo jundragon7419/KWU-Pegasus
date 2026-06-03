@@ -69,6 +69,7 @@ export default function Header() {
         <NavLink end className={navCls} to="/">홈</NavLink>
         <NavLink className={navCls} to="/schedule">일정</NavLink>
         <NavLink className={navCls} to="/roster">선수단</NavLink>
+        <NavLink className={navCls} to="/records">기록</NavLink>
         {user && (
           <NavLink className={navCls} to="/board">게시판</NavLink>
         )}
