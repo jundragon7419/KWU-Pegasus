@@ -2,6 +2,13 @@ const pool         = require('../db')
 const TEAM_ID      = process.env.UNIQUE_PLAY_TEAM_ID      || '3405'
 const SUBLEAGUE_ID = process.env.UNIQUE_PLAY_SUBLEAGUE_ID || '842'
 const BASE         = 'https://service-api.unique-play.com'
+const CACHE_TTL    = 24 * 60 * 60 * 1000  // 24시간
+
+const cache = { batting: null, pitching: null, at: 0 }
+
+function isCacheValid() {
+  return cache.at > 0 && Date.now() - cache.at < CACHE_TTL
+}
 
 async function getRosterNumbers() {
   const [[setting]] = await pool.query(
@@ -95,6 +102,8 @@ function enrichWithWrcPlus(players, lgPlayers) {
 
 exports.getBatting = async (req, res, next) => {
   try {
+    if (isCacheValid() && cache.batting) return res.json(cache.batting)
+
     const year = req.query.year || new Date().getFullYear()
 
     const [team, league] = await Promise.all([
@@ -112,7 +121,10 @@ exports.getBatting = async (req, res, next) => {
 
     const lgPlayers  = league.length > 0 ? league : team
     const numberMap  = await getRosterNumbers()
-    res.json(attachNumbers(enrichWithWrcPlus(team, lgPlayers), numberMap))
+    const result     = attachNumbers(enrichWithWrcPlus(team, lgPlayers), numberMap)
+    cache.batting    = result
+    cache.at         = Date.now()
+    res.json(result)
   } catch (err) { next(err) }
 }
 
@@ -153,6 +165,8 @@ function calcFIP(pitchers, lgPitchers) {
 
 exports.getPitching = async (req, res, next) => {
   try {
+    if (isCacheValid() && cache.pitching) return res.json(cache.pitching)
+
     const year = req.query.year || new Date().getFullYear()
     const [team, league] = await Promise.all([
       fetchFromAPI(new URLSearchParams({
@@ -168,6 +182,9 @@ exports.getPitching = async (req, res, next) => {
     ])
     const lgPitchers = league.length > 0 ? league : team
     const numberMap  = await getRosterNumbers()
-    res.json(attachNumbers(calcFIP(team, lgPitchers), numberMap))
+    const result     = attachNumbers(calcFIP(team, lgPitchers), numberMap)
+    cache.pitching   = result
+    cache.at         = Date.now()
+    res.json(result)
   } catch (err) { next(err) }
 }
