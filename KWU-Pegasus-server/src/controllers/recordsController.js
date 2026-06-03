@@ -1,6 +1,27 @@
+const pool         = require('../db')
 const TEAM_ID      = process.env.UNIQUE_PLAY_TEAM_ID      || '3405'
 const SUBLEAGUE_ID = process.env.UNIQUE_PLAY_SUBLEAGUE_ID || '842'
 const BASE         = 'https://service-api.unique-play.com'
+
+async function getRosterNumbers() {
+  const [[setting]] = await pool.query(
+    "SELECT setting_val FROM settings WHERE setting_key = 'active_roster_year'"
+  )
+  const year = setting?.setting_val ?? new Date().getFullYear()
+  const [rows] = await pool.query(
+    'SELECT name, number FROM roster WHERE year = ?', [year]
+  )
+  const map = {}
+  for (const r of rows) map[r.name] = r.number
+  return map
+}
+
+function attachNumbers(players, numberMap) {
+  return players.map(p => ({
+    ...p,
+    _number: numberMap[p.user?.name] ?? null,
+  }))
+}
 
 // FanGraphs 표준 wOBA 가중치
 const W = { BB: 0.688, HBP: 0.721, B1: 0.884, B2: 1.261, B3: 1.601, HR: 2.072 }
@@ -89,8 +110,9 @@ exports.getBatting = async (req, res, next) => {
       })),
     ])
 
-    const lgPlayers = league.length > 0 ? league : team
-    res.json(enrichWithWrcPlus(team, lgPlayers))
+    const lgPlayers  = league.length > 0 ? league : team
+    const numberMap  = await getRosterNumbers()
+    res.json(attachNumbers(enrichWithWrcPlus(team, lgPlayers), numberMap))
   } catch (err) { next(err) }
 }
 
@@ -116,12 +138,16 @@ function calcFIP(pitchers, lgPitchers) {
   const lgFIPcore = lgIP > 0 ? (13*lgHR + 3*(lgBB+lgHBP) - 2*lgK) / lgIP : 0
   const cFIP = lgERA - lgFIPcore
 
+  const RPW = 9.0
+  const REPLACEMENT_ADJ = 1.5
+
   return pitchers.map(p => {
     const ip = parseIP(p.innings)
-    if (ip <= 0) return { ...p, _fip: null }
-    const bb = (p.pbb || 0) - (p.pibb || 0)
-    const fip = (13*(p.phr||0) + 3*(bb+(p.phitByPitch||0)) - 2*(p.so||0)) / ip + cFIP
-    return { ...p, _fip: +fip.toFixed(2) }
+    if (ip <= 0) return { ...p, _fip: null, _pwar: null }
+    const bb   = (p.pbb || 0) - (p.pibb || 0)
+    const fip  = (13*(p.phr||0) + 3*(bb+(p.phitByPitch||0)) - 2*(p.so||0)) / ip + cFIP
+    const pwar = +((lgERA - fip + REPLACEMENT_ADJ) * ip / 9 / RPW).toFixed(3)
+    return { ...p, _fip: +fip.toFixed(2), _pwar: pwar }
   })
 }
 
@@ -141,6 +167,7 @@ exports.getPitching = async (req, res, next) => {
       })),
     ])
     const lgPitchers = league.length > 0 ? league : team
-    res.json(calcFIP(team, lgPitchers))
+    const numberMap  = await getRosterNumbers()
+    res.json(attachNumbers(calcFIP(team, lgPitchers), numberMap))
   } catch (err) { next(err) }
 }

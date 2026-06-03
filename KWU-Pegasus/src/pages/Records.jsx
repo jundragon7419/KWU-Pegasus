@@ -3,6 +3,66 @@ import { API_BASE } from '../lib/api'
 import { useTabIndicator } from '../hooks/useTabIndicator'
 import styles from './Records.module.css'
 
+const MEDAL = {
+  1: { color: '#FFD700', bg: 'rgba(255,215,0,0.12)', border: 'rgba(255,215,0,0.4)', label: '1st' },
+  2: { color: '#C0C0C0', bg: 'rgba(192,192,192,0.10)', border: 'rgba(192,192,192,0.35)', label: '2nd' },
+  3: { color: '#CD7F32', bg: 'rgba(205,127,50,0.10)', border: 'rgba(205,127,50,0.35)', label: '3rd' },
+}
+
+function PlayerShield({ number, color, bg, border }) {
+  return (
+    <div className={styles.shieldWrapper}>
+      <svg viewBox="0 0 100 115" xmlns="http://www.w3.org/2000/svg" className={styles.shieldSvg}>
+        <path
+          d="M8,8 L92,8 L92,68 L50,107 L8,68 Z"
+          fill={bg}
+          stroke={border}
+          strokeWidth="5"
+          strokeLinejoin="round"
+        />
+      </svg>
+      <span className={styles.shieldNumber} style={{ color }}>
+        {number ?? '?'}
+      </span>
+    </div>
+  )
+}
+
+function TeamPodium({ title, criteria, players, statLabel, statKey }) {
+  return (
+    <div className={styles.podiumSection}>
+      <div className={styles.podiumHeader}>
+        <h3 className={styles.podiumTitle}>{title} Top 3</h3>
+        {criteria && <span className={styles.podiumCriteria}>{criteria}</span>}
+      </div>
+      <div className={styles.podium}>
+        {[0, 1, 2].map(i => {
+          const p = players[i]
+          const rank = i + 1
+          const medal = MEDAL[rank]
+          if (!p) return <div key={i} className={styles.podiumSlot} />
+          const name = p.user?.name ?? '—'
+          const stat = p[statKey] ?? '—'
+          return (
+            <div key={i} className={styles.podiumSlot}>
+              <div className={styles.podiumCard} style={{ borderColor: medal.border, background: medal.bg }}>
+                <span className={styles.medalBadge} style={{ color: medal.color, borderColor: medal.border }}>
+                  {medal.label}
+                </span>
+                <PlayerShield number={p._number} color={medal.color} bg={medal.bg} border={medal.border} />
+                <p className={styles.podiumName}>{name}</p>
+                <p className={styles.podiumStat} style={{ color: medal.color }}>
+                  {statLabel} {stat}
+                </p>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 const BATTING_COLS = [
   { key: 'user.name',    label: '이름' },
   { key: '_owar',        label: 'oWAR' },
@@ -30,6 +90,10 @@ const BATTING_COLS = [
 
 const PITCHING_COLS = [
   { key: 'user.name',     label: '이름' },
+  { key: '_pwar',         label: 'pWAR' },
+  { key: 'era',           label: 'ERA' },
+  { key: '_fip',          label: 'FIP' },
+  { key: 'whip',          label: 'WHIP' },
   { key: 'pgame',         label: 'G' },
   { key: 'win',           label: 'W' },
   { key: 'lose',          label: 'L' },
@@ -43,14 +107,15 @@ const PITCHING_COLS = [
   { key: 'pbb',           label: 'BB' },
   { key: 'phitByPitch',   label: 'HP' },
   { key: 'so',            label: 'SO' },
-  { key: 'era',           label: 'ERA' },
-  { key: '_fip',          label: 'FIP' },
-  { key: 'whip',          label: 'WHIP' },
   { key: 'k7',            label: 'K/7' },
 ]
 
 function getVal(row, key) {
-  if (key === 'user.name') return row.user?.name ?? '—'
+  if (key === 'user.name') {
+    const name = row.user?.name ?? '—'
+    const num  = row._number
+    return num != null ? `${name} (${num})` : name
+  }
   return row[key] ?? '—'
 }
 
@@ -141,19 +206,44 @@ export default function Records() {
         <button
           data-active={tab === 'batter'}
           className={`${styles.tab} ${tab === 'batter' ? styles.tabActive : ''}`}
-          onClick={() => setTab('batter')}
+          onClick={() => { setTab('batter'); setSortKey('_owar'); setSortDir('desc') }}
         >
           타자
         </button>
         <button
           data-active={tab === 'pitcher'}
           className={`${styles.tab} ${tab === 'pitcher' ? styles.tabActive : ''}`}
-          onClick={() => setTab('pitcher')}
+          onClick={() => { setTab('pitcher'); setSortKey('_pwar'); setSortDir('desc') }}
         >
           투수
         </button>
         <div ref={indicatorRef} className={styles.tabIndicator} />
       </div>
+
+      {tab === 'team' && (
+        <div className={styles.teamSection}>
+          <TeamPodium
+            title="타자"
+            criteria={regPA !== null ? `규정타석 ${regPA}타석 기준` : null}
+            players={[...batting]
+              .filter(p => regPA === null || (p.htb ?? 0) >= regPA)
+              .sort((a, b) => (b._owar ?? -Infinity) - (a._owar ?? -Infinity))
+              .slice(0, 3)}
+            statLabel="oWAR"
+            statKey="_owar"
+          />
+          <TeamPodium
+            title="투수"
+            criteria={regIP !== null ? `규정이닝 ${regIP}이닝 기준` : null}
+            players={[...pitching]
+              .filter(p => regIP === null || parseInnings(p.innings) >= regIP)
+              .sort((a, b) => (b._pwar ?? -Infinity) - (a._pwar ?? -Infinity))
+              .slice(0, 3)}
+            statLabel="pWAR"
+            statKey="_pwar"
+          />
+        </div>
+      )}
 
       {tab === 'pitcher' && regIP !== null && (
         <div className={styles.metaBar}>
@@ -203,10 +293,6 @@ export default function Records() {
             </span>
           </span>
         </div>
-      )}
-
-      {tab === 'team' && (
-        <div className={styles.empty}>팀 기록 준비 중입니다.</div>
       )}
 
       {(tab === 'batter' || tab === 'pitcher') && (
