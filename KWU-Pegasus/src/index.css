@@ -154,7 +154,7 @@
   }
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 html, body, #root { width: 100%; min-height: 100vh; }
 body { font-family: var(--font-sans); background: var(--main-800); color: var(--text-100); overflow-y: scroll; }
 #root { width: 100%; min-height: 100vh; overflow-y: auto; }
