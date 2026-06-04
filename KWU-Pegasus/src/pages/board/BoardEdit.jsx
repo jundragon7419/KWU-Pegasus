@@ -187,10 +187,10 @@ export default function BoardEdit() {
         </div>
 
         <div className={styles.actions}>
-          <button type="button" className={styles.cancelButton} onClick={() => navigate(`/board/${id}`)}>
+          <button type="button" className={`btn btn-ghost ${styles.cancelButton}`} onClick={() => navigate(`/board/${id}`)}>
             취소
           </button>
-          <button type="submit" className={styles.submitButton}>
+          <button type="submit" className={`btn btn-primary ${styles.submitButton}`}>
             저장
           </button>
         </div>

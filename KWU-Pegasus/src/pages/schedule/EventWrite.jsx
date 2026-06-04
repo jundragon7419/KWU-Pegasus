@@ -291,8 +291,8 @@ export default function EventWrite() {
           )}
 
           <div className={styles.actions}>
-            <button className={styles.cancelButton} onClick={() => navigate('/schedule')} disabled={loading}>취소</button>
-            <button className={styles.submitButton} onClick={handleSubmit} disabled={loading}>
+            <button className={`btn btn-ghost ${styles.cancelButton}`} onClick={() => navigate('/schedule')} disabled={loading}>취소</button>
+            <button className={`btn btn-primary ${styles.submitButton}`} onClick={handleSubmit} disabled={loading}>
               {loading ? '저장 중…' : '저장'}
             </button>
           </div>

@@ -34,7 +34,7 @@ function App() {
     <BrowserRouter>
       <div className={styles.appRoot}>
         <Header />
-        <div className={styles.contentContainer}>
+        <div className={`${styles.contentContainer} content-area`}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />

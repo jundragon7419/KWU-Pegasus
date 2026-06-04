@@ -204,36 +204,10 @@
 }
 
 .cancelButton {
-  padding: 9px 22px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: none;
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 0.9rem;
-  font-family: var(--font-sans);
-  cursor: pointer;
-  transition: border-color 0.15s ease, color 0.15s ease;
-}
-
-.cancelButton:hover {
-  border-color: rgba(255, 255, 255, 0.3);
-  color: var(--text-100);
+  /* btn btn-ghost 사용 */
 }
 
 .submitButton {
+  /* btn btn-primary 사용 */
   padding: 9px 28px;
-  border-radius: 8px;
-  border: none;
-  background: var(--main-500);
-  color: var(--text-100);
-  font-size: 0.9rem;
-  font-weight: 600;
-  font-family: var(--font-sans);
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
-}
-
-.submitButton:hover {
-  background: var(--main-300);
-  color: var(--main-800);
 }

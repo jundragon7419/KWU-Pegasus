@@ -57,7 +57,12 @@ export default function Board() {
 
   return (
     <div className={styles.page}>
-      <h1 className={styles.title}>게시판</h1>
+      <div className={styles.pageHeader}>
+        <h1 className={styles.title}>게시판</h1>
+        {canWrite && (
+          <Link to="/board/write" className={`${styles.writeButton} ${styles.writeButtonHeader}`}>글쓰기</Link>
+        )}
+      </div>
 
       <div className={styles.list}>
         {pinned.map(p => (

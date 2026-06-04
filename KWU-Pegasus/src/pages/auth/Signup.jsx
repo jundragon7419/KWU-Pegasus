@@ -275,7 +275,7 @@ export default function Signup() {
         </form>
 
         <p className={styles.footer}>
-          이미 계정이 있으신가요? <Link to="/login" className={styles.link}>로그인</Link>
+          이미 계정이 있으신가요?<br /><Link to="/login" className={styles.link}>로그인</Link>
         </p>
       </div>
     </div>

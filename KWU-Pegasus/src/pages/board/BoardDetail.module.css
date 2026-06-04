@@ -287,6 +287,38 @@
   transition: border-color 0.15s ease, color 0.15s ease;
 }
 
+@media (max-width: 768px) {
+  .titleRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .titleActions {
+    margin-top: 0;
+  }
+
+  .meta {
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 0.75rem;
+  }
+
+  .postNav {
+    gap: 6px;
+  }
+
+  .postNavBtn,
+  .postNavCenter {
+    font-size: 0.8rem;
+    padding: 0 10px;
+  }
+
+  .commentInput {
+    font-size: 0.88rem;
+  }
+}
+
 .commentCancelBtn:hover {
   border-color: rgba(255, 255, 255, 0.3);
   color: var(--text-100);

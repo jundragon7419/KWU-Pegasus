@@ -168,59 +168,36 @@
 }
 
 .todayButton {
-  background: none;
-  border: 1px solid rgba(217, 197, 160, 0.5);
-  border-radius: 6px;
-  color: var(--main-300);
-  font-size: 0.8rem;
-  font-weight: 600;
-  font-family: var(--font-sans);
+  /* btn btn-secondary btn-sm 사용 */
   height: 36px;
   padding: 0 12px;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.todayButton:hover {
-  background: rgba(217, 197, 160, 0.15);
 }
 
 .adminBtn {
-  background: none;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 6px;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 0.8rem;
-  font-weight: 600;
-  font-family: var(--font-sans);
+  /* btn btn-ghost / btn btn-secondary 사용 */
   height: 36px;
   padding: 0 12px;
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-}
-
-.adminBtn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--text-100);
-  border-color: rgba(255, 255, 255, 0.5);
-}
-
-.adminBtnPrimary {
-  border-color: rgba(217, 197, 160, 0.5);
-  color: var(--main-300);
-}
-
-.adminBtnPrimary:hover {
-  background: rgba(217, 197, 160, 0.15);
-  border-color: rgba(217, 197, 160, 0.8);
-  color: var(--main-300);
 }
 
 /* 범례 */
 .legend {
   display: flex;
-  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
   padding: 0 4px 16px;
+  gap: 12px;
+}
+
+.legendItems {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.legendActions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .legendItem {
@@ -333,6 +310,60 @@
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
   pointer-events: none;
   white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .header {
+    padding-bottom: 14px;
+  }
+
+  .monthTitle {
+    font-size: 1.1rem;
+  }
+
+  .headerRight {
+    gap: 4px;
+  }
+
+  .adminBtn {
+    font-size: 0.72rem;
+    padding: 0 8px;
+    height: 30px;
+  }
+
+  .legend {
+    gap: 10px;
+  }
+
+  .legendItems {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .cell {
+    min-height: 60px;
+    padding: 6px 4px;
+  }
+
+  .dayNumber {
+    width: 22px;
+    height: 22px;
+    font-size: 0.75rem;
+  }
+
+  .holidayName {
+    font-size: 0.58rem;
+  }
+
+  .eventChip {
+    font-size: 0.58rem;
+    padding: 1px 3px;
+  }
+
+  .dayName {
+    font-size: 0.7rem;
+    padding: 8px 0;
+  }
 }
 
 /* 일요일 */

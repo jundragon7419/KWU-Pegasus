@@ -10,14 +10,36 @@
   width: 100%;
   display: flex;
   justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.heroImageWrapper::before,
+.heroImageWrapper::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 12%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.heroImageWrapper::before {
+  left: 0;
+  background: linear-gradient(to right, #011126 0%, transparent 100%);
+}
+
+.heroImageWrapper::after {
+  right: 0;
+  background: linear-gradient(to left, #011126 0%, transparent 100%);
 }
 
 .heroImage {
-  width: var(--content-width);
-  max-width: var(--content-max-width);
+  width: 100%;
   height: auto;
-  object-fit: contain;
-  border-radius: 16px;
+  display: block;
+  border-radius: 0;
 }
 
 /* ── 위젯 영역 ── */
@@ -180,10 +202,10 @@
 }
 
 .calendarGrid {
-  flex: 1;
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   grid-template-rows: 26px repeat(6, 1fr);
+  aspect-ratio: 7 / 6.5;
   background: rgba(255, 255, 255, 0.1);
   gap: 1px;
 }
@@ -240,4 +262,45 @@
 
 .calendarToday.sun {
   color: var(--color-red);
+}
+
+@media (max-width: 768px) {
+  .widgets {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 20px 0 40px;
+  }
+
+  .heroImageWrapper {
+    overflow: hidden;
+    position: relative;
+  }
+
+  .heroImageWrapper::before,
+  .heroImageWrapper::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 12%;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .heroImageWrapper::before {
+    left: 0;
+    background: linear-gradient(to right, #011126 0%, transparent 100%);
+  }
+
+  .heroImageWrapper::after {
+    right: 0;
+    background: linear-gradient(to left, #011126 0%, transparent 100%);
+  }
+
+  .heroImage {
+    width: 130%;
+    flex-shrink: 0;
+    border-radius: 0;
+    max-width: none;
+  }
 }

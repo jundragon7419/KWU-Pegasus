@@ -7,6 +7,12 @@
   justify-content: space-between;
   align-items: center;
   gap: 24px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .left, .center, .right {
@@ -163,5 +169,120 @@
 .logoutButton:hover {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.6);
+}
+
+/* ── 햄버거 메뉴 ── */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  z-index: 101;
+}
+
+.hamburgerLine {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: var(--text-100);
+  border-radius: 2px;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
+@media (max-width: 768px) {
+  .hamburger {
+    display: flex;
+  }
+
+  .hamburgerOpen:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .hamburgerOpen:nth-child(2) { opacity: 0; }
+  .hamburgerOpen:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  .header {
+    flex-wrap: wrap;
+  }
+
+  .center,
+  .right {
+    display: none;
+  }
+
+  .indicator {
+    display: none;
+  }
+
+  /* 모바일 드롭다운 */
+  .mobileMenu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--main-800);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 8px 5vw 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    z-index: 100;
+    animation: menuSlideDown 0.22s ease forwards;
+  }
+
+  .mobileMenu .navItem,
+  .mobileMenu .navItemAdmin {
+    font-size: 1rem;
+    padding: 10px 0;
+    width: 100%;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .mobileMenuDivider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 8px 0;
+  }
+
+  .mobileMenuAuth {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 4px;
+    width: 100%;
+  }
+
+  .mobileMenuUser {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  @keyframes overlayFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  @keyframes menuSlideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .mobileOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.25);
+    z-index: 99;
+    animation: overlayFadeIn 0.25s ease forwards;
+  }
 }
 

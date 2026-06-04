@@ -20,6 +20,12 @@
   padding-top: 8px;
 }
 
+.pageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .writeButton {
   position: absolute;
   right: 0;
@@ -36,6 +42,11 @@
 .writeButton:hover {
   background: var(--main-300);
   color: var(--main-800);
+}
+
+.writeButtonHeader {
+  display: none;
+  position: static;
 }
 
 /* ── 목록 ── */
@@ -140,4 +151,29 @@
   flex-shrink: 0;
   font-size: 0.78rem;
   color: rgba(255, 255, 255, 0.35);
+}
+
+@media (max-width: 768px) {
+  .row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 12px 4px;
+  }
+
+  .rowMeta {
+    gap: 10px;
+    font-size: 0.72rem;
+  }
+
+  /* 모바일: footer 글쓰기 숨기고 헤더 글쓰기 표시 */
+  .writeButton:not(.writeButtonHeader) {
+    display: none;
+  }
+
+  .writeButtonHeader {
+    display: inline-block;
+    padding: 6px 14px;
+    font-size: 0.82rem;
+  }
 }

@@ -145,7 +145,6 @@
 .saveBtn {
   height: 30px;
   padding: 0 14px;
-  border: none;
   border-radius: 6px;
   font-size: 0.82rem;
   font-weight: 600;
@@ -155,20 +154,15 @@
 }
 
 .approveBtn {
-  background: rgba(100, 200, 120, 0.18);
-  color: #6dc87a;
+  /* btn btn-positive btn-sm 사용 */
 }
-
-.approveBtn:hover { opacity: 0.75; }
 
 .rejectBtn {
-  background: rgba(224, 92, 92, 0.15);
-  color: #e05c5c;
+  /* btn btn-negative btn-sm 사용 */
 }
 
-.rejectBtn:hover { opacity: 0.75; }
-
 .saveBtn {
+  /* btn btn-primary btn-sm 사용 */
   background: var(--main-500);
   color: var(--text-100);
 }
@@ -441,6 +435,88 @@
   height: 30px;
   padding-top: 4px;
   padding-bottom: 4px;
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding: 24px 0 40px;
+  }
+
+  /* 탭 가로 스크롤 */
+  .tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 2px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab {
+    font-size: 0.82rem;
+    padding: 8px 12px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* 테이블 가로 스크롤 */
+  .tableWrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table {
+    min-width: 540px;
+    white-space: nowrap;
+  }
+
+  .table th,
+  .table td {
+    padding: 8px 8px;
+    font-size: 0.78rem;
+  }
+
+  /* 버튼 셀 중앙 정렬 유지 */
+  .actions {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .subTitle {
+    font-size: 0.9rem;
+  }
+
+  /* 로스터 추가 폼 세로 배치 */
+  .rosterAddForm {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .addField {
+    width: 100%;
+  }
+
+  .addInput {
+    width: 100%;
+  }
+
+  /* 연도 설정 폼 */
+  .rosterYearForm {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .yearInput {
+    width: 100%;
+  }
+
+  /* 유저 그룹 간격 */
+  .userGroup {
+    gap: 0;
+  }
 }
 
 .addInputStudentId {

@@ -40,6 +40,120 @@
   --content-min-width: 320px;
 }
 
+/* ================================================================
+   버튼 시스템
+   사용법: className="btn btn-primary" (크기 조정 시 btn-sm / btn-lg 추가)
+================================================================ */
+:root {
+  --btn-radius: 8px;
+  --btn-font:   var(--font-sans);
+  --btn-weight: 600;
+  --btn-transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 22px;
+  border-radius: var(--btn-radius);
+  font-family: var(--btn-font);
+  font-weight: var(--btn-weight);
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition: var(--btn-transition);
+  white-space: nowrap;
+  line-height: 1;
+}
+
+/* 1. 금색 배경 + 흰색 글씨 */
+.btn-primary {
+  background: var(--main-500);
+  color: var(--text-100);
+  border-color: transparent;
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--main-300);
+  color: var(--main-800);
+}
+
+/* 2. 투명 배경 + 금색 글씨 + 금색 테두리 */
+.btn-secondary {
+  background: none;
+  color: var(--main-300);
+  border-color: rgba(217, 197, 160, 0.5);
+}
+.btn-secondary:hover:not(:disabled) {
+  background: rgba(217, 197, 160, 0.12);
+  border-color: rgba(217, 197, 160, 0.8);
+}
+
+/* 3. 투명 배경 + 회색 글씨 + 회색 테두리 */
+.btn-ghost {
+  background: none;
+  color: rgba(255, 255, 255, 0.5);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+.btn-ghost:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.3);
+  color: var(--text-100);
+}
+
+/* 4. 초록 (승인, 임명 등) */
+.btn-positive {
+  background: none;
+  color: #6dc87a;
+  border-color: rgba(109, 200, 122, 0.45);
+}
+.btn-positive:hover:not(:disabled) {
+  background: rgba(109, 200, 122, 0.12);
+  border-color: rgba(109, 200, 122, 0.8);
+}
+
+/* 5. 빨강 (차단, 거부, 삭제 등) */
+.btn-negative {
+  background: none;
+  color: #e57373;
+  border-color: rgba(220, 80, 80, 0.4);
+}
+.btn-negative:hover:not(:disabled) {
+  background: rgba(220, 80, 80, 0.12);
+  border-color: rgba(220, 80, 80, 0.7);
+}
+
+/* 사이즈 수정자 */
+.btn-sm {
+  padding: 5px 14px;
+  font-size: 0.82rem;
+  border-radius: 6px;
+}
+.btn-lg {
+  padding: 12px 32px;
+  font-size: 1rem;
+}
+
+/* 공통 disabled */
+.btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* ================================================================ */
+
+@media (max-width: 768px) {
+  :root {
+    --content-width: 92vw;
+  }
+
+  body.menu-open .content-area {
+    filter: blur(4px);
+    transition: filter 0.25s ease;
+    pointer-events: none;
+  }
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body, #root { width: 100%; min-height: 100vh; }
 body { font-family: var(--font-sans); background: var(--main-800); color: var(--text-100); overflow-y: scroll; }

@@ -93,7 +93,7 @@ export default function Login() {
         </form>
 
         <p className={styles.footer}>
-          계정이 없으신가요? <Link to="/signup" className={styles.link}>회원가입</Link>
+          계정이 없으신가요?<br /><Link to="/signup" className={styles.link}>회원가입</Link>
         </p>
       </div>
     </div>

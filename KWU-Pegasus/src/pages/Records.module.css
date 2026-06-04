@@ -70,6 +70,12 @@
   gap: 32px;
 }
 
+@media (max-width: 768px) {
+  .teamSection {
+    grid-template-columns: 1fr;
+  }
+}
+
 
 .podiumSection {
   display: flex;
@@ -98,9 +104,8 @@
 }
 
 .podium {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 12px;
 }
 
@@ -396,4 +401,52 @@
   padding: 48px 0 !important;
   color: rgba(255, 255, 255, 0.3) !important;
   font-weight: 400 !important;
+}
+
+@media (max-width: 768px) {
+  /* 탭 가로 스크롤 */
+  .tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tabs::-webkit-scrollbar { display: none; }
+
+  .tab {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  /* 테이블 최소 너비 & 폰트 축소 */
+  .table {
+    min-width: 700px;
+    white-space: nowrap;
+  }
+
+  .table th,
+  .table td {
+    padding: 8px 10px;
+    font-size: 0.78rem;
+  }
+
+  /* 메타바 세로 배치 */
+  .metaBar {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+  }
+
+  /* 포디움 카드 폰트 축소 */
+  .podiumName {
+    font-size: 0.82rem;
+  }
+
+  .podiumStat {
+    font-size: 0.72rem;
+  }
+
+  .shieldNumber {
+    font-size: 1.2rem;
+  }
 }

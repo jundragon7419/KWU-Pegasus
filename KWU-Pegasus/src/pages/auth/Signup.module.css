@@ -252,6 +252,18 @@
   margin-top: 4px;
 }
 
+@media (max-width: 768px) {
+  .page {
+    padding: 32px 0;
+    align-items: flex-start;
+  }
+
+  .card {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
 .privacyHeading:first-child {
   margin-top: 0;
 }

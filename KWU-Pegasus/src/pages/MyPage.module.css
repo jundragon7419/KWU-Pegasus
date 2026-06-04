@@ -587,6 +587,43 @@
   padding: 32px 0;
 }
 
+@media (max-width: 768px) {
+  .infoRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 12px 0;
+  }
+
+  .infoLabel {
+    font-size: 0.78rem;
+  }
+
+  .inlineEditCell {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .phoneEditCell {
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .editActions {
+    flex-direction: row;
+  }
+
+  .section {
+    padding: 16px;
+  }
+
+  .tabBtn {
+    font-size: 0.82rem;
+    padding: 8px 12px;
+  }
+}
+
 /* ── 폼 ── */
 .form { display: flex; flex-direction: column; gap: 16px; }
 .field { display: flex; flex-direction: column; gap: 6px; }

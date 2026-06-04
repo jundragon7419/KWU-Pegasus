@@ -176,31 +176,33 @@ export default function Schedule() {
           </div>
 
           <div className={styles.headerRight}>
-            {canManage && (
-              <>
-                <button className={`${styles.adminBtn} ${styles.adminBtnPrimary}`} onClick={() => navigate('/schedule/write')}>일정 추가</button>
-                <button className={styles.adminBtn} onClick={() => navigate('/schedule/write?tab=edit')}>일정 수정</button>
-              </>
-            )}
             {!isCurrentMonth && (
-              <button className={styles.todayButton} onClick={goToday}>오늘</button>
+              <button className={`btn btn-secondary btn-sm ${styles.todayButton}`} onClick={goToday}>오늘</button>
             )}
             <button className={styles.navButton} onClick={nextMonth}>&#8250;</button>
           </div>
         </div>
 
         <div className={styles.legend}>
-          {[
-            { type: 'training', label: '훈련' },
-            { type: 'meeting',  label: '미팅' },
-            { type: 'events',   label: '이벤트' },
-            { type: 'etc',      label: '기타' },
-          ].map(({ type, label }) => (
-            <span key={type} className={styles.legendItem}>
-              <span className={styles.legendDot} style={{ background: EVENT_TYPES[type].color }} />
-              {label}
-            </span>
-          ))}
+          <div className={styles.legendItems}>
+            {[
+              { type: 'training', label: '훈련' },
+              { type: 'meeting',  label: '미팅' },
+              { type: 'events',   label: '이벤트' },
+              { type: 'etc',      label: '기타' },
+            ].map(({ type, label }) => (
+              <span key={type} className={styles.legendItem}>
+                <span className={styles.legendDot} style={{ background: EVENT_TYPES[type].color }} />
+                {label}
+              </span>
+            ))}
+          </div>
+          {canManage && (
+            <div className={styles.legendActions}>
+              <button className={`btn btn-secondary btn-sm ${styles.adminBtn}`} onClick={() => navigate('/schedule/write')}>일정 추가</button>
+              <button className={`btn btn-ghost btn-sm ${styles.adminBtn}`} onClick={() => navigate('/schedule/write?tab=edit')}>일정 수정</button>
+            </div>
+          )}
         </div>
 
         <div className={styles.grid}>

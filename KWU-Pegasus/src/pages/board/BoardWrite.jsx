@@ -162,10 +162,10 @@ export default function BoardWrite() {
         </div>
 
         <div className={styles.actions}>
-          <button type="button" className={styles.cancelButton} onClick={() => navigate('/board')}>
+          <button type="button" className={`btn btn-ghost ${styles.cancelButton}`} onClick={() => navigate('/board')}>
             취소
           </button>
-          <button type="submit" className={styles.submitButton}>
+          <button type="submit" className={`btn btn-primary ${styles.submitButton}`}>
             등록
           </button>
         </div>

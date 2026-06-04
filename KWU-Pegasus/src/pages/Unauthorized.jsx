@@ -19,7 +19,7 @@ export default function Unauthorized() {
           </div>
           <h1 className={styles.title}>로그인이 필요합니다</h1>
           <p className={styles.description}>이 페이지는 로그인한 회원만 이용할 수 있습니다.</p>
-          <Link to="/login" className={styles.primaryButton}>로그인하기</Link>
+          <Link to="/login" className={`btn btn-primary ${styles.primaryButton}`}>로그인하기</Link>
           <p className={styles.signupPrompt}>
             계정이 없나요?{' '}
             <Link to="/signup" className={styles.signupLink}>회원가입</Link>
@@ -39,7 +39,7 @@ export default function Unauthorized() {
         </div>
         <h1 className={styles.title}>접근 권한이 없습니다</h1>
         <p className={styles.description}>이 페이지를 이용하려면 더 높은 권한이 필요합니다.</p>
-        <button className={styles.primaryButton} onClick={() => navigate(-1)}>이전 페이지로</button>
+        <button className={`btn btn-primary ${styles.primaryButton}`} onClick={() => navigate(-1)}>이전 페이지로</button>
         <p className={styles.signupPrompt}>
           <Link to="/" className={styles.signupLink}>홈으로 이동</Link>
         </p>

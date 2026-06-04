@@ -156,8 +156,8 @@ function PendingRow({ u, token, onDone }) {
       <td>{u.ob_yb?.toUpperCase() ?? '—'}</td>
       <td>{u.created_at?.slice(0, 10)}</td>
       <td className={styles.actions}>
-        <button className={styles.approveBtn} onClick={handleApprove}>승인</button>
-        <button className={styles.rejectBtn} onClick={handleReject}>거부</button>
+        <button className={`btn btn-positive btn-sm ${styles.approveBtn}`} onClick={handleApprove}>승인</button>
+        <button className={`btn btn-negative btn-sm ${styles.rejectBtn}`} onClick={handleReject}>거부</button>
       </td>
     </tr>
   )
@@ -277,7 +277,7 @@ function RosterManagementTab({ token }) {
           </select>
         </div>
         <div className={styles.addFieldSubmit}>
-          <button className={styles.approveBtn} type="submit">추가</button>
+          <button className={`btn btn-positive btn-sm ${styles.approveBtn}`} type="submit">추가</button>
         </div>
       </form>
       {addMsg && <p className={styles.rowMsg}>{addMsg}</p>}
@@ -394,14 +394,14 @@ function RosterEntryRow({ entry, token, onDelete, onDone }) {
       <td className={styles.actions}>
         {editing ? (
           <>
-            <button className={styles.approveBtn} onClick={handleSave}>저장</button>
-            <button className={styles.rejectBtn} onClick={() => { setEditing(false); setMsg('') }}>취소</button>
+            <button className={`btn btn-positive btn-sm ${styles.approveBtn}`} onClick={handleSave}>저장</button>
+            <button className={`btn btn-negative btn-sm ${styles.rejectBtn}`} onClick={() => { setEditing(false); setMsg('') }}>취소</button>
             {msg && <span className={styles.rowMsg}>{msg}</span>}
           </>
         ) : (
           <>
-            <button className={styles.saveBtn} onClick={() => setEditing(true)}>수정</button>
-            <button className={styles.rejectBtn} onClick={() => onDelete(entry.id, `${entry.year}년 ${entry.number}번 ${entry.name}`)}>삭제</button>
+            <button className={`btn btn-primary btn-sm ${styles.saveBtn}`} onClick={() => setEditing(true)}>수정</button>
+            <button className={`btn btn-negative btn-sm ${styles.rejectBtn}`} onClick={() => onDelete(entry.id, `${entry.year}년 ${entry.number}번 ${entry.name}`)}>삭제</button>
           </>
         )}
       </td>
@@ -494,7 +494,7 @@ function PromoteTab({ token }) {
                     <td>{ROLE_LABEL[u.authority]}</td>
                     <td>{formatDatetime(u.created_at)}</td>
                     <td className={styles.actions}>
-                      <button className={styles.rejectBtn} onClick={() => handleDemote(u.id)}>권한 해제</button>
+                      <button className={`btn btn-negative btn-sm ${styles.rejectBtn}`} onClick={() => handleDemote(u.id)}>권한 해제</button>
                     </td>
                   </tr>
                 ))
@@ -518,7 +518,7 @@ function PromoteTab({ token }) {
                     <td>{ROLE_LABEL[u.authority]}</td>
                     <td>{formatDatetime(u.created_at)}</td>
                     <td className={styles.actions}>
-                      <button className={styles.approveBtn} onClick={() => handlePromote(u.id)}>권한 부여</button>
+                      <button className={`btn btn-positive btn-sm ${styles.approveBtn}`} onClick={() => handlePromote(u.id)}>권한 부여</button>
                     </td>
                   </tr>
                 ))
@@ -620,7 +620,7 @@ function StaffPromoteTab({ token }) {
                     <td>{`스태프(${STAFF_TYPE_LABEL[u.staff_type] ?? u.staff_type})`}</td>
                     <td>{formatDatetime(u.created_at)}</td>
                     <td className={styles.actions}>
-                      <button className={styles.rejectBtn} onClick={() => handleDemote(u.id)}>권한 해제</button>
+                      <button className={`btn btn-negative btn-sm ${styles.rejectBtn}`} onClick={() => handleDemote(u.id)}>권한 해제</button>
                     </td>
                   </tr>
                 ))
@@ -648,7 +648,7 @@ function StaffPromoteTab({ token }) {
                         <option value="president">회장</option>
                         <option value="headcoach">감독</option>
                       </select>
-                      <button className={styles.approveBtn} onClick={() => handlePromote(u.id)}>권한 부여</button>
+                      <button className={`btn btn-positive btn-sm ${styles.approveBtn}`} onClick={() => handlePromote(u.id)}>권한 부여</button>
                     </td>
                   </tr>
                 ))
@@ -713,7 +713,7 @@ function BasicUsersTab({ token }) {
                     <td>{ROLE_LABEL[u.authority] ?? u.authority}</td>
                     <td>{formatDatetime(u.created_at)}</td>
                     <td className={styles.actions}>
-                      <button className={styles.rejectBtn} onClick={() => handleBan(u.id)}>계정 차단</button>
+                      <button className={`btn btn-negative btn-sm ${styles.rejectBtn}`} onClick={() => handleBan(u.id)}>계정 차단</button>
                     </td>
                   </tr>
                 ))
@@ -829,7 +829,7 @@ function MemberMgmtTab({ token }) {
                     <td>{getRoleDisplay(u)}</td>
                     <td className={styles.actions}>
                       {u.authority === 'member'
-                        ? <button className={styles.rejectBtn} onClick={() => handleDemote(u.id)}>회원 강등</button>
+                        ? <button className={`btn btn-negative btn-sm ${styles.rejectBtn}`} onClick={() => handleDemote(u.id)}>회원 강등</button>
                         : <span className={styles.noChange}>—</span>}
                     </td>
                   </tr>
@@ -926,7 +926,7 @@ function BannedTab({ token, user }) {
                     <td>{ROLE_LABEL[u.authority] ?? u.authority}</td>
                     <td>{formatDatetime(u.created_at)}</td>
                     <td className={styles.actions}>
-                      <button className={styles.approveBtn} onClick={() => handleUnban(u.id)}>차단 해제</button>
+                      <button className={`btn btn-positive btn-sm ${styles.approveBtn}`} onClick={() => handleUnban(u.id)}>차단 해제</button>
                     </td>
                   </tr>
                 ))
@@ -949,7 +949,7 @@ function BannedTab({ token, user }) {
                     <td>{ROLE_LABEL[u.authority] ?? u.authority}</td>
                     <td>{formatDatetime(u.created_at)}</td>
                     <td className={styles.actions}>
-                      <button className={styles.rejectBtn} onClick={() => handleBan(u.id)}>차단</button>
+                      <button className={`btn btn-negative btn-sm ${styles.rejectBtn}`} onClick={() => handleBan(u.id)}>차단</button>
                     </td>
                   </tr>
                 ))
@@ -1020,7 +1020,7 @@ function RosterYearTab({ token }) {
           ))}
         </select>
         <button
-          className={styles.approveBtn}
+          className={`btn btn-positive btn-sm ${styles.approveBtn}`}
           onClick={handleSave}
           disabled={!selected || selected === String(activeYear)}
         >
