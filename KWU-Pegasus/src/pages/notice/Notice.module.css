@@ -104,7 +104,7 @@
 
 .tagGame {
   background: rgba(100, 200, 120, 0.15);
-  color: #6dc87a;
+  color: var(--color-green);
 }
 
 .rowTitle {

@@ -28,12 +28,12 @@
 
 .tagGame {
   background: rgba(100, 200, 120, 0.15);
-  color: #6dc87a;
+  color: var(--color-green);
 }
 
 .tagFamily {
   background: rgba(200, 122, 220, 0.15);
-  color: #c87adc;
+  color: var(--color-purple);
 }
 
 .backButton {
@@ -104,7 +104,7 @@
 
 .deleteButton:hover {
   border-color: rgba(220, 80, 80, 0.7);
-  color: #e57373;
+  color: var(--color-error);
   background: rgba(220, 80, 80, 0.08);
 }
 
@@ -261,7 +261,7 @@
 }
 
 .commentDeleteBtn:hover {
-  color: #e57373;
+  color: var(--color-error);
 }
 
 .commentEditBox {
@@ -393,6 +393,11 @@
 .commentSubmit:hover:not(:disabled) {
   background: var(--main-300);
   color: var(--main-800);
+}
+
+.commentSubmit:disabled {
+  opacity: 0.35;
+  cursor: default;
 }
 
 .commentSubmit:disabled {

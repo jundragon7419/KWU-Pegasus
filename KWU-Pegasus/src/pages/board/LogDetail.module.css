@@ -53,7 +53,7 @@
 
 .actionBadge[data-action$="_create"] {
   background: rgba(80, 200, 120, 0.15);
-  color: #6dc87a;
+  color: var(--color-green);
 }
 
 .actionBadge[data-action$="_update"] {
@@ -63,7 +63,7 @@
 
 .actionBadge[data-action$="_delete"] {
   background: rgba(220, 80, 80, 0.15);
-  color: #e57373;
+  color: var(--color-error);
 }
 
 .typeBadge {

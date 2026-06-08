@@ -151,7 +151,7 @@
 }
 
 .typeSelect option {
-  background: #0d1f35;
+  background: var(--bg-popup);
   color: var(--text-100);
 }
 
@@ -175,6 +175,10 @@
 }
 
 .dateInputError {
+  border-color: rgba(220, 80, 80, 0.7);
+}
+
+.nameInputError {
   border-color: rgba(220, 80, 80, 0.7);
 }
 

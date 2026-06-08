@@ -46,3 +46,8 @@
   background: var(--main-300);
   color: var(--main-800);
 }
+
+.homeButton:disabled {
+  opacity: 0.35;
+  cursor: default;
+}

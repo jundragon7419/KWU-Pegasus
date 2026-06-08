@@ -26,6 +26,6 @@
 }
 
 .subtitle {
-  color: #f8f8f8;
+  color: var(--text-100);
   font-size: 1rem;
 }

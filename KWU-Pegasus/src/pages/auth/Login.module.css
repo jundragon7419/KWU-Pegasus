@@ -103,7 +103,7 @@
 
 .errorText {
   font-size: 0.85rem;
-  color: #e05c5c;
+  color: var(--color-error);
   text-align: center;
 }
 

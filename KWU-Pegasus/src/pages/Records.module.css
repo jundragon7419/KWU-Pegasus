@@ -342,15 +342,15 @@
 }
 
 .table th:first-child {
-  background: #0e1f33;
+  background: var(--bg-table-sticky);
 }
 
 .table td:first-child {
-  background: #0a1929;
+  background: var(--bg-table-sticky);
 }
 
 .table tr:hover td:first-child {
-  background: #112236;
+  background: var(--bg-table-sticky);
 }
 
 .colActive {

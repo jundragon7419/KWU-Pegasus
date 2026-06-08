@@ -67,7 +67,7 @@
   left: 50%;
   transform: translateX(-50%);
   z-index: 100;
-  background: #0d1f35;
+  background: var(--bg-popup);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 12px;
   padding: 16px;

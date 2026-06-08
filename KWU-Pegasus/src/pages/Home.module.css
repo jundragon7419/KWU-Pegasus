@@ -27,12 +27,12 @@
 
 .heroImageWrapper::before {
   left: 0;
-  background: linear-gradient(to right, #011126 0%, transparent 100%);
+  background: linear-gradient(to right, var(--main-800) 0%, transparent 100%);
 }
 
 .heroImageWrapper::after {
   right: 0;
-  background: linear-gradient(to left, #011126 0%, transparent 100%);
+  background: linear-gradient(to left, var(--main-800) 0%, transparent 100%);
 }
 
 .heroImage {
@@ -142,12 +142,12 @@
 
 .tagGame {
   background: rgba(100, 200, 120, 0.15);
-  color: #6dc87a;
+  color: var(--color-green);
 }
 
 .tagFamily {
   background: rgba(200, 122, 220, 0.15);
-  color: #c87adc;
+  color: var(--color-purple);
 }
 
 .tagNormal {
@@ -211,7 +211,7 @@
 }
 
 .calendarDayLabel {
-  background: rgba(30, 24, 18, 0.95);
+  background: var(--bg-calendar-cell);
   text-align: center;
   font-size: 0.72rem;
   font-weight: 600;
@@ -222,7 +222,7 @@
 }
 
 .calendarCell {
-  background: rgba(30, 24, 18, 0.85);
+  background: var(--bg-calendar-cell);
   text-align: center;
   font-size: 0.8rem;
   color: rgba(255, 255, 255, 0.7);
@@ -299,12 +299,12 @@
 
   .heroImageWrapper::before {
     left: 0;
-    background: linear-gradient(to right, #011126 0%, transparent 100%);
+    background: linear-gradient(to right, var(--main-800) 0%, transparent 100%);
   }
 
   .heroImageWrapper::after {
     right: 0;
-    background: linear-gradient(to left, #011126 0%, transparent 100%);
+    background: linear-gradient(to left, var(--main-800) 0%, transparent 100%);
   }
 
   .heroImage {

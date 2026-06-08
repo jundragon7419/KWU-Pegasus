@@ -115,12 +115,12 @@
 
 .tagGame {
   background: rgba(100, 200, 120, 0.15);
-  color: #6dc87a;
+  color: var(--color-green);
 }
 
 .tagFamily {
   background: rgba(200, 122, 220, 0.15);
-  color: #c87adc;
+  color: var(--color-purple);
 }
 
 .tagPost {

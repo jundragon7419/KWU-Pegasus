@@ -48,10 +48,27 @@
 }
 
 .primaryButton {
-  /* btn btn-primary 사용 */
   width: 100%;
   font-size: 1rem;
   padding: 11px;
+  background: var(--main-500);
+  color: var(--text-100);
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.primaryButton:hover:not(:disabled) {
+  background: var(--main-300);
+  color: var(--main-800);
+}
+
+.primaryButton:disabled {
+  opacity: 0.35;
+  cursor: default;
 }
 
 .signupPrompt {

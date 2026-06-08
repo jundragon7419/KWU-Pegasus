@@ -74,11 +74,12 @@
 }
 
 .tabLog {
-  color: rgba(220, 80, 80, 0.7);
+  color: var(--color-error);
+  opacity: 0.7;
 }
 
 .tabLog:hover {
-  color: rgba(220, 80, 80, 0.9) !important;
+  opacity: 0.9 !important;
 }
 
 .logPlaceholder {
@@ -213,7 +214,7 @@
 .logBadge[data-action="member_approve"],
 .logBadge[data-action="user_unban"] {
   background: rgba(80, 200, 120, 0.15);
-  color: #6dc87a;
+  color: var(--color-green);
 }
 
 .logBadge[data-action$="_update"],
@@ -229,7 +230,7 @@
 .logBadge[data-action$="_unset"],
 .logBadge[data-action="user_ban"] {
   background: rgba(220, 80, 80, 0.15);
-  color: #e57373;
+  color: var(--color-error);
 }
 
 .logContent {

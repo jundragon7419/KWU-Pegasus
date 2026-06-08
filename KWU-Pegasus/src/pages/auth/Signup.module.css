@@ -113,12 +113,21 @@
 }
 
 .inputError {
-  border-color: #e05c5c;
+  border-color: var(--color-error);
 }
 
 .errorText {
-  font-size: 0.8rem;
-  color: #e05c5c;
+  font-size: 0.875rem;
+  color: var(--color-error);
+}
+
+.successText {
+  font-size: 0.875rem;
+  color: var(--color-green);
+}
+
+.inputSuccess {
+  border-color: var(--color-green) !important;
 }
 
 .radioGroup {
@@ -180,7 +189,7 @@
   cursor: not-allowed;
 }
 
-.successText {
+.signupSuccessMsg {
   text-align: center;
   font-size: 0.95rem;
   color: rgba(255, 255, 255, 0.7);
@@ -216,7 +225,7 @@
 }
 
 .required {
-  color: #e05c5c;
+  color: var(--color-error);
   font-weight: 400;
 }
 
@@ -250,6 +259,40 @@
   font-weight: 600;
   color: rgba(255, 255, 255, 0.75);
   margin-top: 4px;
+}
+
+.labelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.labelRow .label {
+  margin-bottom: 0;
+}
+
+.sendCodeBtn {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  height: auto;
+}
+
+.verifyRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.verifyRow .input {
+  flex: 1;
+}
+
+.verifyBtn {
+  flex-shrink: 0;
+  height: 44px;
+  padding: 0 16px;
 }
 
 @media (max-width: 768px) {
@@ -306,9 +349,9 @@
 }
 
 .consentRefused {
-  border-color: #e05c5c;
+  border-color: var(--color-error);
   background: rgba(224, 92, 92, 0.1);
-  color: #e05c5c;
+  color: var(--color-error);
 }
 
 .optional {

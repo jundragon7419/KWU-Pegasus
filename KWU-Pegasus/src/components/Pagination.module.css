@@ -53,7 +53,12 @@
   font-weight: 700;
 }
 
-.pageButtonActive:hover {
+.pageButtonActive:hover:not(:disabled) {
   background: var(--main-400);
   border-color: var(--main-400);
+}
+
+.pageButtonActive:disabled {
+  opacity: 0.25;
+  cursor: default;
 }

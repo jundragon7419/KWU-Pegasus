@@ -162,7 +162,7 @@
   bottom: calc(100% + 8px);
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(5, 15, 28, 0.97);
+  background: var(--bg-popup);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 6px;
   padding: 8px 12px;
@@ -331,12 +331,12 @@
 /* ── 중복 확인 결과 ── */
 .checkOk {
   font-size: 0.78rem;
-  color: #6dc87a;
+  color: var(--color-green);
   white-space: nowrap;
 }
 .checkFail {
   font-size: 0.78rem;
-  color: #e05c5c;
+  color: var(--color-error);
   white-space: nowrap;
 }
 
@@ -387,10 +387,10 @@
   font-family: var(--font-sans);
 }
 .auth_basic   { background: rgba(255, 255, 255, 0.07); color: rgba(255, 255, 255, 0.45); }
-.auth_member  { background: rgba(100, 200, 120, 0.15); color: #6dc87a; }
+.auth_member  { background: rgba(100, 200, 120, 0.15); color: var(--color-green); }
 .auth_manager { background: rgba(166, 146, 109, 0.18); color: var(--main-300); }
 .auth_staff   { background: rgba(111, 163, 245, 0.15); color: var(--color-blue); }
-.auth_root    { background: rgba(224, 92, 92, 0.15);   color: #e05c5c; }
+.auth_root    { background: rgba(224, 92, 92, 0.15);   color: var(--color-error); }
 
 /* ── 멤버 신청 상태 배지 ── */
 .statusBadge {
@@ -402,9 +402,9 @@
 }
 .ms_none     { background: rgba(255, 255, 255, 0.06); color: rgba(255, 255, 255, 0.35); }
 .ms_pending  { background: rgba(245, 166, 35, 0.15);  color: #f5a623; }
-.ms_approved { background: rgba(100, 200, 120, 0.15); color: #6dc87a; }
-.ms_rejected { background: rgba(224, 92, 92, 0.12);   color: #e05c5c; }
-.ms_banned   { background: rgba(224, 92, 92, 0.12);   color: #e05c5c; }
+.ms_approved { background: rgba(100, 200, 120, 0.15); color: var(--color-green); }
+.ms_rejected { background: rgba(224, 92, 92, 0.12);   color: var(--color-error); }
+.ms_banned   { background: rgba(224, 92, 92, 0.12);   color: var(--color-error); }
 
 /* ── 신청하기 드롭다운 토글 버튼 ── */
 .applyDropBtn {
@@ -753,9 +753,9 @@
   margin-top: 4px;
 }
 
-.statusPending  { font-size: 0.9rem; color: #f5a623; font-weight: 600; }
-.statusApproved { font-size: 0.9rem; color: #6dc87a; font-weight: 600; }
-.statusRejected { font-size: 0.9rem; color: #e05c5c; font-weight: 600; margin-bottom: 12px; }
+.statusPending  { font-size: 0.9rem; color: var(--color-yellow); font-weight: 600; }
+.statusApproved { font-size: 0.9rem; color: var(--color-green); font-weight: 600; }
+.statusRejected { font-size: 0.9rem; color: var(--color-error); font-weight: 600; margin-bottom: 12px; }
 
 .profileReadonly { margin-bottom: 4px; }
 

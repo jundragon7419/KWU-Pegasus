@@ -146,8 +146,8 @@
 }
 
 .dotStaff   { background: var(--color-blue); }
-.dotRetired { background: #c9a227; }
-.dotManager { background: #c87adc; }
+.dotRetired { background: var(--color-gold-retired); }
+.dotManager { background: var(--color-purple); }
 
 .legendBadge {
   position: static;
@@ -213,7 +213,7 @@
 }
 
 .card_roster_retired .number {
-  color: #c9a227;
+  color: var(--color-gold-retired);
 }
 
 .card_roster_manager {
@@ -222,7 +222,7 @@
 }
 
 .card_roster_manager .number {
-  color: #c87adc;
+  color: var(--color-purple);
 }
 
 /* ── 배지 ── */
@@ -246,12 +246,12 @@
 
 .retiredBadge {
   background: rgba(201, 162, 39, 0.2);
-  color: #c9a227;
+  color: var(--color-gold-retired);
 }
 
 .managerBadge {
   background: rgba(200, 122, 220, 0.2);
-  color: #c87adc;
+  color: var(--color-purple);
 }
 
 @media (max-width: 768px) {
