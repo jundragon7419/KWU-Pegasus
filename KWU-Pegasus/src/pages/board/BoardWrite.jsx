@@ -21,6 +21,14 @@ export default function BoardWrite() {
   const [emptyTitle, setEmptyTitle] = useState(false)
   const [emptyContent, setEmptyContent] = useState(false)
 
+  // 투표 관련 상태
+  const [pollEnabled, setPollEnabled] = useState(false)
+  const [pollTitle, setPollTitle] = useState('')
+  const [pollOptions, setPollOptions] = useState(['', ''])
+  const [isMultiple, setIsMultiple] = useState(false)
+  const [isAnonymous, setIsAnonymous] = useState(false)
+  const [isPrivate, setIsPrivate] = useState(false)
+
   const availableTypes = Object.entries(POST_TYPE_LABEL).filter(
     ([key]) => !POST_TYPE_MANAGER.includes(key) || isManager
   )
@@ -41,6 +49,20 @@ export default function BoardWrite() {
     if (checked) setPinDate('')
   }
 
+  function handleAddOption() {
+    setPollOptions([...pollOptions, ''])
+  }
+
+  function handleRemoveOption(index) {
+    setPollOptions(pollOptions.filter((_, i) => i !== index))
+  }
+
+  function handleOptionChange(index, value) {
+    const newOptions = [...pollOptions]
+    newOptions[index] = value
+    setPollOptions(newOptions)
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
 
@@ -52,10 +74,40 @@ export default function BoardWrite() {
       return
     }
 
+    // 투표 유효성 검사
+    if (pollEnabled) {
+      if (!pollTitle.trim()) {
+        alert('투표 제목을 입력하세요.')
+        return
+      }
+      const validOptions = pollOptions.filter(opt => opt.trim())
+      if (validOptions.length < 2) {
+        alert('투표 옵션은 최소 2개 이상 필요합니다.')
+        return
+      }
+    }
+
     let pinUntil = null
     if (canPin && pinEnabled) {
       if (pinForever) pinUntil = 'infinite'
       else if (pinDate) pinUntil = pinDate
+    }
+
+    const payload = {
+      type,
+      pinUntil,
+      title,
+      content,
+    }
+
+    if (pollEnabled) {
+      payload.poll = {
+        title: pollTitle,
+        isMultiple,
+        isAnonymous,
+        isPrivate,
+        options: pollOptions.filter(opt => opt.trim()).map(text => ({ text })),
+      }
     }
 
     const res = await fetch(`${API_BASE}/api/posts`, {
@@ -64,7 +116,7 @@ export default function BoardWrite() {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
-      body: JSON.stringify({ type, pinUntil, title, content }),
+      body: JSON.stringify(payload),
     })
     if (res.ok) navigate('/board')
   }
@@ -160,6 +212,95 @@ export default function BoardWrite() {
             onChange={e => { setContent(e.target.value); if (e.target.value.trim()) setEmptyContent(false) }}
           />
         </div>
+
+        {/* 투표 섹션 */}
+        <div className={styles.field}>
+          <label className={`${styles.pollCheck} ${pollEnabled ? styles.pollCheckActive : ''}`}>
+            <input
+              type="checkbox"
+              checked={pollEnabled}
+              onChange={e => setPollEnabled(e.target.checked)}
+            />
+            투표 추가
+          </label>
+        </div>
+
+        {pollEnabled && (
+          <div className={styles.pollSection}>
+            <div className={styles.field}>
+              <label className={styles.label} htmlFor="pollTitle">투표 제목</label>
+              <input
+                id="pollTitle"
+                type="text"
+                className={styles.input}
+                placeholder="투표 제목을 입력하세요"
+                value={pollTitle}
+                onChange={e => setPollTitle(e.target.value)}
+              />
+            </div>
+
+            <div className={styles.field}>
+              <label className={styles.label}>투표 옵션</label>
+              {pollOptions.map((option, index) => (
+                <div key={index} className={styles.optionRow}>
+                  <input
+                    type="text"
+                    className={styles.input}
+                    placeholder={`옵션 ${index + 1}`}
+                    value={option}
+                    onChange={e => handleOptionChange(index, e.target.value)}
+                  />
+                  {pollOptions.length > 2 && (
+                    <button
+                      type="button"
+                      className={styles.removeButton}
+                      onClick={() => handleRemoveOption(index)}
+                      title="옵션 삭제"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                className={styles.addButton}
+                onClick={handleAddOption}
+              >
+                + 옵션 추가
+              </button>
+            </div>
+
+            <div className={styles.field}>
+              <div className={styles.pollOptionsRow}>
+                <label className={styles.checkboxLabel}>
+                  <input
+                    type="checkbox"
+                    checked={isMultiple}
+                    onChange={e => setIsMultiple(e.target.checked)}
+                  />
+                  다중선택
+                </label>
+                <label className={styles.checkboxLabel}>
+                  <input
+                    type="checkbox"
+                    checked={isAnonymous}
+                    onChange={e => setIsAnonymous(e.target.checked)}
+                  />
+                  익명 투표
+                </label>
+                <label className={styles.checkboxLabel}>
+                  <input
+                    type="checkbox"
+                    checked={isPrivate}
+                    onChange={e => setIsPrivate(e.target.checked)}
+                  />
+                  비공개 (작성자&관리자만 확인 가능)
+                </label>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className={styles.actions}>
           <button type="button" className={`btn btn-ghost ${styles.cancelButton}`} onClick={() => navigate('/board')}>

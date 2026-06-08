@@ -24,6 +24,15 @@ export default function BoardEdit() {
   const [notFound, setNotFound] = useState(false)
   const [forbidden, setForbidden] = useState(false)
 
+  // 투표 관련 상태
+  const [hasPoll, setHasPoll] = useState(false)
+  const [pollData, setPollData] = useState(null)
+  const [pollTitle, setPollTitle] = useState('')
+  const [pollOptions, setPollOptions] = useState(['', ''])
+  const [isMultiple, setIsMultiple] = useState(false)
+  const [isAnonymous, setIsAnonymous] = useState(false)
+  const [isPrivate, setIsPrivate] = useState(false)
+
   useEffect(() => {
     fetch(`${API_BASE}/api/posts/${id}`)
       .then(r => {
@@ -45,7 +54,26 @@ export default function BoardEdit() {
           }
         }
       })
-  }, [id])
+
+    // 투표 데이터 로드
+    const headers = token ? { Authorization: `Bearer ${token}` } : {}
+    fetch(`${API_BASE}/api/polls/post/${id}`, { headers })
+      .then(r => {
+        if (r.status === 404) return null
+        return r.json()
+      })
+      .then(data => {
+        if (data) {
+          setHasPoll(true)
+          setPollData(data)
+          setPollTitle(data.poll.title)
+          setIsMultiple(data.poll.isMultiple)
+          setIsAnonymous(data.poll.isAnonymous)
+          setIsPrivate(data.poll.isPrivate)
+          setPollOptions(data.options.map(opt => opt.text))
+        }
+      })
+  }, [id, token])
 
   if (notFound)  return <p>존재하지 않는 게시글입니다.</p>
   if (forbidden) return <p>수정 권한이 없습니다.</p>
@@ -69,6 +97,20 @@ export default function BoardEdit() {
     if (checked) setPinDate('')
   }
 
+  function handleAddOption() {
+    setPollOptions([...pollOptions, ''])
+  }
+
+  function handleRemoveOption(index) {
+    setPollOptions(pollOptions.filter((_, i) => i !== index))
+  }
+
+  function handleOptionChange(index, value) {
+    const newOptions = [...pollOptions]
+    newOptions[index] = value
+    setPollOptions(newOptions)
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
     const noTitle   = !title.trim()
@@ -79,10 +121,52 @@ export default function BoardEdit() {
       return
     }
 
+    // 투표 유효성 검사
+    if (hasPoll) {
+      if (!pollTitle.trim()) {
+        alert('투표 제목을 입력하세요.')
+        return
+      }
+      const validOptions = pollOptions.filter(opt => opt.trim())
+      if (validOptions.length < 2) {
+        alert('투표 옵션은 최소 2개 이상 필요합니다.')
+        return
+      }
+    }
+
     let pinUntil = null
     if (canPin && pinEnabled) {
       if (pinForever) pinUntil = 'infinite'
       else if (pinDate) pinUntil = pinDate
+    }
+
+    const payload = {
+      type,
+      pinUntil,
+      title,
+      content,
+    }
+
+    // 투표 수정 (기존 투표가 있으면 삭제하고 새로 추가)
+    if (hasPoll) {
+      if (pollData) {
+        // 기존 투표 삭제
+        await fetch(`${API_BASE}/api/polls/${pollData.poll.id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        })
+      }
+
+      // 새로운 투표 추가
+      payload.poll = {
+        title: pollTitle,
+        isMultiple,
+        isAnonymous,
+        isPrivate,
+        options: pollOptions.filter(opt => opt.trim()).map(text => ({ text })),
+      }
     }
 
     const res = await fetch(`${API_BASE}/api/posts/${id}`, {
@@ -91,7 +175,7 @@ export default function BoardEdit() {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
-      body: JSON.stringify({ type, pinUntil, title, content }),
+      body: JSON.stringify(payload),
     })
     if (res.ok) navigate(`/board/${id}`)
   }
@@ -185,6 +269,84 @@ export default function BoardEdit() {
             onChange={e => { setContent(e.target.value); if (e.target.value.trim()) setEmptyContent(false) }}
           />
         </div>
+
+        {/* 투표 섹션 */}
+        {hasPoll && (
+          <div className={styles.pollSection}>
+            <div className={styles.field}>
+              <label className={styles.label} htmlFor="pollTitle">투표 제목</label>
+              <input
+                id="pollTitle"
+                type="text"
+                className={styles.input}
+                placeholder="투표 제목을 입력하세요"
+                value={pollTitle}
+                onChange={e => setPollTitle(e.target.value)}
+              />
+            </div>
+
+            <div className={styles.field}>
+              <label className={styles.label}>투표 옵션</label>
+              {pollOptions.map((option, index) => (
+                <div key={index} className={styles.optionRow}>
+                  <input
+                    type="text"
+                    className={styles.input}
+                    placeholder={`옵션 ${index + 1}`}
+                    value={option}
+                    onChange={e => handleOptionChange(index, e.target.value)}
+                  />
+                  {pollOptions.length > 2 && (
+                    <button
+                      type="button"
+                      className={styles.removeButton}
+                      onClick={() => handleRemoveOption(index)}
+                      title="옵션 삭제"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                className={styles.addButton}
+                onClick={handleAddOption}
+              >
+                + 옵션 추가
+              </button>
+            </div>
+
+            <div className={styles.field}>
+              <div className={styles.pollOptionsRow}>
+                <label className={styles.checkboxLabel}>
+                  <input
+                    type="checkbox"
+                    checked={isMultiple}
+                    onChange={e => setIsMultiple(e.target.checked)}
+                  />
+                  다중선택
+                </label>
+                <label className={styles.checkboxLabel}>
+                  <input
+                    type="checkbox"
+                    checked={isAnonymous}
+                    onChange={e => setIsAnonymous(e.target.checked)}
+                  />
+                  익명 투표
+                </label>
+                <label className={styles.checkboxLabel}>
+                  <input
+                    type="checkbox"
+                    checked={isPrivate}
+                    onChange={e => setIsPrivate(e.target.checked)}
+                  />
+                  비공개 (작성자&관리자만 결과 확인)
+                </label>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className={styles.actions}>
           <button type="button" className={`btn btn-ghost ${styles.cancelButton}`} onClick={() => navigate(`/board/${id}`)}>

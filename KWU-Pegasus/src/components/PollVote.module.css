@@ -1,0 +1,180 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pollTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-100);
+  margin: 0;
+}
+
+.settings {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.option {
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.option:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.option.selected {
+  background: rgba(166, 146, 109, 0.1);
+  border-color: var(--main-400);
+}
+
+.optionContent {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.optionHeader {
+  display: flex;
+  align-items: center;
+}
+
+.optionLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  flex: 1;
+  user-select: none;
+}
+
+.optionLabel input[type='radio'],
+.optionLabel input[type='checkbox'] {
+  accent-color: var(--main-400);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.optionLabel input[type='radio']:disabled,
+.optionLabel input[type='checkbox']:disabled {
+  cursor: default;
+}
+
+.optionText {
+  color: var(--text-100);
+  font-size: 0.95rem;
+}
+
+.pollBar {
+  position: relative;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.pollFill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: linear-gradient(90deg, var(--main-500) 0%, var(--main-400) 100%);
+  opacity: 0.6;
+  transition: width 0.3s ease;
+}
+
+.pollPercentage {
+  position: relative;
+  z-index: 1;
+  margin-left: 8px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.votersButton {
+  margin-top: 4px;
+  padding: 4px 8px;
+  background: rgba(111, 163, 245, 0.1);
+  border: 1px solid rgba(111, 163, 245, 0.3);
+  border-radius: 4px;
+  color: rgba(111, 163, 245, 0.8);
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.votersButton:hover {
+  background: rgba(111, 163, 245, 0.2);
+  color: rgba(111, 163, 245, 1);
+  border-color: rgba(111, 163, 245, 0.5);
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.totalVotes {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.85rem;
+}
+
+.submitButton {
+  padding: 6px 16px;
+  background: var(--main-500);
+  border: 1px solid var(--main-400);
+  border-radius: 4px;
+  color: var(--text-100);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.submitButton:hover:not(:disabled) {
+  background: var(--main-400);
+}
+
+.submitButton:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.submitButton:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.votedMessage {
+  color: var(--color-green);
+  font-size: 0.85rem;
+  font-weight: 600;
+}

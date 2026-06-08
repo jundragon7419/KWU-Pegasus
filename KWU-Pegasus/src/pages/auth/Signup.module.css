@@ -22,6 +22,46 @@
   text-align: center;
 }
 
+.kakaoButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 11px;
+  border: none;
+  border-radius: 8px;
+  background: #FFE812;
+  color: #191919;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.kakaoButton:hover {
+  background: #FDD600;
+}
+
+.kakaoButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.kakaoIcon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.divider {
+  text-align: center;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin: 16px 0;
+}
+
 .form {
   display: flex;
   flex-direction: column;
@@ -225,7 +265,7 @@
 }
 
 .required {
-  color: var(--color-error);
+  color: rgba(255, 255, 255, 0.4);
   font-weight: 400;
 }
 
@@ -287,6 +327,40 @@
 
 .verifyRow .input {
   flex: 1;
+}
+
+.passwordRow {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.passwordRow .input {
+  width: 100%;
+  padding-right: 40px;
+}
+
+.eyeBtn {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 4px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease;
+}
+
+.eyeBtn:hover {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.eyeBtn svg {
+  width: 18px;
+  height: 18px;
 }
 
 .verifyBtn {

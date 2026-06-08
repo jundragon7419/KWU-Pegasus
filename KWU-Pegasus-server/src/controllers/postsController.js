@@ -51,7 +51,7 @@ exports.getPost = async (req, res, next) => {
 
 exports.createPost = async (req, res, next) => {
   try {
-    const { type = 'normal', pinUntil, title, content } = req.body
+    const { type = 'normal', pinUntil, title, content, poll } = req.body
     const isManager = ['manager', 'staff', 'root'].includes(req.user.role)
 
     if (MANAGER_TYPES.includes(type) && !isManager) {
@@ -64,8 +64,32 @@ exports.createPost = async (req, res, next) => {
       'INSERT INTO posts (user_id, type, pin_until, title, author, date, views, content) VALUES (?, ?, ?, ?, ?, CURDATE(), 0, ?)',
       [req.user.id, type, resolvedPinUntil, title, req.user.username, content]
     )
-    log(req.user.id, 'post_create', 'post', result.insertId, { type, title, content, pin_until: resolvedPinUntil })
-    res.status(201).json({ id: result.insertId })
+    const postId = result.insertId
+
+    // 투표 저장 (옵션이 있는 경우)
+    if (poll && Array.isArray(poll.options) && poll.options.length > 0) {
+      const [pollResult] = await pool.query(
+        'INSERT INTO polls (post_id, title, is_multiple, is_anonymous, is_private) VALUES (?, ?, ?, ?, ?)',
+        [
+          postId,
+          poll.title || '',
+          poll.isMultiple ? 1 : 0,
+          poll.isAnonymous ? 1 : 0,
+          poll.isPrivate ? 1 : 0,
+        ]
+      )
+      const pollId = pollResult.insertId
+
+      for (const option of poll.options) {
+        await pool.query(
+          'INSERT INTO poll_options (poll_id, option_text) VALUES (?, ?)',
+          [pollId, option.text]
+        )
+      }
+    }
+
+    log(req.user.id, 'post_create', 'post', postId, { type, title, content, pin_until: resolvedPinUntil })
+    res.status(201).json({ id: postId })
   } catch (err) {
     next(err)
   }
@@ -80,7 +104,7 @@ exports.updatePost = async (req, res, next) => {
     const isManager = ['manager', 'staff', 'root'].includes(req.user.role)
     if (!isOwner && !isManager) return res.status(403).json({ message: '본인 게시글만 수정할 수 있습니다.' })
 
-    const { type, pinUntil, title, content } = req.body
+    const { type, pinUntil, title, content, poll } = req.body
     const newType = type || rows[0].type
 
     if (MANAGER_TYPES.includes(newType) && !isManager) {
@@ -93,6 +117,29 @@ exports.updatePost = async (req, res, next) => {
       'UPDATE posts SET type = ?, pin_until = ?, title = ?, content = ? WHERE id = ?',
       [newType, resolvedPinUntil, title, content, req.params.id]
     )
+
+    // 투표 수정 (옵션이 있는 경우)
+    if (poll && Array.isArray(poll.options) && poll.options.length > 0) {
+      const [pollResult] = await pool.query(
+        'INSERT INTO polls (post_id, title, is_multiple, is_anonymous, is_private) VALUES (?, ?, ?, ?, ?)',
+        [
+          req.params.id,
+          poll.title || '',
+          poll.isMultiple ? 1 : 0,
+          poll.isAnonymous ? 1 : 0,
+          poll.isPrivate ? 1 : 0,
+        ]
+      )
+      const pollId = pollResult.insertId
+
+      for (const option of poll.options) {
+        await pool.query(
+          'INSERT INTO poll_options (poll_id, option_text) VALUES (?, ?)',
+          [pollId, option.text]
+        )
+      }
+    }
+
     log(req.user.id, 'post_update', 'post', parseInt(req.params.id), { type: newType, title, content, pin_until: resolvedPinUntil })
     res.json({ message: '수정 완료' })
   } catch (err) {

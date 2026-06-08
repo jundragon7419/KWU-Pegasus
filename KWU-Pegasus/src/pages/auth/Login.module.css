@@ -101,6 +101,38 @@
   cursor: not-allowed;
 }
 
+.kakaoButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px;
+  border: none;
+  border-radius: 8px;
+  background: #FFE812;
+  color: #191919;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.kakaoButton:hover {
+  background: #FDD600;
+}
+
+.kakaoButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.kakaoIcon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
 .errorText {
   font-size: 0.85rem;
   color: var(--color-error);

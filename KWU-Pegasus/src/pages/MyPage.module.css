@@ -843,3 +843,106 @@
   padding-top: 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
+
+/* ── 투표 탭 ── */
+.voteList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.voteItem {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.voteHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.voteHeader:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.voteTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.voteTagPost {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--main-300);
+  background: rgba(166, 146, 109, 0.15);
+  padding: 2px 6px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.voteName {
+  font-size: 0.9rem;
+  color: var(--text-100);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.voteToggleIcon {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.75rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.25s ease, color 0.15s ease;
+  transform: rotate(0deg);
+}
+
+.voteToggleIcon.expanded {
+  transform: rotate(180deg);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.voteDetail {
+  background: rgba(255, 255, 255, 0.02);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.loadingText {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.voteGoBtn {
+  align-self: flex-end;
+  padding: 6px 12px;
+  background: rgba(166, 146, 109, 0.15);
+  border: 1px solid rgba(166, 146, 109, 0.3);
+  border-radius: 4px;
+  color: var(--main-300);
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.voteGoBtn:hover {
+  background: rgba(166, 146, 109, 0.25);
+  color: var(--main-200);
+}

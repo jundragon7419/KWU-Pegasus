@@ -60,7 +60,7 @@ export function AuthProvider({ children }) {
       if (res.ok) {
         const data = await res.json()
         setUser(prev => prev
-          ? { ...prev, role: data.role, staff_type: data.staff_type, ob_yb: data.ob_yb }
+          ? { ...prev, username: data.username, email: data.email, role: data.role, staff_type: data.staff_type, ob_yb: data.ob_yb }
           : null
         )
       } else {

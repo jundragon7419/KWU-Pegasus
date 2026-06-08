@@ -7,6 +7,7 @@ import { ROSTER_ROLE_LABEL, POST_TYPE_LABEL } from '../lib/constants'
 import { COUNTRY_CODES } from '../lib/countryCodes'
 import ReactCountryFlag from 'react-country-flag'
 import Pagination from '../components/Pagination'
+import PollVote from '../components/PollVote'
 import styles from './MyPage.module.css'
 
 const PAGE_SIZE = 15
@@ -30,6 +31,8 @@ const TABS = [
   { key: 'club',        label: '활동 내역' },
   { key: 'posts',       label: '내 게시글' },
   { key: 'mycomments',  label: '내 댓글' },
+  { key: 'myvotes',     label: '내 투표' },
+  { key: 'settings',    label: '설정' },
 ]
 
 const AUTHORITY_LABEL = {
@@ -49,7 +52,7 @@ const MEMBERSHIP_STATUS_LABEL = {
 }
 
 export default function MyPage() {
-  const { user, token, loading } = useAuth()
+  const { user, token, loading, logout, refreshUser } = useAuth()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('account')
   const { containerRef: tabContainerRef, indicatorRef: tabIndicatorRef } = useTabIndicator(activeTab)
@@ -62,6 +65,12 @@ export default function MyPage() {
   const [myCommentsAll, setMyCommentsAll]         = useState([])
   const [commentsAllLoaded, setCommentsAllLoaded] = useState(false)
   const [commentsPage, setCommentsPage]           = useState(1)
+  const [myVotesAll, setMyVotesAll]               = useState([])
+  const [votesAllLoaded, setVotesAllLoaded]       = useState(false)
+  const [votesPage, setVotesPage]                 = useState(1)
+  const [expandedVoteId, setExpandedVoteId]       = useState(null)
+  const [pollData, setPollData]                   = useState({})
+  const [pollLoadingId, setPollLoadingId]         = useState(null)
   const [me, setMe] = useState(null)
   const [rosterHistory, setRosterHistory] = useState([])
 
@@ -77,6 +86,11 @@ export default function MyPage() {
   const countryRef = useRef(null)
   const [usernameCheck, setUsernameCheck] = useState(null) // null | 'ok' | 'taken'
   const [emailCheck, setEmailCheck]       = useState(null)
+  const [emailCodeSent, setEmailCodeSent] = useState(false)
+  const [emailCode, setEmailCode] = useState('')
+  const [emailCodeVerified, setEmailCodeVerified] = useState(false)
+  const [emailCodeMsg, setEmailCodeMsg] = useState('')
+  const [emailCodeSending, setEmailCodeSending] = useState(false)
   const [accountMsg, setAccountMsg] = useState('')
 
   // 멤버 신청
@@ -86,6 +100,12 @@ export default function MyPage() {
   const [obYb, setObYb]           = useState('')
   const [profileMsg, setProfileMsg] = useState('')
   const [memberMsg, setMemberMsg]   = useState('')
+
+  // 회원 탈퇴
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false)
+  const [withdrawConfirm, setWithdrawConfirm] = useState('')
+  const [withdrawMsg, setWithdrawMsg] = useState('')
+  const [withdrawLoading, setWithdrawLoading] = useState(false)
 
   useEffect(() => {
     if (!loading && !user) navigate('/login')
@@ -143,6 +163,13 @@ export default function MyPage() {
       .then(data => { setMyCommentsAll(Array.isArray(data) ? data : []); setCommentsAllLoaded(true) })
   }, [activeTab, commentsAllLoaded, token])
 
+  useEffect(() => {
+    if (activeTab !== 'myvotes' || votesAllLoaded || !token) return
+    fetch(`${API_BASE}/api/mypage/votes/all`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json())
+      .then(data => { setMyVotesAll(Array.isArray(data) ? data : []); setVotesAllLoaded(true) })
+  }, [activeTab, votesAllLoaded, token])
+
   // ── 계정 편집 열기 ──
   function handleEditOpen() {
     const countryCode = me.phone_country ?? '82'
@@ -155,8 +182,28 @@ export default function MyPage() {
     setEditPhone(countryCode === '82' ? formatKoreanPhone(me.phone ?? '') : (me.phone ?? ''))
     setUsernameCheck(null)
     setEmailCheck(null)
+    setEmailCodeSent(false)
+    setEmailCode('')
+    setEmailCodeVerified(false)
+    setEmailCodeMsg('')
     setAccountMsg('')
     setEditingAccount(true)
+  }
+
+  async function loadPollData(pollId) {
+    if (pollData[pollId]) return
+    setPollLoadingId(pollId)
+    try {
+      const headers = token ? { Authorization: `Bearer ${token}` } : {}
+      const res = await fetch(`${API_BASE}/api/polls/${pollId}`, { headers })
+      if (res.ok) {
+        const data = await res.json()
+        setPollData(prev => ({ ...prev, [pollId]: data }))
+      }
+    } catch (err) {
+      console.error('투표 데이터 로드 실패:', err)
+    }
+    setPollLoadingId(null)
   }
 
   function selectCountry(c) {
@@ -225,6 +272,63 @@ export default function MyPage() {
     setEmailCheck(data.available ? 'ok' : 'taken')
   }
 
+  async function handleSendEmailCode() {
+    setEmailCodeMsg('')
+    setEmailCodeSending(true)
+    try {
+      // 중복 확인 (현재 이메일과 다른 경우만)
+      if (editEmail !== me.email) {
+        const checkRes = await fetch(
+          `${API_BASE}/api/mypage/check-email?email=${encodeURIComponent(editEmail)}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+        const checkData = await checkRes.json()
+
+        if (!checkData.available) {
+          setEmailCodeMsg('이미 사용 중인 이메일입니다.')
+          setEmailCodeSending(false)
+          return
+        }
+      }
+
+      // 인증번호 발송
+      const res = await fetch(`${API_BASE}/api/auth/send-email-code`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: editEmail }),
+      })
+      const data = await res.json()
+      setEmailCodeMsg(data.message)
+      if (res.ok) {
+        setEmailCodeSent(true)
+        setEmailCode('')
+        setEmailCodeVerified(false)
+      }
+    } catch {
+      setEmailCodeMsg('발송에 실패했습니다.')
+    } finally {
+      setEmailCodeSending(false)
+    }
+  }
+
+  async function handleVerifyEmailCode() {
+    setEmailCodeMsg('')
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/verify-email-code`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: editEmail, code: emailCode }),
+      })
+      const data = await res.json()
+      setEmailCodeMsg(data.message)
+      if (res.ok) {
+        setEmailCodeVerified(true)
+      }
+    } catch {
+      setEmailCodeMsg('인증에 실패했습니다.')
+    }
+  }
+
   // ── 계정 저장 ──
   async function handleAccountSave() {
     setAccountMsg('')
@@ -243,8 +347,8 @@ export default function MyPage() {
       setAccountMsg('아이디 중복 확인을 해주세요.')
       return
     }
-    if (emailChanged && emailCheck !== 'ok') {
-      setAccountMsg('이메일 중복 확인을 해주세요.')
+    if (emailChanged && !emailCodeVerified) {
+      setAccountMsg('이메일 인증을 완료해주세요.')
       return
     }
 
@@ -258,6 +362,7 @@ export default function MyPage() {
     if (res.ok) {
       setEditingAccount(false)
       load()
+      refreshUser()
     }
   }
 
@@ -290,6 +395,31 @@ export default function MyPage() {
     if (res.ok) load()
   }
 
+  // ── 회원 탈퇴 ──
+  async function handleWithdraw() {
+    setWithdrawMsg('')
+    if (withdrawConfirm !== '동의합니다') {
+      setWithdrawMsg('"동의합니다"를 입력해주세요.')
+      return
+    }
+
+    setWithdrawLoading(true)
+    const res = await fetch(`${API_BASE}/api/mypage/withdraw`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    const data = await res.json()
+
+    if (res.ok) {
+      setWithdrawMsg('계정이 삭제되었습니다. 로그인 페이지로 이동합니다.')
+      logout()
+      setTimeout(() => navigate('/login'), 1500)
+    } else {
+      setWithdrawMsg(data.message || '회원 탈퇴에 실패했습니다.')
+      setWithdrawLoading(false)
+    }
+  }
+
   if (loading || !user || !me) return null
 
   const isBasic       = me.role === 'basic'
@@ -311,8 +441,12 @@ export default function MyPage() {
 
   const usernameChanged   = editUsername !== me.username
   const emailChanged      = editEmail    !== me.email
-  const editUsernameValid = /^[a-zA-Z0-9_]{1,15}$/.test(editUsername)
-  const editUsernameError = editUsername && !editUsernameValid ? '영문 대/소문자, 숫자, _ 만 · 최대 15자' : ''
+  const editUsernameValid = /^[a-zA-Z0-9_]{5,15}$/.test(editUsername)
+  const editUsernameError = editUsername && editUsername.length < 5
+    ? '아이디가 너무 짧습니다.'
+    : editUsername && !editUsernameValid
+    ? '영문 대/소문자, 숫자, _ 만 사용 가능합니다.'
+    : ''
   const editEmailValid    = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editEmail)
   const editEmailError    = editEmail && !editEmailValid ? '올바른 이메일 형식이 아닙니다.' : ''
 
@@ -399,19 +533,59 @@ export default function MyPage() {
                     className={`${styles.inlineInput} ${editEmailError ? styles.inlineInputError : ''}`}
                     type="email"
                     value={editEmail}
-                    onChange={e => { setEditEmail(e.target.value); setEmailCheck(null) }}
+                    onChange={e => {
+                      setEditEmail(e.target.value)
+                      setEmailCodeSent(false)
+                      setEmailCode('')
+                      setEmailCodeVerified(false)
+                      setEmailCodeMsg('')
+                    }}
                   />
                   {emailChanged && !editEmailError && (
-                    <button className={styles.checkBtn} type="button" onClick={handleCheckEmail}>중복확인</button>
+                    <button className={styles.checkBtn} type="button" onClick={handleSendEmailCode} disabled={emailCodeSending}>
+                      {emailCodeSending ? '발송 중…' : emailCodeSent ? '재발송' : '발송'}
+                    </button>
                   )}
-                  {editEmailError   && <span className={styles.checkFail}>{editEmailError}</span>}
-                  {!editEmailError && emailCheck === 'ok'    && <span className={styles.checkOk}>사용 가능</span>}
-                  {!editEmailError && emailCheck === 'taken' && <span className={styles.checkFail}>이미 사용 중</span>}
+                  {editEmailError && <span className={styles.checkFail}>{editEmailError}</span>}
+                  {!editEmailError && emailCodeVerified && <span className={styles.checkOk}>인증 완료</span>}
                 </div>
               ) : (
                 <span className={styles.infoValue}>{me.email ?? '—'}</span>
               )}
             </div>
+
+            {/* 이메일 인증번호 */}
+            {editingAccount && emailCodeSent && (
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>인증번호</span>
+                <div className={styles.inlineEditCell}>
+                  <input
+                    className={`${styles.inlineInput}`}
+                    type="text"
+                    placeholder="인증번호 6자리"
+                    value={emailCode}
+                    onChange={e => setEmailCode(e.target.value.replace(/\D/g, ''))}
+                    maxLength={6}
+                    inputMode="numeric"
+                  />
+                  {!emailCodeVerified && (
+                    <button
+                      className={styles.checkBtn}
+                      type="button"
+                      onClick={handleVerifyEmailCode}
+                      disabled={emailCode.length !== 6}
+                    >
+                      인증
+                    </button>
+                  )}
+                  {emailCodeMsg && (
+                    <span className={emailCodeVerified ? styles.checkOk : styles.checkFail}>
+                      {emailCodeMsg}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* 전화번호 */}
             <div className={styles.infoRow}>
@@ -785,6 +959,193 @@ export default function MyPage() {
           </div>
         )
       })()}
+
+      {/* ─── 내 투표 탭 ─── */}
+      {activeTab === 'myvotes' && (() => {
+        const totalVotePages = Math.max(1, Math.ceil(myVotesAll.length / PAGE_SIZE))
+        const pagedVotes = myVotesAll.slice((votesPage - 1) * PAGE_SIZE, votesPage * PAGE_SIZE)
+        return (
+          <div className={styles.tabContent}>
+            <section className={styles.section}>
+              <h2 className={styles.sectionTitle}>내 투표</h2>
+              <div className={styles.voteList}>
+                {myVotesAll.length === 0 ? (
+                  <p className={styles.emptyDesc}>투표한 내역이 없습니다.</p>
+                ) : pagedVotes.map(vote => (
+                  <div key={vote.poll_id} className={styles.voteItem}>
+                    <div
+                      className={styles.voteHeader}
+                      onClick={() => {
+                        if (expandedVoteId !== vote.poll_id) {
+                          loadPollData(vote.poll_id)
+                        }
+                        setExpandedVoteId(expandedVoteId === vote.poll_id ? null : vote.poll_id)
+                      }}
+                    >
+                      <div className={styles.voteTitle}>
+                        <span className={styles.voteTagPost}>{vote.post_type ? POST_TYPE_LABEL[vote.post_type] : '일반'}</span>
+                        <span className={styles.voteName}>{vote.poll_title}</span>
+                      </div>
+                      <div className={`${styles.voteToggleIcon} ${expandedVoteId === vote.poll_id ? styles.expanded : ''}`}>
+                        ▼
+                      </div>
+                    </div>
+                    {expandedVoteId === vote.poll_id && (
+                      <div className={styles.voteDetail}>
+                        {pollData[vote.poll_id] ? (
+                          <PollVote poll={pollData[vote.poll_id]} onVote={null} user={user} />
+                        ) : (
+                          <p className={styles.loadingText}>로드 중...</p>
+                        )}
+                        <button
+                          className={styles.voteGoBtn}
+                          onClick={() => navigate(`/board/${vote.post_id}`)}
+                        >
+                          해당 글로 이동 →
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
+            <div className={styles.paginationRow}>
+              <Pagination page={votesPage} totalPages={totalVotePages} onPageChange={setVotesPage} />
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* ─── 설정 탭 ─── */}
+      {activeTab === 'settings' && (
+        <div className={styles.tabContent}>
+          {me.role === 'root' ? (
+            <section className={styles.section}>
+              <p className={styles.dangerDesc} style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+                root 권한 계정은 SQL을 통해서만 관리됩니다.
+              </p>
+            </section>
+          ) : (
+            <section className={`${styles.section} ${styles.dangerSection}`}>
+              <h2 className={`${styles.sectionTitle} ${styles.dangerTitle}`}>회원 탈퇴</h2>
+              <p className={styles.dangerDesc}>
+                탈퇴 시 계정과 관련된 모든 데이터가 삭제되며 복구할 수 없습니다.
+              </p>
+              <button className={styles.dangerBtn} onClick={() => setShowWithdrawModal(true)}>
+                탈퇴하기
+              </button>
+            </section>
+          )}
+        </div>
+      )}
+
+      {/* 회원 탈퇴 모달 */}
+      {showWithdrawModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+        }}>
+          <div style={{
+            background: 'var(--main-800)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            borderRadius: '12px',
+            padding: '32px',
+            maxWidth: '450px',
+            width: '90%',
+          }}>
+            <h2 style={{ color: 'var(--text-100)', marginBottom: '16px', fontSize: '1.25rem', fontWeight: 700 }}>
+              회원 탈퇴
+            </h2>
+            <p style={{ color: 'rgba(255, 255, 255, 0.75)', marginBottom: '20px', lineHeight: '1.6' }}>
+              회원 탈퇴하시겠습니까? 탈퇴시 모든 개인정보가 삭제됩니다. 동의합니까?
+            </p>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', color: 'rgba(255, 255, 255, 0.55)', fontSize: '0.875rem', marginBottom: '8px', fontWeight: 500 }}>
+                아래에 "동의합니다"를 입력해주세요.
+              </label>
+              <input
+                type="text"
+                value={withdrawConfirm}
+                onChange={e => setWithdrawConfirm(e.target.value)}
+                placeholder="동의합니다"
+                style={{
+                  width: '100%',
+                  padding: '10px 14px',
+                  background: 'rgba(255, 255, 255, 0.07)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  borderRadius: '8px',
+                  color: 'var(--text-100)',
+                  fontSize: '0.95rem',
+                  fontFamily: 'var(--font-sans)',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                  transition: 'border-color 0.15s ease',
+                }}
+                onFocus={e => e.target.style.borderColor = 'var(--main-300)'}
+                onBlur={e => e.target.style.borderColor = 'rgba(255, 255, 255, 0.15)'}
+              />
+            </div>
+            {withdrawMsg && (
+              <p style={{
+                color: withdrawMsg.includes('삭제') || withdrawMsg.includes('성공') ? 'var(--color-green)' : 'var(--color-error)',
+                fontSize: '0.875rem',
+                marginBottom: '20px',
+              }}>
+                {withdrawMsg}
+              </p>
+            )}
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => {
+                  setShowWithdrawModal(false)
+                  setWithdrawConfirm('')
+                  setWithdrawMsg('')
+                }}
+                disabled={withdrawLoading}
+                style={{
+                  padding: '10px 20px',
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '8px',
+                  color: 'rgba(255, 255, 255, 0.7)',
+                  fontSize: '0.9rem',
+                  fontWeight: 600,
+                  fontFamily: 'var(--font-sans)',
+                  cursor: withdrawLoading ? 'not-allowed' : 'pointer',
+                  transition: 'background 0.15s ease',
+                  opacity: withdrawLoading ? 0.6 : 1,
+                }}
+              >
+                취소
+              </button>
+              <button
+                onClick={handleWithdraw}
+                disabled={withdrawLoading || withdrawConfirm !== '동의합니다'}
+                style={{
+                  padding: '10px 20px',
+                  background: withdrawConfirm === '동의합니다' ? 'rgba(224, 92, 92, 0.15)' : 'rgba(224, 92, 92, 0.08)',
+                  border: '1px solid rgba(220, 80, 80, 0.3)',
+                  borderRadius: '8px',
+                  color: withdrawConfirm === '동의합니다' ? 'var(--color-error)' : 'rgba(220, 80, 80, 0.5)',
+                  fontSize: '0.9rem',
+                  fontWeight: 600,
+                  fontFamily: 'var(--font-sans)',
+                  cursor: withdrawLoading || withdrawConfirm !== '동의합니다' ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.15s ease',
+                  opacity: withdrawLoading ? 0.6 : 1,
+                }}
+              >
+                {withdrawLoading ? '처리 중...' : '탈퇴하기'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   )

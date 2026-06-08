@@ -4,6 +4,7 @@ import { API_BASE } from '../../lib/api'
 import { POST_TYPE_LABEL } from '../../lib/constants'
 import { useAuth } from '../../context/AuthContext'
 import ContentRenderer from '../../components/ContentRenderer'
+import PollVote from '../../components/PollVote'
 import styles from './BoardDetail.module.css'
 
 const TYPE_CLASS = {
@@ -28,6 +29,10 @@ export default function BoardDetail() {
 
   const [editingId, setEditingId]       = useState(null)
   const [editContent, setEditContent]   = useState('')
+
+  const [poll, setPoll]         = useState(null)
+  const [pollLoading, setPollLoading]   = useState(false)
+  const [pollError, setPollError]       = useState('')
 
   const isManager = user && ['manager', 'staff', 'root'].includes(user.role)
 
@@ -59,6 +64,9 @@ export default function BoardDetail() {
     setComments([])
     setCommentInput('')
     setEditingId(null)
+    setPoll(null)
+    setPollLoading(false)
+    setPollError('')
 
     fetch(`${API_BASE}/api/posts/${id}`)
       .then(r => { if (r.status === 404) { setNotFound(true); return null } return r.json() })
@@ -68,8 +76,32 @@ export default function BoardDetail() {
       .then(r => r.json())
       .then(data => setAdjacent(data))
 
+    // 투표 데이터 로드
+    setPollLoading(true)
+    const pollOptions = {}
+    if (token) {
+      pollOptions.headers = { Authorization: `Bearer ${token}` }
+    }
+    fetch(`${API_BASE}/api/polls/post/${id}`, pollOptions)
+      .then(r => {
+        if (r.status === 404) {
+          setPoll(null)
+          setPollLoading(false)
+          return null
+        }
+        return r.json()
+      })
+      .then(data => {
+        if (data) setPoll(data)
+        setPollLoading(false)
+      })
+      .catch(err => {
+        console.error('투표 로드 실패:', err)
+        setPollLoading(false)
+      })
+
     loadComments()
-  }, [id])
+  }, [id, token])
 
   async function handleCommentSubmit() {
     if (!commentInput.trim() || submitting) return
@@ -122,6 +154,42 @@ export default function BoardDetail() {
       headers: { 'Authorization': `Bearer ${token}` },
     })
     if (res.ok) setComments(prev => prev.filter(c => c.id !== commentId))
+  }
+
+  async function handleVoteSubmit(selectedOptionIds) {
+    if (!user || !token) {
+      alert('로그인이 필요합니다.')
+      return
+    }
+
+    const res = await fetch(`${API_BASE}/api/polls/${poll.poll.id}/vote`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ optionIds: selectedOptionIds }),
+    })
+
+    if (!res.ok) {
+      const data = await res.json()
+      alert(data.message || '투표 저장에 실패했습니다.')
+      return
+    }
+
+    // 투표 재로드
+    setPollLoading(true)
+    const pollOptions = { headers: { Authorization: `Bearer ${token}` } }
+    fetch(`${API_BASE}/api/polls/post/${id}`, pollOptions)
+      .then(r => r.json())
+      .then(data => {
+        if (data) setPoll(data)
+        setPollLoading(false)
+      })
+      .catch(err => {
+        console.error('투표 로드 실패:', err)
+        setPollLoading(false)
+      })
   }
 
   if (notFound) {
@@ -178,6 +246,13 @@ export default function BoardDetail() {
         <div className={styles.body}>
           <ContentRenderer content={post.content} />
         </div>
+
+        {/* 투표 섹션 */}
+        {poll && !pollLoading && (
+          <div className={styles.pollSection}>
+            <PollVote poll={poll} onVote={handleVoteSubmit} user={user} />
+          </div>
+        )}
       </article>
 
       {/* ── 댓글 ── */}

@@ -211,3 +211,108 @@
   /* btn btn-primary 사용 */
   padding: 9px 28px;
 }
+
+/* ── 투표 섹션 ── */
+.pollCheck {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.5);
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+  user-select: none;
+}
+
+.pollCheck:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  color: var(--text-100);
+}
+
+.pollCheck input[type='checkbox'] {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--main-400);
+  cursor: pointer;
+}
+
+.pollCheckActive {
+  border-color: var(--main-400);
+  color: var(--main-300);
+  background: rgba(166, 146, 109, 0.1);
+}
+
+.pollSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+}
+
+.optionRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.removeButton {
+  padding: 6px 10px;
+  background: rgba(220, 80, 80, 0.15);
+  border: 1px solid rgba(220, 80, 80, 0.3);
+  border-radius: 4px;
+  color: rgba(220, 80, 80, 0.8);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.removeButton:hover {
+  background: rgba(220, 80, 80, 0.25);
+  color: rgba(220, 80, 80, 1);
+}
+
+.addButton {
+  padding: 8px 14px;
+  background: rgba(109, 200, 122, 0.15);
+  border: 1px solid rgba(109, 200, 122, 0.3);
+  border-radius: 4px;
+  color: var(--color-green);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: background 0.15s ease;
+}
+
+.addButton:hover {
+  background: rgba(109, 200, 122, 0.25);
+}
+
+.pollOptionsRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
+  user-select: none;
+}
+
+.checkboxLabel input[type='checkbox'] {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--main-400);
+  cursor: pointer;
+}

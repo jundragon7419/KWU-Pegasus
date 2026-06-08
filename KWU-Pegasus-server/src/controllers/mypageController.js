@@ -209,3 +209,70 @@ exports.requestMembership = async (req, res, next) => {
   }
 }
 
+// 회원 탈퇴 — 계정 및 관련 모든 데이터 삭제 (root 권한 제외)
+exports.withdrawUser = async (req, res, next) => {
+  let conn = null
+  try {
+    conn = await pool.getConnection()
+    const userId = req.user.id
+
+    // root 권한 사용자는 탈퇴 불가 (트랜잭션 시작 전 확인)
+    const [userRows] = await conn.query('SELECT authority FROM users WHERE id = ?', [userId])
+
+    if (!userRows.length) {
+      if (conn) conn.release()
+      return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' })
+    }
+    if (userRows[0].authority === 'root') {
+      if (conn) conn.release()
+      return res.status(403).json({ message: 'root 권한 계정은 SQL을 통해서만 관리됩니다.' })
+    }
+
+    // 트랜잭션 시작
+    await conn.beginTransaction()
+
+    // 1. 사용자가 작성한 댓글 삭제
+    await conn.query('DELETE FROM comments WHERE user_id = ?', [userId])
+
+    // 2. 사용자가 작성한 게시물 삭제
+    await conn.query('DELETE FROM posts WHERE user_id = ?', [userId])
+
+    // 3. 사용자 삭제
+    await conn.query('DELETE FROM users WHERE id = ?', [userId])
+
+    await conn.commit()
+    if (conn) conn.release()
+    res.json({ message: '계정이 삭제되었습니다.' })
+  } catch (err) {
+    console.error('회원 탈퇴 에러:', err)
+    try {
+      if (conn) await conn.rollback()
+    } catch (rollbackErr) {
+      console.error('롤백 에러:', rollbackErr)
+    }
+    if (conn) conn.release()
+    next(err)
+  }
+}
+
+// 내가 투표한 항목 전체 (탭 전용)
+exports.getMyVotesAll = async (req, res, next) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT DISTINCT
+        po.id AS poll_id,
+        p.id AS post_id,
+        p.type AS post_type,
+        po.title AS poll_title
+       FROM poll_votes pv
+       JOIN polls po ON pv.poll_id = po.id
+       JOIN posts p ON po.post_id = p.id
+       WHERE pv.user_id = ?
+       ORDER BY po.id DESC`,
+      [req.user.id]
+    )
+
+    res.json(rows)
+  } catch (err) { next(err) }
+}
+

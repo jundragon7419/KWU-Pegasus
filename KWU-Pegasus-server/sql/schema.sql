@@ -25,11 +25,17 @@ USE kwu_pegasus;
 -- staff_type       : authority가 staff일 때만 사용. 회장(president) 또는 감독(headcoach) 구분. 기본 NULL
 -- membership_status: 멤버 등록 진행 상태
 --                     none(미신청) | pending(신청중) | approved(승인) | rejected(거부)
+-- marketing_email   : 메일 수신 동의 (1=동의, 0=미동의). 기본 0
+-- marketing_email   : 메일 수신 동의 (1=동의, 0=미동의). 기본 0
+-- marketing_sms     : SMS 수신 동의 (1=동의, 0=미동의). 기본 0
+-- marketing_kakao   : 카카오톡 수신 동의 (1=동의, 0=미동의). 기본 0
+-- marketing_agreed_at: 메일 수신 동의 일시. NULL이면 미동의
+-- kakao_id          : 카카오 고유 ID. 카카오 로그인 사용자만 값 보유. NULL이면 일반 사용자
 -- created_at       : 계정 생성 일시 (자동 기록)
 CREATE TABLE IF NOT EXISTS users (
   id                INT           NOT NULL AUTO_INCREMENT PRIMARY KEY,
   username          VARCHAR(50)   NOT NULL UNIQUE,
-  password          VARCHAR(255)  NOT NULL,
+  password          VARCHAR(255)  NULL DEFAULT NULL,
   email             VARCHAR(100)  NOT NULL UNIQUE,
   name              VARCHAR(50)   NULL DEFAULT NULL,
   student_id        CHAR(10)      NULL DEFAULT NULL UNIQUE,
@@ -39,11 +45,11 @@ CREATE TABLE IF NOT EXISTS users (
   authority         ENUM('basic','member','manager','staff','root') NOT NULL DEFAULT 'basic',
   staff_type        ENUM('president','headcoach') NULL DEFAULT NULL,
   membership_status    ENUM('none','pending','approved','rejected','banned') NOT NULL DEFAULT 'none',
-  marketing_agreed     TINYINT(1)    NOT NULL DEFAULT 0,
   marketing_email      TINYINT(1)    NOT NULL DEFAULT 0,
   marketing_sms        TINYINT(1)    NOT NULL DEFAULT 0,
   marketing_kakao      TINYINT(1)    NOT NULL DEFAULT 0,
   marketing_agreed_at  DATETIME      NULL DEFAULT NULL,
+  kakao_id             VARCHAR(255)  NULL DEFAULT NULL UNIQUE,
   created_at           DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -204,12 +210,67 @@ CREATE TABLE IF NOT EXISTS holidays (
   name  VARCHAR(100) NOT NULL
 );
 
+-- ── 투표 ──────────────────────────────────────────────────────
+-- id           : 투표 고유 식별자. PK (자동 증가)
+-- post_id      : 소속 게시글. posts.id 참조. 게시글 삭제 시 투표도 함께 삭제
+-- title        : 투표 제목
+-- is_multiple  : 다중선택 여부 (1=다중선택, 0=단일선택)
+-- is_anonymous : 익명 투표 여부 (1=익명, 0=기명)
+-- is_private   : 결과 비공개 여부 (1=비공개, 0=공개)
+-- created_at   : 생성 일시
+CREATE TABLE IF NOT EXISTS polls (
+  id           INT          NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  post_id      INT          NOT NULL UNIQUE,
+  title        VARCHAR(200) NOT NULL,
+  is_multiple  TINYINT(1)   NOT NULL DEFAULT 0,
+  is_anonymous TINYINT(1)   NOT NULL DEFAULT 0,
+  is_private   TINYINT(1)   NOT NULL DEFAULT 0,
+  created_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+);
+
+-- ── 투표 옵션 ──────────────────────────────────────────────────────
+-- id         : 옵션 고유 식별자. PK (자동 증가)
+-- poll_id    : 소속 투표. polls.id 참조. 투표 삭제 시 옵션도 함께 삭제
+-- option_text: 옵션 텍스트 (예: "찬성", "반대", "기권")
+-- vote_count : 현재 투표 개수
+CREATE TABLE IF NOT EXISTS poll_options (
+  id          INT          NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  poll_id     INT          NOT NULL,
+  option_text VARCHAR(100) NOT NULL,
+  vote_count  INT          NOT NULL DEFAULT 0,
+  FOREIGN KEY (poll_id) REFERENCES polls(id) ON DELETE CASCADE
+);
+
+-- ── 투표 기록 ──────────────────────────────────────────────────────
+-- id        : 투표 기록 고유 식별자. PK (자동 증가)
+-- poll_id   : 소속 투표. polls.id 참조
+-- user_id   : 투표자. users.id 참조. 익명 투표시 NULL
+-- option_id : 선택한 옵션. poll_options.id 참조
+-- created_at: 투표 일시
+-- UNIQUE: (poll_id, user_id, option_id)로 같은 옵션에 중복 투표 방지
+CREATE TABLE IF NOT EXISTS poll_votes (
+  id        INT      NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  poll_id   INT      NOT NULL,
+  user_id   INT      NULL DEFAULT NULL,
+  option_id INT      NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_poll_vote (poll_id, user_id, option_id),
+  FOREIGN KEY (poll_id) REFERENCES polls(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+  FOREIGN KEY (option_id) REFERENCES poll_options(id) ON DELETE CASCADE
+);
+
 -- ── 인덱스 ──────────────────────────────────────────────────────
 -- roster.student_id  : users.student_id와의 JOIN 및 이력 조회에 사용
 -- users.student_id   : 로스터 연동 시 매칭에 사용 (UNIQUE이나 명시적 인덱스 추가)
 -- events.year        : 연도별 일정 조회에 사용
 -- holidays.year      : 연도별 공휴일 조회에 사용
+-- polls.post_id      : 게시글 기준 투표 조회에 사용
+-- poll_votes.poll_id : 투표 기준 투표 기록 조회에 사용
 CREATE INDEX idx_roster_student_id ON roster(student_id);
 CREATE INDEX idx_events_date       ON events(date);
 CREATE INDEX idx_comments_post_id  ON comments(post_id);
 CREATE INDEX idx_holidays_year     ON holidays(year);
+CREATE INDEX idx_polls_post_id     ON polls(post_id);
+CREATE INDEX idx_poll_votes_poll_id ON poll_votes(poll_id);

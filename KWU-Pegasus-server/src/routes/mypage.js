@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const { getMe, checkUsername, checkEmail, updateAccount, updateProfile, requestMembership, getRosterHistory, getMyPosts, getMyPostsAll, getMyComments, getMyCommentsAll } = require('../controllers/mypageController')
+const { getMe, checkUsername, checkEmail, updateAccount, updateProfile, requestMembership, getRosterHistory, getMyPosts, getMyPostsAll, getMyComments, getMyCommentsAll, getMyVotesAll, withdrawUser } = require('../controllers/mypageController')
 const { authenticate } = require('../middlewares/auth')
 
 router.use(authenticate)
@@ -16,5 +16,7 @@ router.get('/posts',              getMyPosts)
 router.get('/posts/all',          getMyPostsAll)
 router.get('/comments',           getMyComments)
 router.get('/comments/all',       getMyCommentsAll)
+router.get('/votes/all',          getMyVotesAll)
+router.delete('/withdraw',        withdrawUser)
 
 module.exports = router

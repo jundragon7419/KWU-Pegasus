@@ -10,8 +10,26 @@ exports.signup = async (req, res, next) => {
     if (!username || !password || !email) {
       return res.status(400).json({ message: '아이디, 비밀번호, 이메일을 모두 입력해주세요.' })
     }
-    if (!/^[a-zA-Z0-9_]{1,15}$/.test(username)) {
-      return res.status(400).json({ message: '아이디는 영문 대/소문자, 숫자, _ 만 사용 가능하며 15자 이하여야 합니다.' })
+    if (!/^[a-zA-Z0-9_]{5,15}$/.test(username)) {
+      return res.status(400).json({ message: '아이디는 영문 대/소문자, 숫자, _ 만 사용 가능하며 5~15자여야 합니다.' })
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({ message: '비밀번호가 너무 짧습니다.' })
+    }
+
+    const hasLetter = /[a-zA-Z]/.test(password)
+    const hasNumber = /[0-9]/.test(password)
+    const hasSpecial = /[!@#$%^&*()_\-=\[\]{};:'",.<>?/\\|]/.test(password)
+
+    const missing = []
+    if (!hasLetter) missing.push('영문')
+    if (!hasNumber) missing.push('숫자')
+    if (!hasSpecial) missing.push('특수문자')
+
+    if (missing.length > 0) {
+      const msg = `${missing.join(', ')}${missing.length === 1 ? '이' : '가'} 포함되어야 합니다.`
+      return res.status(400).json({ message: msg })
     }
 
     const [existing] = await pool.query(
@@ -27,18 +45,17 @@ exports.signup = async (req, res, next) => {
     }
 
     const hashed = await bcrypt.hash(password, 10)
-    const agreed = marketingAgreed === true
+    const marketingEmail = marketingAgreed === true ? 1 : 0
     await pool.query(
       `INSERT INTO users
-        (username, password, email, marketing_agreed, marketing_email, marketing_sms, marketing_kakao, marketing_agreed_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        (username, password, email, marketing_email, marketing_sms, marketing_kakao, marketing_agreed_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
         username, hashed, email,
-        agreed ? 1 : 0,
-        agreed && marketingChannels?.email  ? 1 : 0,
-        agreed && marketingChannels?.sms    ? 1 : 0,
-        agreed && marketingChannels?.kakao  ? 1 : 0,
-        agreed ? new Date() : null,
+        marketingEmail,
+        0,
+        0,
+        marketingAgreed === true ? new Date() : null,
       ]
     )
 

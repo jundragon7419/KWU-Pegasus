@@ -120,8 +120,12 @@ export default function Header() {
           </>
         ) : (
           <>
-            <Link to="/login" className={styles.loginButton}>로그인</Link>
-            <Link to="/signup" className={styles.signupButton}>회원가입</Link>
+            {location.pathname !== '/login' && (
+              <Link to="/login" className={styles.loginButton}>로그인</Link>
+            )}
+            {location.pathname !== '/signup' && (
+              <Link to="/signup" className={styles.signupButton}>회원가입</Link>
+            )}
           </>
         )}
       </div>
