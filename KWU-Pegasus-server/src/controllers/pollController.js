@@ -87,7 +87,7 @@ exports.getPollByPostId = async (req, res, next) => {
       [postId]
     )
     if (pollRows.length === 0) {
-      return res.status(404).json({ message: '투표를 찾을 수 없습니다.' })
+      return res.json(null)
     }
 
     res.json(await loadPollData(pollRows[0], req.user?.id, req.user?.role))

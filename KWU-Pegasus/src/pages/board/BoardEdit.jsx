@@ -58,10 +58,7 @@ export default function BoardEdit() {
     // 투표 데이터 로드
     const headers = token ? { Authorization: `Bearer ${token}` } : {}
     fetch(`${API_BASE}/api/polls/post/${id}`, { headers })
-      .then(r => {
-        if (r.status === 404) return null
-        return r.json()
-      })
+      .then(r => r.json())
       .then(data => {
         if (data) {
           setHasPoll(true)

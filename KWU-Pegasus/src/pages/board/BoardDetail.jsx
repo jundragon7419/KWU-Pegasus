@@ -63,16 +63,9 @@ export default function BoardDetail() {
       pollOptions.headers = { Authorization: `Bearer ${token}` }
     }
     fetch(`${API_BASE}/api/polls/post/${id}`, pollOptions)
-      .then(r => {
-        if (r.status === 404) {
-          setPoll(null)
-          setPollLoading(false)
-          return null
-        }
-        return r.json()
-      })
+      .then(r => r.json())
       .then(data => {
-        if (data) setPoll(data)
+        setPoll(data)
         setPollLoading(false)
       })
       .catch(err => {
