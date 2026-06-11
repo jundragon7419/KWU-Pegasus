@@ -1,5 +1,0 @@
-{
-  "buildCommand": "cd KWU-Pegasus && npm install && npm run build",
-  "outputDirectory": "KWU-Pegasus/dist",
-  "installCommand": "echo 'skip'"
-}
