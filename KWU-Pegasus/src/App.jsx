@@ -5,8 +5,6 @@ import Header from './layouts/Header'
 import Home from './pages/Home'
 import Login from './pages/auth/Login'
 import Signup from './pages/auth/Signup'
-import KakaoSignupForm from './pages/auth/KakaoSignupForm'
-import KakaoSignupError from './pages/auth/KakaoSignupError'
 import Unauthorized from './pages/Unauthorized'
 import Schedule from './pages/Schedule'
 import Roster from './pages/Roster'
@@ -41,8 +39,6 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
-            <Route path="/auth/kakao-signup-form" element={<KakaoSignupForm />} />
-            <Route path="/auth/kakao-signup-error" element={<KakaoSignupError />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
             <Route path="/schedule" element={<Schedule />} />
             <Route path="/roster" element={<Roster />} />

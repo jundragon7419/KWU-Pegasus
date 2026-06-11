@@ -8,7 +8,11 @@ export const STAFF_TYPE_LABEL = {
   president: '회장', headcoach: '감독',
 }
 
-export const CATEGORY_LABEL = { notice: '공지', event: '행사', game: '경기' }
+export const MANAGER_ROLES = ['manager', 'staff', 'root']
+
+export function isManagerRole(user) {
+  return !!user && MANAGER_ROLES.includes(user.role)
+}
 
 export const POST_TYPE_LABEL = {
   notice:          '공지',
@@ -25,8 +29,8 @@ export const ROSTER_ROLE_LABEL = {
 }
 
 export const EVENT_TYPES = {
-  training: { color: 'var(--event-training)', bg: 'var(--event-training-bg)', border: 'var(--event-training-border)' },
-  meeting:  { color: 'var(--event-meeting)',  bg: 'var(--event-meeting-bg)',  border: 'var(--event-meeting-border)'  },
-  events:   { color: 'var(--event-events)',   bg: 'var(--event-events-bg)',   border: 'var(--event-events-border)'   },
-  etc:      { color: 'var(--event-etc)',      bg: 'var(--event-etc-bg)',      border: 'var(--event-etc-border)'      },
+  training: { label: '훈련',   color: 'var(--event-training)', bg: 'var(--event-training-bg)', border: 'var(--event-training-border)' },
+  meeting:  { label: '미팅',   color: 'var(--event-meeting)',  bg: 'var(--event-meeting-bg)',  border: 'var(--event-meeting-border)'  },
+  events:   { label: '이벤트', color: 'var(--event-events)',   bg: 'var(--event-events-bg)',   border: 'var(--event-events-border)'   },
+  etc:      { label: '기타',   color: 'var(--event-etc)',      bg: 'var(--event-etc-bg)',      border: 'var(--event-etc-border)'      },
 }

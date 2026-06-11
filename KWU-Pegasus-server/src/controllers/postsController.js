@@ -1,5 +1,6 @@
 const pool = require('../db')
 const { log } = require('../services/activityLogService')
+const { isManagerRole } = require('../lib/constants')
 
 const MANAGER_TYPES  = ['notice', 'event', 'game']
 const PINNABLE_TYPES = ['notice', 'event', 'game', 'family_occasion']
@@ -52,7 +53,7 @@ exports.getPost = async (req, res, next) => {
 exports.createPost = async (req, res, next) => {
   try {
     const { type = 'normal', pinUntil, title, content, poll } = req.body
-    const isManager = ['manager', 'staff', 'root'].includes(req.user.role)
+    const isManager = isManagerRole(req.user.role)
 
     if (MANAGER_TYPES.includes(type) && !isManager) {
       return res.status(403).json({ message: '해당 유형은 매니저 이상만 작성할 수 있습니다.' })
@@ -101,7 +102,7 @@ exports.updatePost = async (req, res, next) => {
     if (rows.length === 0) return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' })
 
     const isOwner   = rows[0].user_id === req.user.id
-    const isManager = ['manager', 'staff', 'root'].includes(req.user.role)
+    const isManager = isManagerRole(req.user.role)
     if (!isOwner && !isManager) return res.status(403).json({ message: '본인 게시글만 수정할 수 있습니다.' })
 
     const { type, pinUntil, title, content, poll } = req.body
@@ -168,7 +169,7 @@ exports.deletePost = async (req, res, next) => {
     if (rows.length === 0) return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' })
 
     const isOwner   = rows[0].user_id === req.user.id
-    const isManager = ['manager', 'staff', 'root'].includes(req.user.role)
+    const isManager = isManagerRole(req.user.role)
     if (!isOwner && !isManager) return res.status(403).json({ message: '본인 게시글만 삭제할 수 있습니다.' })
 
     const snapshot = { type: rows[0].type, title: rows[0].title, content: rows[0].content }

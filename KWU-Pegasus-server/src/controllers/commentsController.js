@@ -1,5 +1,6 @@
 const pool = require('../db')
 const { log } = require('../services/activityLogService')
+const { isManagerRole } = require('../lib/constants')
 
 exports.getComments = async (req, res, next) => {
   try {
@@ -76,7 +77,7 @@ exports.deleteComment = async (req, res, next) => {
     if (rows.length === 0) return res.status(404).json({ message: '댓글을 찾을 수 없습니다.' })
 
     const isOwner   = rows[0].user_id === req.user.id
-    const isManager = ['manager', 'staff', 'root'].includes(req.user.role)
+    const isManager = isManagerRole(req.user.role)
     if (!isOwner && !isManager) return res.status(403).json({ message: '삭제 권한이 없습니다.' })
 
     const snapshot = { content: rows[0].content, post_id: rows[0].post_id, post_title: rows[0].post_title }

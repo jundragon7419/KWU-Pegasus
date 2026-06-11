@@ -1,8 +1,8 @@
-import { useState, useMemo, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { API_BASE } from '../lib/api'
-import { EVENT_TYPES, DAYS } from '../lib/constants'
+import { EVENT_TYPES, DAYS, isManagerRole } from '../lib/constants'
 import { useAuth } from '../context/AuthContext'
+import { useScheduleData } from '../hooks/useScheduleData'
 import styles from './Schedule.module.css'
 
 const MONTHS = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월']
@@ -11,7 +11,7 @@ const MIN_YEAR = 2000
 export default function Schedule() {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const canManage = user && ['manager', 'staff', 'root'].includes(user.role)
+  const canManage = isManagerRole(user)
 
   const today = new Date()
   const [current, setCurrent] = useState({ year: today.getFullYear(), month: today.getMonth() })
@@ -19,8 +19,6 @@ export default function Schedule() {
   const [pickerYear, setPickerYear] = useState(current.year)
   const pickerRef = useRef(null)
 
-  const [holidays, setHolidays] = useState([])
-  const [events, setEvents] = useState([])
   const [tooltip, setTooltip] = useState(null)
 
   function showTooltip(e, text) {
@@ -30,39 +28,7 @@ export default function Schedule() {
     setTooltip(null)
   }
 
-  useEffect(() => {
-    fetch(`${API_BASE}/api/holidays?year=${current.year}`)
-      .then(r => r.json())
-      .then(data => setHolidays(data))
-  }, [current.year])
-
-  useEffect(() => {
-    fetch(`${API_BASE}/api/events?year=${current.year}`)
-      .then(r => r.json())
-      .then(data => setEvents(data))
-  }, [current.year])
-
-  const holidayMap = useMemo(() => {
-    const map = new Map()
-    for (const h of holidays) {
-      const key = `${String(h.month).padStart(2, '0')}-${String(h.day).padStart(2, '0')}`
-      if (!map.has(key)) map.set(key, [])
-      map.get(key).push(h.name)
-    }
-    return map
-  }, [holidays])
-
-  const eventMap = useMemo(() => {
-    const map = new Map()
-    for (const e of events) {
-      const [, eMonth, eDay] = e.date.split('-').map(Number)
-      if (eMonth !== current.month + 1) continue
-      const day = String(eDay).padStart(2, '0')
-      if (!map.has(day)) map.set(day, [])
-      map.get(day).push(e)
-    }
-    return map
-  }, [events, current.month])
+  const { holidayMap, eventMap } = useScheduleData(current.year, current.month)
 
   function prevMonth() {
     setCurrent(({ year, month }) => {

@@ -1,15 +1,9 @@
-import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { API_BASE } from '../../lib/api'
-import { useAuth } from '../../context/AuthContext'
 import styles from './Signup.module.css'
 
-const KAKAO_APP_KEY = '410636bf5b4af39ef7954bc6e61d58d2' // TODO: .env에서 로드
-
 export default function Signup() {
-  const { login } = useAuth()
-  const navigate = useNavigate()
-
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [passwordConfirm, setPasswordConfirm] = useState('')
@@ -29,78 +23,8 @@ export default function Signup() {
   const [marketingAgreed, setMarketingAgreed] = useState(null)
   const [showPassword, setShowPassword] = useState(false)
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false)
-  const [emailCheckDuplicate, setEmailCheckDuplicate] = useState(null) // null | 'ok' | 'taken'
 
   const usernameValid = /^[a-zA-Z0-9_]{5,15}$/.test(username)
-  const usernameError = username && !usernameValid
-    ? '영문 대/소문자, 숫자, 특수문자(_)로 구성된 5~15자'
-    : ''
-
-  useEffect(() => {
-    // 카카오 SDK 로드
-    const script = document.createElement('script')
-    script.src = 'https://developers.kakao.com/sdk/js/kakao.js'
-    script.async = true
-    document.head.appendChild(script)
-
-    script.onload = () => {
-      if (window.Kakao && !window.Kakao.isInitialized()) {
-        window.Kakao.init(KAKAO_APP_KEY)
-      }
-    }
-  }, [])
-
-  async function handleKakaoSignup() {
-    if (!window.Kakao) {
-      setError('카카오 SDK를 불러올 수 없습니다.')
-      return
-    }
-
-    window.Kakao.Auth.login({
-      success: async (authObj) => {
-        try {
-          // 카카오 사용자 정보 조회
-          window.Kakao.API.request({
-            url: '/v2/user/me',
-            success: async (res) => {
-              const kakaoEmail = res.kakao_account?.email
-
-              // 1. 이메일 중복 확인
-              const emailCheckRes = await fetch(
-                `${API_BASE}/api/auth/check-email?email=${encodeURIComponent(kakaoEmail)}`
-              )
-              const emailCheckData = await emailCheckRes.json()
-
-              if (!emailCheckData.available) {
-                // 이메일 중복 → 에러 페이지로 이동
-                sessionStorage.removeItem('kakao_info')
-                navigate('/auth/kakao-signup-error')
-                return
-              }
-
-              // 2. 이메일 중복 아님 → 카카오 정보 저장 후 가입폼으로 이동
-              const kakaoInfo = {
-                kakao_id: res.id,
-                email: kakaoEmail,
-                name: res.kakao_account?.profile?.nickname || '사용자',
-                phone_number: res.kakao_account?.phone_number || '',
-              }
-              sessionStorage.setItem('kakao_info', JSON.stringify(kakaoInfo))
-              navigate('/auth/kakao-signup-form')
-            },
-            fail: () => {
-              setError('카카오 사용자 정보를 불러올 수 없습니다.')
-            },
-          })
-        } catch {
-          setError('회원가입 처리 중 오류가 발생했습니다.')
-        }
-      },
-      fail: () => {
-        setError('카카오 회원가입이 취소되었습니다.')
-      },
-    })
-  }
 
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
   const emailError = email && !emailValid ? '올바른 이메일 형식이 아닙니다.' : ''
@@ -111,7 +35,7 @@ export default function Signup() {
 
     const hasLetter = /[a-zA-Z]/.test(password)
     const hasNumber = /[0-9]/.test(password)
-    const hasSpecial = /[!@#$%^&*()_\-=\[\]{};:'",.<>?/\\|]/.test(password)
+    const hasSpecial = /[!@#$%^&*()_\-=[\]{};:'",.<>?/\\|]/.test(password)
 
     const missing = []
     if (!hasLetter) missing.push('영문')
@@ -304,7 +228,6 @@ export default function Signup() {
                 onChange={e => {
                   const val = e.target.value
                   setEmail(val)
-                  setEmailCheckDuplicate(null)
                   if (verifiedEmail && val !== verifiedEmail) {
                     setEmailVerified(false)
                     setCodeSent(false)
@@ -332,12 +255,9 @@ export default function Signup() {
 
                       if (!checkData.available) {
                         setCodeMsg('이미 사용 중인 이메일입니다.')
-                        setEmailCheckDuplicate('taken')
                         setCodeSending(false)
                         return
                       }
-
-                      setEmailCheckDuplicate('ok')
 
                       // 인증번호 발송
                       const res = await fetch(`${API_BASE}/api/auth/send-email-code`, {

@@ -70,9 +70,7 @@ export default function MyPage() {
   const [votesPage, setVotesPage]                 = useState(1)
   const [expandedVoteId, setExpandedVoteId]       = useState(null)
   const [pollData, setPollData]                   = useState({})
-  const [pollLoadingId, setPollLoadingId]         = useState(null)
   const [me, setMe] = useState(null)
-  const [rosterHistory, setRosterHistory] = useState([])
 
   // 계정 정보 편집
   const [editingAccount, setEditingAccount] = useState(false)
@@ -85,7 +83,6 @@ export default function MyPage() {
   const [showCountryDrop, setShowCountryDrop]   = useState(false)
   const countryRef = useRef(null)
   const [usernameCheck, setUsernameCheck] = useState(null) // null | 'ok' | 'taken'
-  const [emailCheck, setEmailCheck]       = useState(null)
   const [emailCodeSent, setEmailCodeSent] = useState(false)
   const [emailCode, setEmailCode] = useState('')
   const [emailCodeVerified, setEmailCodeVerified] = useState(false)
@@ -135,13 +132,6 @@ export default function MyPage() {
   }, [])
 
   useEffect(() => {
-    if (!token || !me || !MEMBER_ROLES.includes(me.role) || !me.student_id) return
-    fetch(`${API_BASE}/api/mypage/roster-history`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json())
-      .then(data => setRosterHistory(Array.isArray(data) ? data : []))
-  }, [token, me])
-
-  useEffect(() => {
     if (!token || !me || !MEMBER_ROLES.includes(me.role)) return
     fetch(`${API_BASE}/api/mypage/posts`,    { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json()).then(data => setMyPosts(Array.isArray(data) ? data : []))
@@ -181,7 +171,6 @@ export default function MyPage() {
     setCountryInput(countryCode)
     setEditPhone(countryCode === '82' ? formatKoreanPhone(me.phone ?? '') : (me.phone ?? ''))
     setUsernameCheck(null)
-    setEmailCheck(null)
     setEmailCodeSent(false)
     setEmailCode('')
     setEmailCodeVerified(false)
@@ -192,7 +181,6 @@ export default function MyPage() {
 
   async function loadPollData(pollId) {
     if (pollData[pollId]) return
-    setPollLoadingId(pollId)
     try {
       const headers = token ? { Authorization: `Bearer ${token}` } : {}
       const res = await fetch(`${API_BASE}/api/polls/${pollId}`, { headers })
@@ -203,7 +191,6 @@ export default function MyPage() {
     } catch (err) {
       console.error('투표 데이터 로드 실패:', err)
     }
-    setPollLoadingId(null)
   }
 
   function selectCountry(c) {
@@ -260,16 +247,6 @@ export default function MyPage() {
     )
     const data = await res.json()
     setUsernameCheck(data.available ? 'ok' : 'taken')
-  }
-
-  async function handleCheckEmail() {
-    if (!editEmail) return
-    const res = await fetch(
-      `${API_BASE}/api/mypage/check-email?email=${encodeURIComponent(editEmail)}`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    )
-    const data = await res.json()
-    setEmailCheck(data.available ? 'ok' : 'taken')
   }
 
   async function handleSendEmailCode() {
@@ -425,7 +402,6 @@ export default function MyPage() {
   const isBasic       = me.role === 'basic'
   const memberStatus  = me.membership_status
   const roleDisplay   = getRoleDisplay(me.role, me.staff_type)
-  const showRosterHistory = MEMBER_ROLES.includes(me.role) && me.student_id
 
   const filteredCountries = (() => {
     const input = countryInput.trim()

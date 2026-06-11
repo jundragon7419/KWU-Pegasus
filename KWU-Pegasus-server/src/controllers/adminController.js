@@ -1,5 +1,5 @@
 const pool = require('../db')
-const { STUDENT_ID_REGEX, ROSTER_ROLES, STAFF_TYPES } = require('../lib/constants')
+const { STUDENT_ID_REGEX, ROSTER_ROLES, STAFF_TYPES, ROSTER_ORDER_BY } = require('../lib/constants')
 const { syncHolidaysFromAPI } = require('../services/holidayService')
 const { log } = require('../services/activityLogService')
 
@@ -53,10 +53,7 @@ exports.getRosterAdmin = async (req, res, next) => {
        FROM roster r
        LEFT JOIN users u ON u.student_id = r.student_id
        WHERE r.year = ?
-       ORDER BY
-         CASE WHEN r.number = 'M' THEN 1 ELSE 0 END ASC,
-         CASE WHEN r.number != 'M' THEN CAST(r.number AS UNSIGNED) END ASC,
-         r.generation ASC`,
+       ${ROSTER_ORDER_BY}`,
       [year]
     )
     res.json(rows)
@@ -153,17 +150,17 @@ exports.getOrgMembers = async (_req, res, next) => {
 // ── 멤버 강등 (authority='member' → 'basic', membership_status='none')
 exports.demoteMember = async (req, res, next) => {
   try {
-    const [rows] = await pool.query('SELECT authority FROM users WHERE id = ?', [req.params.id])
+    const [rows] = await pool.query('SELECT authority, username, name, student_id, ob_yb FROM users WHERE id = ?', [req.params.id])
     if (rows.length === 0) return res.status(404).json({ message: '유저를 찾을 수 없습니다.' })
     if (rows[0].authority !== 'member') {
       return res.status(400).json({ message: '멤버만 강등할 수 있습니다.' })
     }
-    const [[u]] = await pool.query('SELECT username, name, student_id, ob_yb FROM users WHERE id = ?', [req.params.id])
+    const { username, name, student_id, ob_yb } = rows[0]
     await pool.query(
       "UPDATE users SET authority = 'basic', membership_status = 'none' WHERE id = ?",
       [req.params.id]
     )
-    if (u) log(req.user.id, 'member_demote', 'user', parseInt(req.params.id), u)
+    log(req.user.id, 'member_demote', 'user', parseInt(req.params.id), { username, name, student_id, ob_yb })
     res.json({ message: '회원 강등 완료' })
   } catch (err) {
     next(err)
@@ -185,10 +182,10 @@ exports.getBasicUsers = async (_req, res, next) => {
 // ── 계정 차단 (membership_status = 'banned')
 exports.banUser = async (req, res, next) => {
   try {
-    const [rows] = await pool.query('SELECT authority FROM users WHERE id = ?', [req.params.id])
+    const [rows] = await pool.query('SELECT authority, username, name, student_id, ob_yb FROM users WHERE id = ?', [req.params.id])
     if (rows.length === 0) return res.status(404).json({ message: '유저를 찾을 수 없습니다.' })
 
-    const targetAuthority = rows[0].authority
+    const { authority: targetAuthority, username, name, student_id, ob_yb } = rows[0]
     const requesterRole = req.user.role
 
     // staff: basic/member/manager 차단 가능, root: basic/member/manager/staff 차단 가능
@@ -200,9 +197,8 @@ exports.banUser = async (req, res, next) => {
       return res.status(403).json({ message: '해당 계정을 차단할 권한이 없습니다.' })
     }
 
-    const [[u]] = await pool.query('SELECT username, name, student_id, ob_yb FROM users WHERE id = ?', [req.params.id])
     await pool.query("UPDATE users SET membership_status = 'banned' WHERE id = ?", [req.params.id])
-    if (u) log(req.user.id, 'user_ban', 'user', parseInt(req.params.id), u)
+    log(req.user.id, 'user_ban', 'user', parseInt(req.params.id), { username, name, student_id, ob_yb })
     res.json({ message: '계정이 차단되었습니다.' })
   } catch (err) {
     next(err)
@@ -254,19 +250,19 @@ exports.setStaff = async (req, res, next) => {
       return res.status(400).json({ message: '스태프 직함을 선택해주세요.' })
     }
     const [rows] = await pool.query(
-      'SELECT authority FROM users WHERE id = ?',
+      'SELECT authority, username, name, student_id, ob_yb FROM users WHERE id = ?',
       [req.params.id]
     )
     if (rows.length === 0) return res.status(404).json({ message: '유저를 찾을 수 없습니다.' })
     if (!['member', 'manager'].includes(rows[0].authority)) {
       return res.status(400).json({ message: '멤버 또는 매니저만 스태프로 임명할 수 있습니다.' })
     }
-    const [[u]] = await pool.query('SELECT username, name, student_id, ob_yb FROM users WHERE id = ?', [req.params.id])
+    const { username, name, student_id, ob_yb } = rows[0]
     await pool.query(
       "UPDATE users SET authority = 'staff', staff_type = ? WHERE id = ?",
       [staff_type, req.params.id]
     )
-    if (u) log(req.user.id, 'role_set_staff', 'user', parseInt(req.params.id), { ...u, staff_type })
+    log(req.user.id, 'role_set_staff', 'user', parseInt(req.params.id), { username, name, student_id, ob_yb, staff_type })
     res.json({ message: '스태프 임명 완료' })
   } catch (err) {
     next(err)
@@ -276,14 +272,14 @@ exports.setStaff = async (req, res, next) => {
 // ── 매니저 해제 (staff/root가 manager → member로 강등)
 exports.unsetManager = async (req, res, next) => {
   try {
-    const [rows] = await pool.query('SELECT authority FROM users WHERE id = ?', [req.params.id])
+    const [rows] = await pool.query('SELECT authority, username, name, student_id, ob_yb FROM users WHERE id = ?', [req.params.id])
     if (rows.length === 0) return res.status(404).json({ message: '유저를 찾을 수 없습니다.' })
     if (rows[0].authority !== 'manager') {
       return res.status(400).json({ message: '매니저만 해제할 수 있습니다.' })
     }
-    const [[u]] = await pool.query('SELECT username, name, student_id, ob_yb FROM users WHERE id = ?', [req.params.id])
+    const { username, name, student_id, ob_yb } = rows[0]
     await pool.query("UPDATE users SET authority = 'member' WHERE id = ?", [req.params.id])
-    if (u) log(req.user.id, 'role_unset_manager', 'user', parseInt(req.params.id), u)
+    log(req.user.id, 'role_unset_manager', 'user', parseInt(req.params.id), { username, name, student_id, ob_yb })
     res.json({ message: '매니저 해제 완료' })
   } catch (err) {
     next(err)
@@ -293,14 +289,14 @@ exports.unsetManager = async (req, res, next) => {
 // ── 스태프 해제 (root가 staff → member로 강등)
 exports.unsetStaff = async (req, res, next) => {
   try {
-    const [rows] = await pool.query('SELECT authority FROM users WHERE id = ?', [req.params.id])
+    const [rows] = await pool.query('SELECT authority, username, name, student_id, ob_yb FROM users WHERE id = ?', [req.params.id])
     if (rows.length === 0) return res.status(404).json({ message: '유저를 찾을 수 없습니다.' })
     if (rows[0].authority !== 'staff') {
       return res.status(400).json({ message: '스태프만 해제할 수 있습니다.' })
     }
-    const [[u]] = await pool.query('SELECT username, name, student_id, ob_yb FROM users WHERE id = ?', [req.params.id])
+    const { username, name, student_id, ob_yb } = rows[0]
     await pool.query("UPDATE users SET authority = 'member', staff_type = NULL WHERE id = ?", [req.params.id])
-    if (u) log(req.user.id, 'role_unset_staff', 'user', parseInt(req.params.id), u)
+    log(req.user.id, 'role_unset_staff', 'user', parseInt(req.params.id), { username, name, student_id, ob_yb })
     res.json({ message: '스태프 해제 완료' })
   } catch (err) {
     next(err)
@@ -311,19 +307,19 @@ exports.unsetStaff = async (req, res, next) => {
 exports.setManager = async (req, res, next) => {
   try {
     const [rows] = await pool.query(
-      'SELECT authority FROM users WHERE id = ?',
+      'SELECT authority, username, name, student_id, ob_yb FROM users WHERE id = ?',
       [req.params.id]
     )
     if (rows.length === 0) return res.status(404).json({ message: '유저를 찾을 수 없습니다.' })
     if (rows[0].authority !== 'member') {
       return res.status(400).json({ message: '멤버만 매니저로 임명할 수 있습니다.' })
     }
-    const [[u]] = await pool.query('SELECT username, name, student_id, ob_yb FROM users WHERE id = ?', [req.params.id])
+    const { username, name, student_id, ob_yb } = rows[0]
     await pool.query(
       "UPDATE users SET authority = 'manager' WHERE id = ?",
       [req.params.id]
     )
-    if (u) log(req.user.id, 'role_set_manager', 'user', parseInt(req.params.id), u)
+    log(req.user.id, 'role_set_manager', 'user', parseInt(req.params.id), { username, name, student_id, ob_yb })
     res.json({ message: '매니저 임명 완료' })
   } catch (err) {
     next(err)
@@ -360,14 +356,13 @@ exports.getBannableUsers = async (_req, res, next) => {
 // ── 차단 해제
 exports.unbanUser = async (req, res, next) => {
   try {
-    const [rows] = await pool.query('SELECT authority FROM users WHERE id = ?', [req.params.id])
+    const [rows] = await pool.query('SELECT authority, username, name, student_id, ob_yb FROM users WHERE id = ?', [req.params.id])
     if (rows.length === 0) return res.status(404).json({ message: '유저를 찾을 수 없습니다.' })
 
-    const { authority } = rows[0]
+    const { authority, username, name, student_id, ob_yb } = rows[0]
     const newStatus = ['member', 'manager', 'staff'].includes(authority) ? 'approved' : 'none'
-    const [[u]] = await pool.query('SELECT username, name, student_id, ob_yb FROM users WHERE id = ?', [req.params.id])
     await pool.query('UPDATE users SET membership_status = ? WHERE id = ?', [newStatus, req.params.id])
-    if (u) log(req.user.id, 'user_unban', 'user', parseInt(req.params.id), u)
+    log(req.user.id, 'user_unban', 'user', parseInt(req.params.id), { username, name, student_id, ob_yb })
     res.json({ message: '차단이 해제되었습니다.' })
   } catch (err) {
     next(err)

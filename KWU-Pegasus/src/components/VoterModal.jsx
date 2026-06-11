@@ -1,6 +1,7 @@
 import styles from './VoterModal.module.css'
 
-export default function VoterModal({ option, voters, onClose }) {
+export default function VoterModal({ option, onClose }) {
+  const voters = option.voters
   return (
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={e => e.stopPropagation()}>

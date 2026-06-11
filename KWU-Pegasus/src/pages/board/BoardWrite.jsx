@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { API_BASE } from '../../lib/api'
-import { POST_TYPE_LABEL, POST_TYPE_MANAGER } from '../../lib/constants'
+import { POST_TYPE_LABEL, POST_TYPE_MANAGER, isManagerRole } from '../../lib/constants'
 import { useAuth } from '../../context/AuthContext'
 import styles from '../Write.module.css'
 
@@ -10,7 +10,7 @@ const PINNABLE_TYPES = ['notice', 'event', 'game', 'family_occasion']
 export default function BoardWrite() {
   const navigate = useNavigate()
   const { user, token } = useAuth()
-  const isManager = user && ['manager', 'staff', 'root'].includes(user.role)
+  const isManager = isManagerRole(user)
 
   const [type, setType] = useState('normal')
   const [pinEnabled, setPinEnabled] = useState(false)

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { API_BASE } from '../../lib/api'
-import { POST_TYPE_LABEL, POST_TYPE_MANAGER } from '../../lib/constants'
+import { POST_TYPE_LABEL, POST_TYPE_MANAGER, isManagerRole } from '../../lib/constants'
 import { useAuth } from '../../context/AuthContext'
 import styles from '../Write.module.css'
 
@@ -11,7 +11,7 @@ export default function BoardEdit() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { user, token } = useAuth()
-  const isManager = user && ['manager', 'staff', 'root'].includes(user.role)
+  const isManager = isManagerRole(user)
 
   const [type, setType] = useState('normal')
   const [pinEnabled, setPinEnabled] = useState(false)
@@ -73,7 +73,7 @@ export default function BoardEdit() {
           setPollOptions(data.options.map(opt => opt.text))
         }
       })
-  }, [id, token])
+  }, [id, token, user?.id])
 
   if (notFound)  return <p>존재하지 않는 게시글입니다.</p>
   if (forbidden) return <p>수정 권한이 없습니다.</p>
@@ -271,6 +271,19 @@ export default function BoardEdit() {
         </div>
 
         {/* 투표 섹션 */}
+        {!pollData && (
+          <div className={styles.field}>
+            <label className={`${styles.pollCheck} ${hasPoll ? styles.pollCheckActive : ''}`}>
+              <input
+                type="checkbox"
+                checked={hasPoll}
+                onChange={e => setHasPoll(e.target.checked)}
+              />
+              투표 추가
+            </label>
+          </div>
+        )}
+
         {hasPoll && (
           <div className={styles.pollSection}>
             <div className={styles.field}>

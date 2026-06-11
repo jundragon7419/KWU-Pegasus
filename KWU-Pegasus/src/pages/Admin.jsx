@@ -6,6 +6,9 @@ import { ROLE_LABEL, STAFF_TYPE_LABEL, ROSTER_ROLE_LABEL } from '../lib/constant
 import { useTabIndicator } from '../hooks/useTabIndicator'
 import styles from './Admin.module.css'
 
+const STAFF_BANNABLE = ['basic', 'member', 'manager']
+const ROOT_BANNABLE  = ['basic', 'member', 'manager', 'staff']
+
 const ROSTER_ROLE_OPTIONS = [
   { value: 'roster_player',    label: '선수' },
   { value: 'roster_headcoach', label: '감독' },
@@ -19,7 +22,7 @@ export default function Admin() {
   const [tab, setTab] = useState('pending')
   const { containerRef, indicatorRef } = useTabIndicator(tab)
 
-  useEffect(() => { refreshUser() }, [])
+  useEffect(() => { refreshUser() }, [refreshUser])
 
   const isRoot = user?.role === 'root'
   const isStaffOrRoot = user && ['staff', 'root'].includes(user.role)
@@ -92,8 +95,10 @@ function PendingTab({ token }) {
     })
       .then(r => r.json())
       .then(data => { setList(data); setLoading(false) })
+      .catch(err => { console.error('멤버 신청 목록 로드 실패:', err); setLoading(false) })
   }, [token])
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- 마운트 시 데이터 로드
   useEffect(() => { load() }, [load])
 
   if (loading) return <p className={styles.empty}>불러오는 중...</p>
@@ -170,7 +175,6 @@ function RosterManagementTab({ token }) {
   const [roster, setRoster] = useState([])
   const [loading, setLoading] = useState(false)
 
-  const [activeYear, setActiveYear] = useState(null)
   const [addYear, setAddYear] = useState('')
   const [addNumber, setAddNumber] = useState('')
   const [addName, setAddName] = useState('')
@@ -184,10 +188,10 @@ function RosterManagementTab({ token }) {
       .then(r => r.json())
       .then(data => {
         if (data.year) {
-          setActiveYear(data.year)
           setAddYear(String(data.year))
         }
       })
+      .catch(err => console.error('활성 로스터 연도 로드 실패:', err))
   }, [])
 
   const loadYears = useCallback(() => {
@@ -195,11 +199,12 @@ function RosterManagementTab({ token }) {
       .then(r => r.json())
       .then(data => {
         setYears(data)
-        if (data.length > 0 && !selectedYear) setSelectedYear(data[0])
+        if (data.length > 0) setSelectedYear(prev => prev ?? data[0])
       })
+      .catch(err => console.error('로스터 연도 목록 로드 실패:', err))
   }, [])
 
-  useEffect(() => { loadYears() }, [])
+  useEffect(() => { loadYears() }, [loadYears])
 
   const loadRoster = useCallback(() => {
     if (!selectedYear) return
@@ -209,8 +214,10 @@ function RosterManagementTab({ token }) {
     })
       .then(r => r.json())
       .then(data => { setRoster(data); setLoading(false) })
+      .catch(err => { console.error('로스터 목록 로드 실패:', err); setLoading(false) })
   }, [selectedYear, token])
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- 마운트/연도 변경 시 데이터 로드
   useEffect(() => { loadRoster() }, [loadRoster])
 
   async function handleAdd(e) {
@@ -430,9 +437,10 @@ function PromoteTab({ token }) {
       setMembers(Array.isArray(membersData) ? membersData : [])
       setManagers(Array.isArray(managersData) ? managersData : [])
       setLoading(false)
-    })
+    }).catch(err => { console.error('매니저 임명 목록 로드 실패:', err); setLoading(false) })
   }, [token])
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- 마운트 시 데이터 로드
   useEffect(() => { load() }, [load])
 
   async function handlePromote(id) {
@@ -552,9 +560,10 @@ function StaffPromoteTab({ token }) {
       setCandidates(combined)
       setStaffs(Array.isArray(staffsData) ? staffsData : [])
       setLoading(false)
-    })
+    }).catch(err => { console.error('스태프 임명 목록 로드 실패:', err); setLoading(false) })
   }, [token])
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- 마운트 시 데이터 로드
   useEffect(() => { load() }, [load])
 
   function getStaffType(id) { return staffTypes[id] ?? 'president' }
@@ -673,8 +682,10 @@ function BasicUsersTab({ token }) {
     })
       .then(r => r.json())
       .then(data => { setList(data); setLoading(false) })
+      .catch(err => { console.error('일반유저 목록 로드 실패:', err); setLoading(false) })
   }, [token])
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- 마운트 시 데이터 로드
   useEffect(() => { load() }, [load])
 
   async function handleBan(id) {
@@ -756,8 +767,10 @@ function MemberMgmtTab({ token }) {
     })
       .then(r => r.json())
       .then(data => { setList(data); setLoading(false) })
+      .catch(err => { console.error('멤버 목록 로드 실패:', err); setLoading(false) })
   }, [token])
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- 마운트 시 데이터 로드
   useEffect(() => { load() }, [load])
 
   async function handleDemote(id) {
@@ -839,7 +852,6 @@ function MemberMgmtTab({ token }) {
           </div>
         </div>
       ))}
-      {groups.every(g => g.users.length === 0) && !msg && null}
     </div>
   )
 }
@@ -851,9 +863,6 @@ function BannedTab({ token, user }) {
   const [loading, setLoading] = useState(true)
   const [msg, setMsg] = useState('')
 
-  const staffBannable = ['basic', 'member', 'manager']
-  const rootBannable  = ['basic', 'member', 'manager', 'staff']
-
   const load = useCallback(() => {
     setLoading(true)
     Promise.all([
@@ -861,12 +870,13 @@ function BannedTab({ token, user }) {
       fetch(`${API_BASE}/api/admin/bannable-users`,  { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()),
     ]).then(([bannedData, bannableData]) => {
       setBanned(Array.isArray(bannedData) ? bannedData : [])
-      const allowed = user?.role === 'root' ? rootBannable : staffBannable
+      const allowed = user?.role === 'root' ? ROOT_BANNABLE : STAFF_BANNABLE
       setBannable(Array.isArray(bannableData) ? bannableData.filter(u => allowed.includes(u.authority)) : [])
       setLoading(false)
-    })
+    }).catch(err => { console.error('차단 계정 목록 로드 실패:', err); setLoading(false) })
   }, [token, user])
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- 마운트 시 데이터 로드
   useEffect(() => { load() }, [load])
 
   async function handleBan(id) {
@@ -980,9 +990,10 @@ function RosterYearTab({ token }) {
       setYears(Array.isArray(yearsData) ? yearsData : [])
       setSelected(current ? String(current) : '')
       setLoading(false)
-    })
+    }).catch(err => { console.error('활성 로스터 연도 로드 실패:', err); setLoading(false) })
   }, [])
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- 마운트 시 데이터 로드
   useEffect(() => { load() }, [load])
 
   async function handleSave() {

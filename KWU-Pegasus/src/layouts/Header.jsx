@@ -1,7 +1,7 @@
 import { useRef, useEffect, useCallback, useState } from 'react'
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { ROLE_LABEL, STAFF_TYPE_LABEL } from '../lib/constants'
+import { ROLE_LABEL, STAFF_TYPE_LABEL, isManagerRole } from '../lib/constants'
 import styles from './Header.module.css'
 
 export default function Header() {
@@ -11,7 +11,7 @@ export default function Header() {
   const navRef = useRef(null)
   const indicatorRef = useRef(null)
 
-  const isAdmin = user && ['manager', 'staff', 'root'].includes(user.role)
+  const isAdmin = isManagerRole(user)
   const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => { setMenuOpen(false) }, [location.pathname])

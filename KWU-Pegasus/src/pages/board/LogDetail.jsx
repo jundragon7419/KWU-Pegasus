@@ -27,7 +27,7 @@ export default function LogDetail() {
     )
   }
 
-  const { snapshot, action, targetId } = log
+  const { snapshot, action } = log
   const isPost    = action.startsWith('post_')
   const isComment = action.startsWith('comment_')
 
@@ -71,7 +71,7 @@ export default function LogDetail() {
         <div className={styles.divider} />
 
         <div className={styles.body}>
-          <ContentRenderer content={isPost ? (snapshot.content ?? '') : (snapshot.content ?? '')} />
+          <ContentRenderer content={snapshot.content ?? ''} />
         </div>
       </article>
     </div>

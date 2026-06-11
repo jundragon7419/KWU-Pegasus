@@ -125,7 +125,6 @@ export default function PollVote({ poll, onVote, user }) {
       {selectedVotersOption && (
         <VoterModal
           option={selectedVotersOption}
-          voters={selectedVotersOption.voters}
           onClose={() => setSelectedVotersOption(null)}
         />
       )}

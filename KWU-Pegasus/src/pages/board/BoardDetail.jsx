@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { API_BASE } from '../../lib/api'
-import { POST_TYPE_LABEL } from '../../lib/constants'
+import { POST_TYPE_LABEL, isManagerRole } from '../../lib/constants'
 import { useAuth } from '../../context/AuthContext'
 import ContentRenderer from '../../components/ContentRenderer'
 import PollVote from '../../components/PollVote'
@@ -32,9 +32,8 @@ export default function BoardDetail() {
 
   const [poll, setPoll]         = useState(null)
   const [pollLoading, setPollLoading]   = useState(false)
-  const [pollError, setPollError]       = useState('')
 
-  const isManager = user && ['manager', 'staff', 'root'].includes(user.role)
+  const isManager = isManagerRole(user)
 
   async function handlePostDelete() {
     if (!post) return
@@ -57,26 +56,7 @@ export default function BoardDetail() {
       .then(data => setComments(Array.isArray(data) ? data : []))
   }
 
-  useEffect(() => {
-    setPost(null)
-    setAdjacent({ prev: null, next: null })
-    setNotFound(false)
-    setComments([])
-    setCommentInput('')
-    setEditingId(null)
-    setPoll(null)
-    setPollLoading(false)
-    setPollError('')
-
-    fetch(`${API_BASE}/api/posts/${id}`)
-      .then(r => { if (r.status === 404) { setNotFound(true); return null } return r.json() })
-      .then(data => { if (data) setPost(data) })
-
-    fetch(`${API_BASE}/api/posts/${id}/adjacent`)
-      .then(r => r.json())
-      .then(data => setAdjacent(data))
-
-    // 투표 데이터 로드
+  function loadPoll() {
     setPollLoading(true)
     const pollOptions = {}
     if (token) {
@@ -99,7 +79,28 @@ export default function BoardDetail() {
         console.error('투표 로드 실패:', err)
         setPollLoading(false)
       })
+  }
 
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 게시글 id 변경 시 상태 초기화
+    setPost(null)
+    setAdjacent({ prev: null, next: null })
+    setNotFound(false)
+    setComments([])
+    setCommentInput('')
+    setEditingId(null)
+    setPoll(null)
+    setPollLoading(false)
+
+    fetch(`${API_BASE}/api/posts/${id}`)
+      .then(r => { if (r.status === 404) { setNotFound(true); return null } return r.json() })
+      .then(data => { if (data) setPost(data) })
+
+    fetch(`${API_BASE}/api/posts/${id}/adjacent`)
+      .then(r => r.json())
+      .then(data => setAdjacent(data))
+
+    loadPoll()
     loadComments()
   }, [id, token])
 
@@ -178,18 +179,7 @@ export default function BoardDetail() {
     }
 
     // 투표 재로드
-    setPollLoading(true)
-    const pollOptions = { headers: { Authorization: `Bearer ${token}` } }
-    fetch(`${API_BASE}/api/polls/post/${id}`, pollOptions)
-      .then(r => r.json())
-      .then(data => {
-        if (data) setPoll(data)
-        setPollLoading(false)
-      })
-      .catch(err => {
-        console.error('투표 로드 실패:', err)
-        setPollLoading(false)
-      })
+    loadPoll()
   }
 
   if (notFound) {

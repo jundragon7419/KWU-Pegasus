@@ -15,7 +15,6 @@ export default function Roster() {
   const [roster, setRoster] = useState([])
   const [filter, setFilter] = useState('all')
   const [search, setSearch] = useState('')
-  const [activeYear, setActiveYear] = useState(null)
   const [years, setYears] = useState([])
   const [selectedYear, setSelectedYear] = useState(null)
 
@@ -24,7 +23,6 @@ export default function Roster() {
       fetch(`${API_BASE}/api/roster/active-year`).then(r => r.json()),
       fetch(`${API_BASE}/api/roster/years`).then(r => r.json()),
     ]).then(([activeData, yearsData]) => {
-      setActiveYear(activeData.year)
       setYears(yearsData)
       setSelectedYear(activeData.year)
     })

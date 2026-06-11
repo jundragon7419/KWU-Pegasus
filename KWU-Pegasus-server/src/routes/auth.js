@@ -18,26 +18,38 @@ router.post('/signup', signupLimiter, signup)
 router.post('/login',  login)
 router.get('/me',      authenticate, me)
 
-router.get('/check-username', async (req, res) => {
+router.get('/check-username', async (req, res, next) => {
   const { username } = req.query
   if (!username) return res.status(400).json({ message: '아이디를 입력해주세요.' })
-  const [rows] = await pool.query('SELECT id FROM users WHERE username = ?', [username])
-  res.json({ available: rows.length === 0 })
+  try {
+    const [rows] = await pool.query('SELECT id FROM users WHERE username = ?', [username])
+    res.json({ available: rows.length === 0 })
+  } catch (err) {
+    next(err)
+  }
 })
 
-router.get('/check-email', async (req, res) => {
+router.get('/check-email', async (req, res, next) => {
   const { email } = req.query
   if (!email) return res.status(400).json({ message: '이메일을 입력해주세요.' })
-  const [rows] = await pool.query('SELECT id FROM users WHERE email = ?', [email])
-  res.json({ available: rows.length === 0 })
+  try {
+    const [rows] = await pool.query('SELECT id FROM users WHERE email = ?', [email])
+    res.json({ available: rows.length === 0 })
+  } catch (err) {
+    next(err)
+  }
 })
 
-router.post('/send-email-code', async (req, res) => {
+router.post('/send-email-code', async (req, res, next) => {
   const { email } = req.body
   if (!email) return res.status(400).json({ message: '이메일을 입력해주세요.' })
 
-  const [rows] = await pool.query('SELECT id FROM users WHERE email = ?', [email])
-  if (rows.length > 0) return res.status(409).json({ message: '이미 사용 중인 이메일입니다.' })
+  try {
+    const [rows] = await pool.query('SELECT id FROM users WHERE email = ?', [email])
+    if (rows.length > 0) return res.status(409).json({ message: '이미 사용 중인 이메일입니다.' })
+  } catch (err) {
+    return next(err)
+  }
 
   try {
     await sendVerificationCode(email)
