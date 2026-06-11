@@ -21,6 +21,10 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
   applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );"
 
+# schema.sql에 이미 포함된 인덱스이므로 적용된 것으로 표시
+mysql -h"$DB_HOST" -u"$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" \
+  -e "INSERT IGNORE INTO schema_migrations (filename) VALUES ('001_add_indexes.sql')"
+
 for f in "$SERVER_DIR"/sql/migrations/*.sql; do
   name=$(basename "$f")
   applied=$(mysql -h"$DB_HOST" -u"$DB_USER" -p"$DB_PASSWORD" -N -B "$DB_NAME" \
