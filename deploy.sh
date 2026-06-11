@@ -15,15 +15,25 @@ set -a
 source "$SERVER_DIR/.env"
 set +a
 
+TABLE_EXISTS=$(mysql -h"$DB_HOST" -u"$DB_USER" -p"$DB_PASSWORD" -N -B "$DB_NAME" \
+  -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='$DB_NAME' AND table_name='schema_migrations'")
+
 mysql -h"$DB_HOST" -u"$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" -e "
 CREATE TABLE IF NOT EXISTS schema_migrations (
   filename VARCHAR(255) PRIMARY KEY,
   applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );"
 
-# schema.sql에 이미 포함된 인덱스이므로 적용된 것으로 표시
-mysql -h"$DB_HOST" -u"$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" \
-  -e "INSERT IGNORE INTO schema_migrations (filename) VALUES ('001_add_indexes.sql')"
+# schema.sql에 이미 모든 기존 마이그레이션이 반영되어 있으므로,
+# 테이블을 처음 만드는 경우 기존 마이그레이션은 적용된 것으로 표시
+if [ "$TABLE_EXISTS" -eq 0 ]; then
+  echo "  마이그레이션 테이블 신규 생성 - 기존 마이그레이션은 적용됨으로 표시"
+  for f in "$SERVER_DIR"/sql/migrations/*.sql; do
+    name=$(basename "$f")
+    mysql -h"$DB_HOST" -u"$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" \
+      -e "INSERT IGNORE INTO schema_migrations (filename) VALUES ('$name')"
+  done
+fi
 
 for f in "$SERVER_DIR"/sql/migrations/*.sql; do
   name=$(basename "$f")
